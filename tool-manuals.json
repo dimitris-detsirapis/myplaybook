@@ -1,0 +1,4647 @@
+{
+  "tools": [
+    {
+      "name": "accesschk",
+      "summary": "Sysinternals permission inspection utility for checking effective access on files, registry keys, services, processes, and other Windows objects.",
+      "syntax": "accesschk [options] [username] <target>",
+      "parameters": [
+        {
+          "name": "[username]",
+          "description": "Optional user or group to evaluate."
+        },
+        {
+          "name": "<target>",
+          "description": "File, directory, registry key, service, process, object, or other supported target."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-s",
+          "type": "flag",
+          "description": "Recurse through subkeys or subdirectories.",
+          "use_case": "Check broad writable paths or weak permission inheritance quickly."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Show objects with write access.",
+          "use_case": "Spot privilege escalation paths faster."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Suppress errors and show only objects with access.",
+          "use_case": "Reduce noise when triaging many candidate targets."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Check registry keys.",
+          "use_case": "Inspect autoruns, service keys, and other registry-backed escalation paths."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Check services.",
+          "use_case": "Review service permissions and service control opportunities."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Check processes.",
+          "use_case": "Inspect process handles or object access in post-compromise triage."
+        }
+      ],
+      "notes": [
+        "AccessChk is most useful when you already have a hypothesis about a writable path, service, or registry location and want to prove it quickly.",
+        "Save the exact command and target path when permissions become part of an escalation finding."
+      ],
+      "related_tools": [
+        "PowerUp",
+        "whoami",
+        "PowerShell"
+      ]
+    },
+    {
+      "name": "Amass",
+      "summary": "Attack surface intelligence framework for turning scoped domains, data sources, and optional active validation into a fuller subdomain and infrastructure map.",
+      "syntax": "amass enum -d <DOMAIN> [options]",
+      "parameters": [
+        {
+          "name": "<DOMAIN>",
+          "description": "Registered domain in scope for enumeration."
+        },
+        {
+          "name": "-config <FILE>",
+          "description": "Optional config file that keeps scope, data sources, and output settings reproducible."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "enum",
+          "type": "subcommand",
+          "description": "Run the main enumeration workflow.",
+          "use_case": "Build the first-pass asset map for a domain or target list."
+        },
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Set one in-scope domain directly.",
+          "use_case": "Quick focused enumeration against a single target domain."
+        },
+        {
+          "name": "-active",
+          "type": "flag",
+          "description": "Enable active validation in addition to passive collection.",
+          "use_case": "Confirm findings once the engagement allows active probing."
+        },
+        {
+          "name": "-brute",
+          "type": "flag",
+          "description": "Enable brute-force subdomain expansion.",
+          "use_case": "Push deeper when passive sources alone are not enough."
+        },
+        {
+          "name": "-oA",
+          "type": "flag",
+          "description": "Write combined output artifacts with one basename.",
+          "use_case": "Keep enumeration output and reruns organized."
+        },
+        {
+          "name": "datasources.yaml",
+          "type": "config",
+          "description": "Configure external sources and credentials.",
+          "use_case": "Improve depth and explain where discoveries came from."
+        }
+      ],
+      "notes": [
+        "Amass gets much better when the data sources are configured intentionally instead of relying on defaults alone.",
+        "Treat active mode as a scoped escalation step so the collection path stays explainable."
+      ],
+      "related_tools": [
+        "Subfinder",
+        "dnsx",
+        "httpx"
+      ]
+    },
+    {
+      "name": "bloodhound-python",
+      "summary": "Collector for AD relationship data that feeds BloodHound-style graph analysis without relying on the GUI first.",
+      "syntax": "bloodhound-python -u <user> -p <password> -d <DOMAIN> [collection flags]",
+      "parameters": [
+        {
+          "name": "<user>",
+          "description": "Directory username for collection."
+        },
+        {
+          "name": "<password>",
+          "description": "Password for the collecting account."
+        },
+        {
+          "name": "<DOMAIN>",
+          "description": "AD domain name such as corp.local."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the username.",
+          "use_case": "Authenticate collection against the domain."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Set the password.",
+          "use_case": "Supply credentials for collection."
+        },
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Set the AD domain.",
+          "use_case": "Keep the collection anchored to the right directory."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Choose collection methods such as All.",
+          "use_case": "Scope how much data to gather for path analysis."
+        },
+        {
+          "name": "-ns",
+          "type": "flag",
+          "description": "Specify the domain controller or DNS server.",
+          "use_case": "Control where lookups and collection traffic go."
+        }
+      ],
+      "related_tools": [
+        "NetExec",
+        "ldapsearch",
+        "kerbrute"
+      ]
+    },
+    {
+      "name": "Browser DevTools",
+      "summary": "Built-in browser tooling for tracing requests, client-side state, storage, and DOM behavior before and after proxy work.",
+      "syntax": "DevTools -> Network / Application / Sources / Console",
+      "parameters": [
+        {
+          "name": "Open page",
+          "description": "The route or app state you want to inspect live in the browser."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Network",
+          "type": "panel",
+          "description": "Shows document, XHR, fetch, and static asset requests with timings, headers, and responses.",
+          "use_case": "Build the request map before moving to Burp or CLI replay."
+        },
+        {
+          "name": "Application",
+          "type": "panel",
+          "description": "Exposes cookies, local storage, session storage, indexed DB, and service workers.",
+          "use_case": "Review auth state, tokens, persistence, and client-side trust."
+        },
+        {
+          "name": "Sources",
+          "type": "panel",
+          "description": "Lets you inspect loaded scripts, source maps, breakpoints, and front-end routing logic.",
+          "use_case": "Trace hidden endpoints, validation logic, and client-side sinks."
+        },
+        {
+          "name": "Console",
+          "type": "panel",
+          "description": "Runs quick JavaScript expressions and surfaces client-side errors or warnings.",
+          "use_case": "Validate assumptions without leaving the browser context."
+        }
+      ],
+      "notes": [
+        "Use DevTools early when the app relies on client-side rendering, storage, or JavaScript-driven routing."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Wappalyzer",
+        "curl"
+      ]
+    },
+    {
+      "name": "Burp Suite",
+      "summary": "Intercepting proxy and manual testing suite for replaying requests, comparing responses, and validating behavior before broader automation.",
+      "syntax": "Burp Suite desktop -> Proxy / HTTP history / Repeater / Intruder",
+      "parameters": [
+        {
+          "name": "Target scope",
+          "description": "The hosts, routes, or features you want Burp to collect and compare."
+        },
+        {
+          "name": "Captured request",
+          "description": "A real request from the browser or client that you can replay from history or Repeater."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "HTTP history",
+          "type": "control",
+          "description": "Keeps the exact requests and responses that actually reached the application.",
+          "use_case": "Use it as the source of truth before exporting requests to other tools."
+        },
+        {
+          "name": "Repeater",
+          "type": "control",
+          "description": "Replays a chosen request while you change one input at a time.",
+          "use_case": "Ideal for auth checks, injections, upload validation, and response diffing."
+        },
+        {
+          "name": "Proxy Intercept",
+          "type": "control",
+          "description": "Pauses traffic long enough to inspect or modify it before forwarding.",
+          "use_case": "Capture exact login, API, upload, and session requests."
+        },
+        {
+          "name": "Logger and notes",
+          "type": "control",
+          "description": "Helps you preserve useful request shapes and evidence as you work.",
+          "use_case": "Turn manual traffic into reusable CLI requests and clean writeups."
+        }
+      ],
+      "notes": [
+        "Start with Burp when the request format, cookies, CSRF handling, or hidden fields are still unclear."
+      ],
+      "related_tools": [
+        "curl",
+        "httpie",
+        "ffuf"
+      ]
+    },
+    {
+      "name": "Certipy",
+      "summary": "AD CS enumeration and abuse toolkit for mapping certificate authorities, vulnerable templates, certificate-backed auth, shadow credentials, relay, and post-exploitation certificate paths.",
+      "syntax": "certipy <command> [options]",
+      "parameters": [
+        {
+          "name": "<command>",
+          "description": "Action such as find, req, auth, relay, shadow, template, ca, forge, or cert."
+        },
+        {
+          "name": "-u / -p or -k",
+          "description": "Credential path for LDAP and certificate service interaction."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "find",
+          "type": "command",
+          "description": "Enumerate AD CS templates, authorities, and vulnerable ESC paths.",
+          "use_case": "Build the PKI picture before requesting or relaying anything."
+        },
+        {
+          "name": "req",
+          "type": "command",
+          "description": "Request a certificate from a chosen template.",
+          "use_case": "Test whether template controls permit alternate identities or privileged enrollment."
+        },
+        {
+          "name": "auth",
+          "type": "command",
+          "description": "Authenticate with a certificate and retrieve Kerberos material or LDAP access.",
+          "use_case": "Turn a PFX into usable identity context."
+        },
+        {
+          "name": "relay",
+          "type": "command",
+          "description": "Relay NTLM to AD CS HTTP enrollment endpoints.",
+          "use_case": "Bridge relay paths into certificate issuance when the environment allows it."
+        },
+        {
+          "name": "shadow",
+          "type": "command",
+          "description": "Work with shadow credentials.",
+          "use_case": "Establish or validate key-credential abuse paths."
+        },
+        {
+          "name": "forge",
+          "type": "command",
+          "description": "Create Golden Certificates with CA material.",
+          "use_case": "Handle high-impact post-compromise certificate abuse explicitly."
+        }
+      ],
+      "notes": [
+        "Certipy is broader than simple certificate requests, so keep the AD CS role, template state, and intended abuse path documented separately.",
+        "Its outputs can include text, JSON, and BloodHound data, which is useful if you want PKI findings to sit next to the wider AD graph."
+      ],
+      "related_tools": [
+        "PKINITtools",
+        "Rubeus",
+        "ntlmrelayx.py"
+      ]
+    },
+    {
+      "name": "CeWL",
+      "summary": "Targeted custom wordlist generator that spiders a site and turns site language, branding, and metadata into better cracking candidates.",
+      "syntax": "cewl [options] <URL>",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "The start URL you want CeWL to spider."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Set crawl depth.",
+          "use_case": "Control how far CeWL follows links from the starting page."
+        },
+        {
+          "name": "-m",
+          "type": "flag",
+          "description": "Set minimum word length.",
+          "use_case": "Strip out very short noise before feeding the output into crackers."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Write the collected words to a file.",
+          "use_case": "Create a reusable custom list for John, hashcat, or spray prep."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Show counts for discovered words.",
+          "use_case": "Prioritize repeated organization-specific terms."
+        },
+        {
+          "name": "-e",
+          "type": "flag",
+          "description": "Collect email addresses.",
+          "use_case": "Useful for username generation and identity context alongside the wordlist."
+        },
+        {
+          "name": "--auth_type",
+          "type": "flag",
+          "description": "Use basic or digest authentication.",
+          "use_case": "Spider authenticated areas when the engagement requires it."
+        }
+      ],
+      "notes": [
+        "CeWL defaults to staying on-site and a crawl depth of 2, which is usually safer than letting it drift widely.",
+        "A short, explainable org-specific list often beats a giant generic list when you are auditing real user behavior."
+      ],
+      "related_tools": [
+        "john",
+        "hashcat",
+        "SecLists"
+      ]
+    },
+    {
+      "name": "chisel",
+      "summary": "Tunneling tool for reverse port forwards and SOCKS-style pivots when SSH is not the right fit.",
+      "syntax": "chisel server [options] or chisel client <server:port> <tunnel spec>",
+      "parameters": [
+        {
+          "name": "<server:port>",
+          "description": "Chisel server address and port."
+        },
+        {
+          "name": "<tunnel spec>",
+          "description": "Forwarding definition such as R:socks or a specific port mapping."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "server",
+          "type": "mode",
+          "description": "Run the chisel server component.",
+          "use_case": "Start the listening side of the tunnel."
+        },
+        {
+          "name": "client",
+          "type": "mode",
+          "description": "Run the chisel client component.",
+          "use_case": "Connect back to the server and establish the tunnel."
+        },
+        {
+          "name": "--reverse",
+          "type": "flag",
+          "description": "Allow reverse port forwarding from the client back through the server.",
+          "use_case": "Useful when the target can initiate outbound connections."
+        },
+        {
+          "name": "R:socks",
+          "type": "pattern",
+          "description": "Reverse SOCKS tunnel definition.",
+          "use_case": "Expose a proxy back through the connected host."
+        }
+      ],
+      "related_tools": [
+        "SSH",
+        "proxychains",
+        "socat"
+      ]
+    },
+    {
+      "name": "Clairvoyance",
+      "summary": "GraphQL schema recovery tool that reconstructs all or part of a schema from suggestion behavior when introspection is disabled.",
+      "syntax": "clairvoyance <GRAPHQL_URL> -o <SCHEMA_JSON>",
+      "parameters": [
+        {
+          "name": "<GRAPHQL_URL>",
+          "description": "Target GraphQL endpoint."
+        },
+        {
+          "name": "-o <SCHEMA_JSON>",
+          "description": "Path for the recovered schema JSON output."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Write recovered schema JSON to a file.",
+          "use_case": "Feed the schema into visualizers or other GraphQL tooling."
+        },
+        {
+          "name": "wordlists",
+          "type": "input",
+          "description": "Use general or target-specific wordlists to improve name discovery.",
+          "use_case": "Recover deeper schema detail when the default pass is too shallow."
+        },
+        {
+          "name": "schema recovery",
+          "type": "feature",
+          "description": "Reconstruct schema information even with introspection disabled.",
+          "use_case": "Keep GraphQL testing moving when direct introspection is blocked."
+        },
+        {
+          "name": "JSON output",
+          "type": "artifact",
+          "description": "Produce schema data suitable for tools like Voyager or InQL.",
+          "use_case": "Turn raw recovery into something you can navigate and attack."
+        }
+      ],
+      "notes": [
+        "Clairvoyance shines when GraphQL suggestions are still enabled, so confirm the endpoint leaks useful suggestion data before deeper runs.",
+        "Target-specific words from observed traffic or static assets often improve recovery quality significantly."
+      ],
+      "related_tools": [
+        "InQL",
+        "GraphQLMap",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "Coercer",
+      "summary": "RPC coercion toolkit for scanning or triggering Windows authentication paths across multiple protocols, methods, and named pipes from one operator workflow.",
+      "syntax": "Coercer.py <mode> [options]",
+      "parameters": [
+        {
+          "name": "<mode>",
+          "description": "Operating mode such as scan, coerce, or fuzz depending on whether you are assessing, triggering, or researching coercion paths."
+        },
+        {
+          "name": "--target / --targets-file",
+          "description": "Single target or file of targets you want to assess or coerce."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "scan",
+          "type": "mode",
+          "description": "Assess a host for reachable coercion paths and export the results.",
+          "use_case": "Host triage before you choose an exploit path."
+        },
+        {
+          "name": "coerce",
+          "type": "mode",
+          "description": "Trigger authentication to the listener you specify.",
+          "use_case": "Focused relay or capture workflows."
+        },
+        {
+          "name": "--listener-ip",
+          "type": "flag",
+          "description": "Set the listener host that should receive the coerced authentication.",
+          "use_case": "Tie a coercion attempt to your relay or capture box."
+        },
+        {
+          "name": "--filter-method-name",
+          "type": "flag",
+          "description": "Limit testing to one coercion method by name.",
+          "use_case": "Repeatable proofs and lower-noise validation."
+        },
+        {
+          "name": "--filter-protocol-name",
+          "type": "flag",
+          "description": "Restrict the scan or coercion run to one protocol family.",
+          "use_case": "Trim broad RPC coverage to the area you care about."
+        },
+        {
+          "name": "--export-json / --export-xlsx / --export-sqlite",
+          "type": "flag",
+          "description": "Export scan findings for review and reporting.",
+          "use_case": "Keep the coercion surface reviewable instead of ephemeral."
+        }
+      ],
+      "notes": [
+        "Coercer is best when you treat scan mode as reconnaissance and only move into coerce mode for paths you can explain and monitor.",
+        "Write down the exact method, protocol, listener, and authentication outcome so your notes survive beyond the first successful relay."
+      ],
+      "related_tools": [
+        "PetitPotam",
+        "Responder",
+        "ntlmrelayx.py"
+      ]
+    },
+    {
+      "name": "commix",
+      "summary": "Automation framework for OS command injection testing that works best after you already understand the request shape and why the input is suspicious.",
+      "syntax": "python3 commix.py [options]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Target URL when testing a direct request path."
+        },
+        {
+          "name": "<REQUEST_FILE>",
+          "description": "Saved raw request used when replaying complex traffic."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "--url",
+          "type": "flag",
+          "description": "Set the target URL.",
+          "use_case": "Direct GET-style validation on a known suspect parameter."
+        },
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Load a raw request from file.",
+          "use_case": "Replay authenticated or non-trivial requests cleanly."
+        },
+        {
+          "name": "--data",
+          "type": "flag",
+          "description": "Send POST data.",
+          "use_case": "Body-based injection testing when the input is not in the query string."
+        },
+        {
+          "name": "--batch",
+          "type": "flag",
+          "description": "Run non-interactively.",
+          "use_case": "Automated, logged workflows after the request is understood."
+        },
+        {
+          "name": "--tamper",
+          "type": "flag",
+          "description": "Use tamper scripts on injection data.",
+          "use_case": "Filter-aware validation once you know what the application is normalizing."
+        },
+        {
+          "name": "--crawl",
+          "type": "flag",
+          "description": "Crawl from the target URL.",
+          "use_case": "Discover additional pages carefully when the surface is still incomplete."
+        }
+      ],
+      "notes": [
+        "Commix should accelerate a validated command-injection hypothesis, not replace the manual work of building one.",
+        "Saved requests are often the cleanest way to preserve cookies, headers, and content types when the request shape matters."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "curl",
+        "interactsh-client"
+      ]
+    },
+    {
+      "name": "curl",
+      "summary": "Low-friction HTTP client for replaying exact requests, checking headers, sending forms, and validating behavior outside the browser.",
+      "syntax": "curl [request options] <URL>",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "The full target URL you want to request."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-I",
+          "type": "flag",
+          "description": "Fetch headers only.",
+          "use_case": "Quickly inspect status codes, redirects, and response headers."
+        },
+        {
+          "name": "-H",
+          "type": "flag",
+          "description": "Add a custom header to the request.",
+          "use_case": "Replay cookies, auth tokens, host headers, and content types."
+        },
+        {
+          "name": "--data",
+          "type": "flag",
+          "description": "Send request body data, typically for POST-style requests.",
+          "use_case": "Replay form and API requests from Burp or DevTools."
+        },
+        {
+          "name": "-b",
+          "type": "flag",
+          "description": "Send cookies with the request.",
+          "use_case": "Test authenticated routes without the browser."
+        },
+        {
+          "name": "-F",
+          "type": "flag",
+          "description": "Send multipart form data.",
+          "use_case": "Upload testing and file handling validation."
+        },
+        {
+          "name": "-O",
+          "type": "flag",
+          "description": "Write the response to a local file named after the remote resource.",
+          "use_case": "Fast tool transfer or sample download."
+        }
+      ],
+      "related_tools": [
+        "httpie",
+        "Burp Suite",
+        "httpx"
+      ]
+    },
+    {
+      "name": "Dalfox",
+      "summary": "Purpose-built XSS automation tool for replaying focused reflected or stored XSS checks once the sink and request shape are already grounded.",
+      "syntax": "dalfox [mode] [target] [flags]",
+      "parameters": [
+        {
+          "name": "mode",
+          "description": "Input mode such as url, file, or pipe."
+        },
+        {
+          "name": "target",
+          "description": "Target URL, file, or stdin pipeline depending on the mode."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "url",
+          "type": "mode",
+          "description": "Test one URL directly.",
+          "use_case": "Focused validation against a single suspect parameter."
+        },
+        {
+          "name": "file",
+          "type": "mode",
+          "description": "Load targets from a file.",
+          "use_case": "Replay a curated list of known-meaningful URLs."
+        },
+        {
+          "name": "pipe",
+          "type": "mode",
+          "description": "Read targets from stdin.",
+          "use_case": "Fit Dalfox into a tuned pipeline."
+        },
+        {
+          "name": "--blind",
+          "type": "flag",
+          "description": "Configure a blind callback endpoint.",
+          "use_case": "Stored or blind XSS checks after you know the sink path."
+        },
+        {
+          "name": "--cookie",
+          "type": "flag",
+          "description": "Replay cookie state.",
+          "use_case": "Authenticated XSS validation."
+        },
+        {
+          "name": "--skip-bav",
+          "type": "flag",
+          "description": "Skip built-in basic vulnerability checks.",
+          "use_case": "Reduce noise when the sink is already understood."
+        }
+      ],
+      "notes": [
+        "Dalfox is strongest when the target set is already curated and the app state is reproducible.",
+        "Blind or stored XSS work only stays explainable if you tie the callback and sink path back to the exact request flow."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Browser DevTools",
+        "interactsh-client"
+      ]
+    },
+    {
+      "name": "dirsearch",
+      "summary": "Directory and file brute-forcing helper for targeted path discovery once you already understand response baselines and target behavior.",
+      "syntax": "dirsearch -u <URL> [options]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Target URL to brute force."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the target URL.",
+          "use_case": "Point dirsearch at the exact base path you want to fuzz."
+        },
+        {
+          "name": "-e",
+          "type": "flag",
+          "description": "Set file extensions.",
+          "use_case": "Tune the search toward the technology you already identified."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Choose the wordlist.",
+          "use_case": "Control breadth and relevance of the brute-force path set."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Exclude status codes.",
+          "use_case": "Filter out known noise while keeping meaningful deltas."
+        }
+      ],
+      "notes": [
+        "Path brute forcing gets better after you know the framework, response baseline, and normal redirect or error pattern.",
+        "Save the exclusions and extension set you used so you can replay the exact search later."
+      ],
+      "related_tools": [
+        "ffuf",
+        "Feroxbuster",
+        "Gobuster"
+      ]
+    },
+    {
+      "name": "dnstool.py",
+      "summary": "krbrelayx helper for querying and modifying Active Directory-integrated DNS records over LDAP when name resolution itself becomes part of the attack path.",
+      "syntax": "dnstool.py <HOSTNAME> -u <DOMAIN\\USER> [-p PASSWORD] -r <RECORD> [-a ACTION] [options]",
+      "parameters": [
+        {
+          "name": "<HOSTNAME>",
+          "description": "Hostname, IP, or ldap:// connection string for the LDAP/DNS target."
+        },
+        {
+          "name": "-r <RECORD>",
+          "description": "FQDN of the ADIDNS record you want to query or modify."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-a, --action",
+          "type": "flag",
+          "description": "Choose add, modify, query, remove, resurrect, or ldapdelete.",
+          "use_case": "Make record intent explicit before touching ADIDNS."
+        },
+        {
+          "name": "-d, --data",
+          "type": "flag",
+          "description": "Record data such as the A-record IP.",
+          "use_case": "Point a hostname at the IP that supports your relay or operator path."
+        },
+        {
+          "name": "--zone",
+          "type": "flag",
+          "description": "Set a different DNS zone manually.",
+          "use_case": "Target the right partition when the default domain zone is not enough."
+        },
+        {
+          "name": "--forest / --legacy",
+          "type": "flag",
+          "description": "Switch to ForestDnsZones or legacy System partition storage.",
+          "use_case": "Handle environments that do not store the record where you first expect."
+        },
+        {
+          "name": "-k, --kerberos",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Keep auth aligned with the rest of a ticket-based workflow."
+        },
+        {
+          "name": "--print-zones / --print-zones-dn",
+          "type": "flag",
+          "description": "List known zones instead of modifying records.",
+          "use_case": "Discover where a record should live before you add or change it."
+        }
+      ],
+      "notes": [
+        "Treat ADIDNS changes as stateful infrastructure changes, not just another quick relay helper.",
+        "Always query the existing record or zone first so cleanup and attribution stay manageable."
+      ],
+      "related_tools": [
+        "krbrelayx",
+        "ntlmrelayx.py",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "dnsx",
+      "summary": "Fast DNS probing and brute-force helper for resolving hostnames, validating record data, and filtering noisy DNS results before deeper scanning.",
+      "syntax": "dnsx -l <HOSTS_FILE> [options] or dnsx -d <DOMAIN> -w <WORDLIST> [options]",
+      "parameters": [
+        {
+          "name": "-l <HOSTS_FILE>",
+          "description": "Resolve a host list from a file or stdin."
+        },
+        {
+          "name": "-d <DOMAIN>",
+          "description": "Base domain to brute-force when paired with a wordlist."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-l, -list",
+          "type": "flag",
+          "description": "Load subdomains or hosts from a file or stdin.",
+          "use_case": "Validate recon output before handing it to HTTP or port scanners."
+        },
+        {
+          "name": "-d, -domain",
+          "type": "flag",
+          "description": "Set the domain to brute-force.",
+          "use_case": "Focused DNS expansion against one organization or zone."
+        },
+        {
+          "name": "-w, -wordlist",
+          "type": "flag",
+          "description": "Use a wordlist for brute-force resolution.",
+          "use_case": "Generate candidate names once the target naming pattern is clear."
+        },
+        {
+          "name": "-r, -resolver",
+          "type": "flag",
+          "description": "Provide custom resolvers.",
+          "use_case": "Stabilize results or route through trusted resolver sets."
+        },
+        {
+          "name": "-resp",
+          "type": "flag",
+          "description": "Include response data in output.",
+          "use_case": "Save the exact records that justified follow-on work."
+        },
+        {
+          "name": "-rcode",
+          "type": "flag",
+          "description": "Filter or inspect response codes.",
+          "use_case": "Separate real answers from NXDOMAIN noise while tuning brute-force runs."
+        }
+      ],
+      "notes": [
+        "dnsx is strongest as a resolver and validator stage after subdomain discovery, not as a replacement for broader asset collection.",
+        "Save the resolver set and response output when DNS behavior itself becomes part of your evidence."
+      ],
+      "related_tools": [
+        "Amass",
+        "Subfinder",
+        "httpx"
+      ]
+    },
+    {
+      "name": "DOM Invader",
+      "summary": "Burp browser tool for surfacing DOM XSS sinks, web-message abuse paths, prototype-pollution gadgets, and DOM clobbering clues during live client-side testing.",
+      "syntax": "Burp browser DevTools -> DOM Invader",
+      "parameters": [
+        {
+          "name": "live browser flow",
+          "description": "The authenticated or stateful app flow you want to inspect in Burp's browser."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "DOM XSS sink tracing",
+          "type": "feature",
+          "description": "Show controllable sinks and their context directly in the page tooling.",
+          "use_case": "Move from reflected client-side input to an exact sink faster."
+        },
+        {
+          "name": "web message tooling",
+          "type": "feature",
+          "description": "Log, modify, and resend postMessage traffic.",
+          "use_case": "Test DOM XSS and trust mistakes in message handlers."
+        },
+        {
+          "name": "prototype pollution analysis",
+          "type": "feature",
+          "description": "Identify pollution sources and controllable gadgets.",
+          "use_case": "Map client-side prototype abuse paths without manual source hunting."
+        },
+        {
+          "name": "DOM clobbering detection",
+          "type": "feature",
+          "description": "Highlight potential clobbering issues.",
+          "use_case": "Spot client-side name collisions that affect security-sensitive logic."
+        }
+      ],
+      "notes": [
+        "DOM Invader is built into Burp's browser, so it is most useful when you drive the real application state you care about through that browser.",
+        "Use its sink context and stack traces to bridge client-side signals back to a reproducible exploit path."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Browser DevTools",
+        "Dalfox"
+      ]
+    },
+    {
+      "name": "Droopescan",
+      "summary": "CMS-focused scanner for identifying Drupal, WordPress, or SilverStripe installs and enumerating versions, plugins, themes, and interesting files with a controlled request profile.",
+      "syntax": "droopescan scan [cms] -u <URL> [options]",
+      "parameters": [
+        {
+          "name": "[cms]",
+          "description": "Optional CMS selector such as drupal, wordpress, or silverstripe."
+        },
+        {
+          "name": "-u <URL>",
+          "description": "Target URL to scan."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "scan",
+          "type": "subcommand",
+          "description": "Run the main scanning workflow.",
+          "use_case": "Kick off CMS identification or a focused scan against a known platform."
+        },
+        {
+          "name": "-u, --url",
+          "type": "flag",
+          "description": "Set one target URL directly.",
+          "use_case": "Validate a single CMS host cleanly."
+        },
+        {
+          "name": "-U, --url-file",
+          "type": "flag",
+          "description": "Load multiple URLs from a file.",
+          "use_case": "Batch scan a curated list of candidate CMS hosts."
+        },
+        {
+          "name": "-e, --enumerate",
+          "type": "flag",
+          "description": "Choose checks like plugins, themes, versions, or interesting URLs.",
+          "use_case": "Reduce noise and match the scan to the question you actually need answered."
+        },
+        {
+          "name": "--number / --threads",
+          "type": "flag",
+          "description": "Control request volume and concurrency.",
+          "use_case": "Tune scan speed without overloading the target."
+        },
+        {
+          "name": "json output",
+          "type": "feature",
+          "description": "Support machine-friendly output in addition to standard console output.",
+          "use_case": "Feed results into reporting or comparison workflows."
+        }
+      ],
+      "notes": [
+        "The project README explicitly warns that version findings still need manual correlation to real vulnerabilities rather than automatic trust.",
+        "Droopescan also documents support for .netrc files and proxy environment variables, which makes it easier to fit into authenticated or intercepted testing."
+      ],
+      "related_tools": [
+        "WhatWeb",
+        "httpx",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "enum4linux-ng",
+      "summary": "Aggregated SMB, RPC, and domain enumeration helper that is useful for getting a quick multi-protocol baseline on Windows targets.",
+      "syntax": "enum4linux-ng -A[s] <TARGET>",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Target Windows or Samba host."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-A",
+          "type": "flag",
+          "description": "Run a broad enumeration pass.",
+          "use_case": "Initial baseline when you want a fast multi-check snapshot."
+        },
+        {
+          "name": "-As",
+          "type": "flag",
+          "description": "Run a broad pass with share enumeration.",
+          "use_case": "Add share visibility to the baseline."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Authenticate with a username.",
+          "use_case": "Post-auth enumeration when null sessions are not enough."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Supply a password.",
+          "use_case": "Authenticated SMB/RPC checks."
+        }
+      ],
+      "notes": [
+        "This is good for triage, but the real value is following up the interesting result with the protocol-native tool that proved it.",
+        "Capture which parts of the aggregate output actually changed your next step."
+      ],
+      "related_tools": [
+        "SMBMap",
+        "rpcclient",
+        "smbclient"
+      ]
+    },
+    {
+      "name": "Feroxbuster",
+      "summary": "Recursive content discovery tool that is especially useful when you want fast route expansion with flexible wordlists and extensions.",
+      "syntax": "feroxbuster -u <URL> -w <WORDLIST> [options]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "The base URL you want to brute-force."
+        },
+        {
+          "name": "<WORDLIST>",
+          "description": "The wordlist that drives path discovery."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the target URL.",
+          "use_case": "Primary route or directory enumeration."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Set the wordlist to use.",
+          "use_case": "Tune breadth to the application size and context."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Add file extensions to test.",
+          "use_case": "Look for likely script or backup files."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Ignore TLS certificate validation errors.",
+          "use_case": "Useful in lab or internal environments with rough certs."
+        }
+      ],
+      "related_tools": [
+        "ffuf",
+        "Gobuster",
+        "dirsearch"
+      ]
+    },
+    {
+      "name": "ffuf",
+      "summary": "Fast web fuzzer for content discovery, vhost checks, parameter name testing, and replaying captured requests with controlled filters.",
+      "syntax": "ffuf -w <WORDLIST> -u <URL_WITH_FUZZ> [filters and matchers]",
+      "parameters": [
+        {
+          "name": "<WORDLIST>",
+          "description": "The candidate list to inject into FUZZ."
+        },
+        {
+          "name": "<URL_WITH_FUZZ>",
+          "description": "Target URL or request component containing the FUZZ marker."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Set the wordlist file used for FUZZ input.",
+          "use_case": "Directory, vhost, parameter, or payload testing."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the target URL with a FUZZ marker.",
+          "use_case": "Define exactly where the wordlist gets injected."
+        },
+        {
+          "name": "-fc",
+          "type": "flag",
+          "description": "Filter out specific status codes.",
+          "use_case": "Hide baseline misses like 404s."
+        },
+        {
+          "name": "-fs",
+          "type": "flag",
+          "description": "Filter responses by body size.",
+          "use_case": "Cut static false positives after you capture a baseline."
+        },
+        {
+          "name": "-mc",
+          "type": "flag",
+          "description": "Match specific status codes or all responses.",
+          "use_case": "Keep broad coverage when response codes vary."
+        },
+        {
+          "name": "-ac",
+          "type": "flag",
+          "description": "Auto-calibrate filtering from baseline responses.",
+          "use_case": "Useful when the app reflects misses dynamically."
+        },
+        {
+          "name": "-H",
+          "type": "flag",
+          "description": "Add custom headers to each request.",
+          "use_case": "Host header fuzzing, auth, or content-type control."
+        },
+        {
+          "name": "-request",
+          "type": "flag",
+          "description": "Replay a saved raw HTTP request.",
+          "use_case": "Fuzz the exact request shape you captured in Burp."
+        },
+        {
+          "name": "-request-proto",
+          "type": "flag",
+          "description": "Choose the protocol used with a raw request file.",
+          "use_case": "Useful when replaying a saved request and you need to force HTTPS or HTTP."
+        },
+        {
+          "name": "-e",
+          "type": "flag",
+          "description": "Add file extensions to test with the FUZZ position.",
+          "use_case": "Expand directory or file discovery into likely script and backup variants."
+        },
+        {
+          "name": "-X",
+          "type": "flag",
+          "description": "Set the HTTP method for the request.",
+          "use_case": "Switch from default GET behavior to POST or other verbs during fuzzing."
+        },
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Send request body data.",
+          "use_case": "Parameter fuzzing and auth or API testing with POST requests."
+        },
+        {
+          "name": "-of",
+          "type": "flag",
+          "description": "Choose the output format.",
+          "use_case": "Save results in JSON or another structured format for later processing."
+        },
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Write results to an output file.",
+          "use_case": "Keep fuzzing output for review, pipelines, or reporting."
+        }
+      ],
+      "related_tools": [
+        "Feroxbuster",
+        "Gobuster",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "findDelegation.py",
+      "summary": "Impacket helper for surfacing delegation configurations that influence Kerberos abuse paths and service trust boundaries.",
+      "syntax": "findDelegation.py <DOMAIN>/<USER>:<PASSWORD> -dc-ip <DC_IP>",
+      "parameters": [
+        {
+          "name": "<DC_IP>",
+          "description": "Domain controller IP used to query delegation data."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-dc-ip",
+          "type": "flag",
+          "description": "Specify the domain controller IP.",
+          "use_case": "Keep enumeration pinned to the controller you intend to query."
+        },
+        {
+          "name": "-target-domain",
+          "type": "flag",
+          "description": "Query a different target domain when appropriate.",
+          "use_case": "Cross-domain or trust-aware reviews."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Fit into an existing ticket-based workflow."
+        }
+      ],
+      "notes": [
+        "Delegation findings change what later relay and lateral-movement tooling is worth attempting.",
+        "Document the exact principals and services involved, not just the delegation type label."
+      ],
+      "related_tools": [
+        "GetUserSPNs.py",
+        "NetExec",
+        "krbrelayx"
+      ]
+    },
+    {
+      "name": "GetADUsers.py",
+      "summary": "Impacket directory inventory helper for pulling user records and related account context into a readable baseline.",
+      "syntax": "GetADUsers.py <DOMAIN>/<USER>:<PASSWORD> -dc-ip <DC_IP> [-all]",
+      "parameters": [
+        {
+          "name": "<DOMAIN>/<USER>:<PASSWORD>",
+          "description": "Credential used to query the directory."
+        },
+        {
+          "name": "<DC_IP>",
+          "description": "Domain controller IP for the query."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-all",
+          "type": "flag",
+          "description": "Return a broader user listing.",
+          "use_case": "Build a fuller baseline when you are still mapping the domain."
+        },
+        {
+          "name": "-dc-ip",
+          "type": "flag",
+          "description": "Set the domain controller IP.",
+          "use_case": "Keep the query path consistent and reviewable."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Ticket-based directory review."
+        },
+        {
+          "name": "-hashes",
+          "type": "flag",
+          "description": "Authenticate with LM:NT hash material.",
+          "use_case": "Hash-based workflows where password reuse is not the path."
+        }
+      ],
+      "notes": [
+        "This is a great baseline export before you start filtering for high-value service accounts, stale users, or delegation paths.",
+        "Save the output early so later BloodHound and Kerberos results have a readable identity backdrop."
+      ],
+      "related_tools": [
+        "ldapsearch",
+        "kerbrute",
+        "bloodhound-python"
+      ]
+    },
+    {
+      "name": "GetNPUsers.py",
+      "summary": "Impacket helper for identifying users without Kerberos pre-authentication and optionally saving returned AS-REP material.",
+      "syntax": "GetNPUsers.py <DOMAIN>/[<USER>:<PASS>] -dc-ip <DC_IP> [-usersfile FILE] [-no-pass] [-request]",
+      "parameters": [
+        {
+          "name": "<DOMAIN>",
+          "description": "Target Active Directory domain."
+        },
+        {
+          "name": "<DC_IP>",
+          "description": "Domain controller IP used for the KDC request path."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-usersfile",
+          "type": "flag",
+          "description": "Provide a username list.",
+          "use_case": "Test a curated set of candidate users instead of guessing wide."
+        },
+        {
+          "name": "-request",
+          "type": "flag",
+          "description": "Request roastable data for matching accounts.",
+          "use_case": "Produce output for offline cracking."
+        },
+        {
+          "name": "-dc-ip",
+          "type": "flag",
+          "description": "Set the domain controller IP.",
+          "use_case": "Avoid DNS ambiguity and keep requests predictable."
+        },
+        {
+          "name": "-no-pass",
+          "type": "flag",
+          "description": "Avoid prompting for a password.",
+          "use_case": "Unauthenticated checks when the target list is already justified."
+        },
+        {
+          "name": "-outputfile",
+          "type": "flag",
+          "description": "Write output to a file.",
+          "use_case": "Keep roast material separate from console notes."
+        }
+      ],
+      "notes": [
+        "This workflow is strongest when the username list is built from real identity context such as LDAP, Kerbrute, or org-specific patterns.",
+        "Tie the saved AS-REP file back to the user list and DC you used so later cracks are attributable."
+      ],
+      "related_tools": [
+        "kerbrute",
+        "hashcat",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "GetUserSPNs.py",
+      "summary": "Impacket helper for locating SPN-bearing accounts and optionally requesting service tickets for offline review.",
+      "syntax": "GetUserSPNs.py <DOMAIN>/<USER>:<PASSWORD> -dc-ip <DC_IP> [-request]",
+      "parameters": [
+        {
+          "name": "<DOMAIN>/<USER>:<PASSWORD>",
+          "description": "Validated domain credential used to query the directory."
+        },
+        {
+          "name": "<DC_IP>",
+          "description": "Domain controller IP used for the request path."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-request",
+          "type": "flag",
+          "description": "Request service tickets for roastable accounts.",
+          "use_case": "Create a clean roast file for offline cracking."
+        },
+        {
+          "name": "-dc-ip",
+          "type": "flag",
+          "description": "Specify the domain controller IP.",
+          "use_case": "Keep Kerberos and LDAP traffic pinned to the right host."
+        },
+        {
+          "name": "-outputfile",
+          "type": "flag",
+          "description": "Write roast output to a file.",
+          "use_case": "Organize evidence and handoff into cracking workflows."
+        },
+        {
+          "name": "-usersfile",
+          "type": "flag",
+          "description": "Limit processing to a provided user list.",
+          "use_case": "Keep the query narrow when you already know which accounts matter."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Operate with a ticket-based workflow instead of raw password reuse."
+        }
+      ],
+      "notes": [
+        "SPN-bearing accounts matter because of the services they front and the privileges they often accumulate over time.",
+        "Save the output with account context so cracked material later maps back to the right service owner."
+      ],
+      "related_tools": [
+        "GetNPUsers.py",
+        "hashcat",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "Gobuster",
+      "summary": "Lightweight brute-force tool for web content and DNS name discovery when you want simple, fast coverage.",
+      "syntax": "gobuster <mode> [mode options]",
+      "parameters": [
+        {
+          "name": "<mode>",
+          "description": "Common modes here are dir for web paths and dns for subdomains."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "dir",
+          "type": "mode",
+          "description": "Run directory and file discovery against a web target.",
+          "use_case": "Fast web route coverage with a known wordlist."
+        },
+        {
+          "name": "dns",
+          "type": "mode",
+          "description": "Run subdomain brute forcing against a root domain.",
+          "use_case": "Expand DNS coverage beyond passive results."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the target URL.",
+          "use_case": "Required for dir mode."
+        },
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Set the target domain.",
+          "use_case": "Required for dns mode."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Set the wordlist file.",
+          "use_case": "Drives route or subdomain candidates."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Test file extensions in dir mode.",
+          "use_case": "Check likely script and text file variants."
+        },
+        {
+          "name": "--append-domain",
+          "type": "flag",
+          "description": "Append the target domain to each dns wordlist entry.",
+          "use_case": "Helpful for clean DNS brute-force syntax."
+        }
+      ],
+      "related_tools": [
+        "ffuf",
+        "Feroxbuster",
+        "Subfinder"
+      ]
+    },
+    {
+      "name": "GraphQLMap",
+      "summary": "GraphQL-focused helper for schema-aware route testing, auth checks, and query exploration once you know the endpoint.",
+      "syntax": "graphqlmap -u <URL> [options]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "The GraphQL endpoint you want to inspect."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the GraphQL endpoint URL.",
+          "use_case": "Point GraphQLMap at the schema entry point."
+        }
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "httpie",
+        "jwt-tool"
+      ]
+    },
+    {
+      "name": "hashcat",
+      "summary": "High-speed offline password recovery tool that rewards precise mode selection, realistic candidate generation, and disciplined reporting more than blind GPU time.",
+      "syntax": "hashcat -m <MODE> -a <ATTACK_MODE> <HASH_FILE> [wordlist|mask|rule inputs]",
+      "parameters": [
+        {
+          "name": "<MODE>",
+          "description": "Hash mode number that matches the exact capture format, such as 1000 for NTLM, 5600 for NetNTLMv2, 13100 for Kerberoast, 18200 for AS-REP, or 22000 for WPA handshakes."
+        },
+        {
+          "name": "<ATTACK_MODE>",
+          "description": "Attack style such as 0 for wordlist, 3 for mask, 6 for wordlist+mask, or 7 for mask+wordlist."
+        },
+        {
+          "name": "<HASH_FILE>",
+          "description": "File containing the scoped target hashes you want to crack."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-m",
+          "type": "flag",
+          "description": "Select the exact hash mode.",
+          "use_case": "The first thing to get right before any cracking run."
+        },
+        {
+          "name": "-a",
+          "type": "flag",
+          "description": "Select the attack mode.",
+          "use_case": "Switch between wordlists, masks, hybrids, and combinator-style runs."
+        },
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Apply a rules file to a wordlist attack.",
+          "use_case": "Useful when policy patterns are still human-shaped instead of random."
+        },
+        {
+          "name": "--increment",
+          "type": "flag",
+          "description": "Grow a mask length automatically within the bounds you set.",
+          "use_case": "Try policy-shaped mask ranges without launching separate jobs by hand."
+        },
+        {
+          "name": "--show",
+          "type": "flag",
+          "description": "Display cracked hashes already stored in the potfile.",
+          "use_case": "Reporting and handoff after a cracking session."
+        },
+        {
+          "name": "--username",
+          "type": "flag",
+          "description": "Treat the username field separately when the input file includes user:hash lines.",
+          "use_case": "Common in Windows and AD workflows where identity context matters."
+        },
+        {
+          "name": "1000",
+          "type": "mode",
+          "description": "NTLM.",
+          "use_case": "Windows local or domain hash material already in NT hash format."
+        },
+        {
+          "name": "5600",
+          "type": "mode",
+          "description": "NetNTLMv2.",
+          "use_case": "Responder or relay-adjacent challenge-response capture review."
+        },
+        {
+          "name": "7500",
+          "type": "mode",
+          "description": "Kerberos 5 AS-REQ Pre-Auth etype 23.",
+          "use_case": "Kerberos AS-REQ material captured from coercion or rogue-service workflows."
+        },
+        {
+          "name": "13100",
+          "type": "mode",
+          "description": "Kerberos 5 TGS-REP etype 23.",
+          "use_case": "Classic RC4 Kerberoast material."
+        },
+        {
+          "name": "18200",
+          "type": "mode",
+          "description": "Kerberos 5 AS-REP etype 23.",
+          "use_case": "AS-REP roast material from accounts without preauth."
+        },
+        {
+          "name": "19600",
+          "type": "mode",
+          "description": "Kerberos 5 TGS-REP etype 17.",
+          "use_case": "AES128 Kerberoast captures."
+        },
+        {
+          "name": "19700",
+          "type": "mode",
+          "description": "Kerberos 5 TGS-REP etype 18.",
+          "use_case": "AES256 Kerberoast captures."
+        },
+        {
+          "name": "2100",
+          "type": "mode",
+          "description": "DCC2 / mscash2.",
+          "use_case": "Cached domain logon hashes from Windows credential stores."
+        },
+        {
+          "name": "22000",
+          "type": "mode",
+          "description": "WPA-PBKID-PMKID plus WPA-EAPOL.",
+          "use_case": "Modern Wi-Fi handshake and PMKID cracking workflows."
+        },
+        {
+          "name": "3200",
+          "type": "mode",
+          "description": "bcrypt.",
+          "use_case": "Web application password database hashes using bcrypt."
+        },
+        {
+          "name": "7400",
+          "type": "mode",
+          "description": "sha256crypt.",
+          "use_case": "Linux shadow entries using SHA-256 crypt."
+        },
+        {
+          "name": "1800",
+          "type": "mode",
+          "description": "sha512crypt.",
+          "use_case": "Linux shadow entries using SHA-512 crypt."
+        }
+      ],
+      "notes": [
+        "Hashcat's example hashes page is the safest quick way to confirm the exact mode before you commit GPU time or report a crack path.",
+        "Use rules and masks that reflect a real password policy, naming standard, or crack pattern you can explain later."
+      ],
+      "related_tools": [
+        "john",
+        "CeWL",
+        "GetNPUsers.py",
+        "GetUserSPNs.py"
+      ]
+    },
+    {
+      "name": "HTTP Request Smuggler",
+      "summary": "PortSwigger Burp extension for detecting and exploiting HTTP desynchronization issues including classic request smuggling, HTTP/2 variants, and connection-state attacks.",
+      "syntax": "Burp extension -> Launch Smuggle probe from a selected request",
+      "parameters": [
+        {
+          "name": "selected request",
+          "description": "Stable request path used as the basis for the desync probe."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Launch Smuggle probe",
+          "type": "action",
+          "description": "Run the extension's main probe against the selected request.",
+          "use_case": "Test for parser discrepancy and desync behavior from a real path."
+        },
+        {
+          "name": "HTTP/1.1 desync detection",
+          "type": "feature",
+          "description": "Probe classic CL.TE and TE.CL style issues.",
+          "use_case": "Check common front-end/back-end parsing mismatches."
+        },
+        {
+          "name": "HTTP/2 and downgrade support",
+          "type": "feature",
+          "description": "Cover newer desync variants and tunneling attacks.",
+          "use_case": "Test modern edge stacks and proxy layers."
+        },
+        {
+          "name": "research mode",
+          "type": "feature",
+          "description": "Explore novel or less-standard techniques in Pro and Community editions.",
+          "use_case": "Dig deeper once the initial signal suggests desync potential."
+        },
+        {
+          "name": "Turbo Intruder integration",
+          "type": "feature",
+          "description": "Generate or assist with advanced exploitation flows.",
+          "use_case": "Move from detection into a controlled proof of impact."
+        }
+      ],
+      "notes": [
+        "This tool works best from a known-good request because request smuggling is about parser behavior in a real chain, not random endpoints.",
+        "Record the protocol version, front-end assumptions, and endpoint behavior because desync findings are notoriously context-specific."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Param Miner",
+        "Nuclei"
+      ]
+    },
+    {
+      "name": "httpie",
+      "summary": "Human-readable HTTP client for quickly replaying API requests with clearer syntax than raw curl commands.",
+      "syntax": "http [METHOD] <URL> [Header:Value] [key=value]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "The API or route you want to call."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "METHOD",
+          "type": "parameter",
+          "description": "Optional request method like GET, POST, PUT, or DELETE.",
+          "use_case": "Make the intent of the request obvious in the command itself."
+        },
+        {
+          "name": "Header:Value",
+          "type": "parameter",
+          "description": "Inline header syntax for auth, content type, and routing.",
+          "use_case": "Useful for APIs where headers matter as much as the body."
+        },
+        {
+          "name": "key=value",
+          "type": "parameter",
+          "description": "Inline body fields for form or JSON-like workflows depending on the command shape.",
+          "use_case": "Fast request drafting while you are still validating behavior."
+        },
+        {
+          "name": "Authorization:'Bearer TOKEN'",
+          "type": "pattern",
+          "description": "Inline bearer token header format.",
+          "use_case": "Common for API auth replay from captured traffic."
+        }
+      ],
+      "related_tools": [
+        "curl",
+        "Burp Suite",
+        "jq"
+      ]
+    },
+    {
+      "name": "httpx",
+      "summary": "ProjectDiscovery probe runner for checking live HTTP targets, titles, status codes, technologies, redirects, and screenshots in bulk.",
+      "syntax": "httpx -u <URL> [probe flags] or httpx -list <HOSTS_FILE> [probe flags]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Single URL or host to probe."
+        },
+        {
+          "name": "<HOSTS_FILE>",
+          "description": "File of hosts or URLs to probe in bulk."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Probe a single target URL or host.",
+          "use_case": "Quickly fingerprint one live endpoint."
+        },
+        {
+          "name": "-list",
+          "type": "flag",
+          "description": "Read many hosts or URLs from a file.",
+          "use_case": "Bulk probing after subdomain or asset collection."
+        },
+        {
+          "name": "-silent",
+          "type": "flag",
+          "description": "Reduce noise in the output to just the probe results.",
+          "use_case": "Cleaner pipelines into files and follow-on tools."
+        },
+        {
+          "name": "-status-code",
+          "type": "flag",
+          "description": "Include HTTP status codes in the output.",
+          "use_case": "Quick route and host triage."
+        },
+        {
+          "name": "-title",
+          "type": "flag",
+          "description": "Include the HTML title when present.",
+          "use_case": "Surface likely apps or portals faster."
+        },
+        {
+          "name": "-tech-detect",
+          "type": "flag",
+          "description": "Attempt technology fingerprinting for the target.",
+          "use_case": "Prioritize stack-specific follow-up checks."
+        },
+        {
+          "name": "-follow-host-redirects",
+          "type": "flag",
+          "description": "Follow redirects that stay within the same host.",
+          "use_case": "Resolve canonical routes without drifting too far."
+        },
+        {
+          "name": "-screenshot",
+          "type": "flag",
+          "description": "Capture screenshots of live targets.",
+          "use_case": "Fast visual triage and evidence collection."
+        }
+      ],
+      "related_tools": [
+        "Subfinder",
+        "dnsx",
+        "Nuclei",
+        "WhatWeb"
+      ]
+    },
+    {
+      "name": "Hydra",
+      "summary": "Online credential testing tool for scoped form, SSH, SMB, and other service logins once failure behavior is well understood.",
+      "syntax": "hydra [user source] [password source] <target> <service module> [options]",
+      "parameters": [
+        {
+          "name": "<target>",
+          "description": "Service hostname or IP you want to test."
+        },
+        {
+          "name": "<service module>",
+          "description": "Target protocol definition such as ssh or an HTTP form module."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-L",
+          "type": "flag",
+          "description": "Load usernames from a file.",
+          "use_case": "Test a candidate user set without editing the command."
+        },
+        {
+          "name": "-P",
+          "type": "flag",
+          "description": "Load passwords from a file.",
+          "use_case": "Pair with scoped wordlists after lockout review."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Use a single password across many users.",
+          "use_case": "Password spray style checks with tight scoping."
+        },
+        {
+          "name": "-t",
+          "type": "flag",
+          "description": "Set the number of parallel tasks.",
+          "use_case": "Control aggressiveness and service impact."
+        },
+        {
+          "name": "-f",
+          "type": "flag",
+          "description": "Stop after a valid login is found for a target.",
+          "use_case": "Reduce noise once the test objective is met."
+        },
+        {
+          "name": "-V",
+          "type": "flag",
+          "description": "Show verbose attempt output.",
+          "use_case": "Useful while tuning the exact login syntax."
+        }
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "ffuf",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "impacket-smbserver",
+      "summary": "Impacket helper for standing up a temporary SMB share to receive files, host tooling, or support controlled relay and staging workflows.",
+      "syntax": "smbserver.py <SHARE_NAME> <SHARE_PATH> [options]",
+      "parameters": [
+        {
+          "name": "<SHARE_NAME>",
+          "description": "Name exposed to connecting clients."
+        },
+        {
+          "name": "<SHARE_PATH>",
+          "description": "Local directory to export over SMB."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-username",
+          "type": "flag",
+          "description": "Require a specific username.",
+          "use_case": "Add basic access control when the share should not be anonymous."
+        },
+        {
+          "name": "-password",
+          "type": "flag",
+          "description": "Require a specific password.",
+          "use_case": "Pair with -username for controlled access to the served content."
+        },
+        {
+          "name": "-smb2support",
+          "type": "flag",
+          "description": "Enable SMB2 support.",
+          "use_case": "Improve compatibility with modern Windows hosts and tools."
+        },
+        {
+          "name": "-ip",
+          "type": "flag",
+          "description": "Bind the server to a specific local IP.",
+          "use_case": "Control which interface is exposed during a test."
+        },
+        {
+          "name": "-port",
+          "type": "flag",
+          "description": "Choose a listening port.",
+          "use_case": "Handle lab constraints or non-default test paths."
+        },
+        {
+          "name": "-comment",
+          "type": "flag",
+          "description": "Set a share comment.",
+          "use_case": "Label the share intentionally when multiple operator services are active."
+        }
+      ],
+      "notes": [
+        "A temporary SMB share is easy to forget later, so document why it exists and remove it as soon as the workflow is complete.",
+        "Prefer explicit credentials and interface binding when the share is supporting a controlled relay or staging path."
+      ],
+      "related_tools": [
+        "smbclient",
+        "ntlmrelayx.py",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "InQL",
+      "summary": "Burp Suite extension for advanced GraphQL testing with schema analysis, query generation, engine fingerprinting, and batch attack support.",
+      "syntax": "Burp extension -> analyze GraphQL endpoint or schema",
+      "parameters": [
+        {
+          "name": "GraphQL endpoint or schema file",
+          "description": "Target endpoint or local introspection schema to analyze."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Scanner",
+          "type": "panel",
+          "description": "Analyze an endpoint or schema and generate queries, mutations, and subscriptions.",
+          "use_case": "Organize the schema into something directly testable."
+        },
+        {
+          "name": "Batch Queries",
+          "type": "panel",
+          "description": "Run batch GraphQL attacks.",
+          "use_case": "Test batching or weak rate limiting deliberately."
+        },
+        {
+          "name": "Engine Fingerprinting",
+          "type": "panel",
+          "description": "Fingerprint the backend GraphQL technology.",
+          "use_case": "Shape follow-on tests around the actual implementation."
+        },
+        {
+          "name": "GraphiQL / Voyager",
+          "type": "feature",
+          "description": "Send analyzed schemas into GraphiQL and Voyager helpers.",
+          "use_case": "Visualize and interact with recovered or introspected schema data."
+        },
+        {
+          "name": "Custom headers",
+          "type": "feature",
+          "description": "Set per-domain headers for scans and generated queries.",
+          "use_case": "Keep tenant or auth context correct while enumerating the API."
+        }
+      ],
+      "notes": [
+        "InQL is most useful after you identify the GraphQL endpoint and preserve the right headers or tokens for the target tenant or user context.",
+        "Generated queries are a great starting point, but trim them to the exact data flow you are validating."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "GraphQLMap",
+        "Clairvoyance"
+      ]
+    },
+    {
+      "name": "interactsh-client",
+      "summary": "Out-of-band interaction client for generating callback endpoints, polling for hits, and proving that a server-side sink reached your controlled infrastructure.",
+      "syntax": "interactsh-client [flags]",
+      "parameters": [
+        {
+          "name": "-s <SERVER>",
+          "description": "Interactsh server to use."
+        },
+        {
+          "name": "-o <FILE>",
+          "description": "Optional output file for captured interactions."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-s, -server",
+          "type": "flag",
+          "description": "Set one or more interactsh servers.",
+          "use_case": "Route callbacks to the infrastructure you intend to monitor."
+        },
+        {
+          "name": "-t, -token",
+          "type": "flag",
+          "description": "Authenticate to a protected interactsh server.",
+          "use_case": "Use private or self-hosted deployments safely."
+        },
+        {
+          "name": "-pi, -poll-interval",
+          "type": "flag",
+          "description": "Control polling frequency.",
+          "use_case": "Tune how quickly you want to observe blind callbacks."
+        },
+        {
+          "name": "-dns-only / -http-only / -smtp-only",
+          "type": "flag",
+          "description": "Filter displayed interaction types.",
+          "use_case": "Separate the callback channel you care about from background noise."
+        },
+        {
+          "name": "-json",
+          "type": "flag",
+          "description": "Write JSONL output.",
+          "use_case": "Feed callbacks into evidence or parsing workflows cleanly."
+        },
+        {
+          "name": "-ps, -payload-store",
+          "type": "flag",
+          "description": "Store generated payloads to a file.",
+          "use_case": "Keep the exact callback values tied to the triggering requests."
+        }
+      ],
+      "notes": [
+        "Interactsh is strongest when every generated payload stays tied to the exact request, field, or workflow that should have triggered it.",
+        "ProjectDiscovery documents both public and self-hosted server paths, so choose the one that fits privacy and evidence requirements."
+      ],
+      "related_tools": [
+        "commix",
+        "Dalfox",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "john",
+      "summary": "Flexible offline cracker that shines when you know the format, choose the right mode deliberately, and use show/report flows cleanly.",
+      "syntax": "john [--format=<FORMAT>] [--wordlist=<FILE>] [--rules] <HASH_FILE>",
+      "parameters": [
+        {
+          "name": "<FORMAT>",
+          "description": "John format name, used when auto-detection is unclear or you want to force the right parser."
+        },
+        {
+          "name": "<FILE>",
+          "description": "Wordlist or hash file used for the current run."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "--format",
+          "type": "flag",
+          "description": "Force a specific hash format.",
+          "use_case": "Useful when auto-detection is ambiguous or you only want one parser."
+        },
+        {
+          "name": "--wordlist",
+          "type": "flag",
+          "description": "Run wordlist mode against a chosen file.",
+          "use_case": "Targeted cracking with a controlled candidate source."
+        },
+        {
+          "name": "--rules",
+          "type": "flag",
+          "description": "Apply mangling rules during wordlist mode.",
+          "use_case": "Expand candidates without switching to a completely different attack path."
+        },
+        {
+          "name": "--single",
+          "type": "flag",
+          "description": "Use single crack mode.",
+          "use_case": "Start with user-derived guesses when identity context matters."
+        },
+        {
+          "name": "--show",
+          "type": "flag",
+          "description": "Show cracked passwords from the potfile for the given hash file.",
+          "use_case": "Reporting and review without rerunning the crack."
+        }
+      ],
+      "notes": [
+        "John’s default flow can work well, but forcing the correct format often saves more time than trying more wordlists.",
+        "Use --show early and often so cracked results stay tied to the original source file."
+      ],
+      "related_tools": [
+        "hashcat",
+        "CeWL",
+        "Hydra"
+      ]
+    },
+    {
+      "name": "Joomscan",
+      "summary": "OWASP Joomla scanner for identifying version clues, components, common misconfigurations, backups, and other Joomla-specific exposure points.",
+      "syntax": "joomscan.pl -u <URL> [options]",
+      "parameters": [
+        {
+          "name": "-u <URL>",
+          "description": "Joomla target URL or domain."
+        },
+        {
+          "name": "--cookie <STRING>",
+          "description": "Optional cookie header for authenticated or stateful scans."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u, --url",
+          "type": "flag",
+          "description": "Set the Joomla URL or domain to scan.",
+          "use_case": "Run default Joomla validation against one host."
+        },
+        {
+          "name": "-ec, --enumerate-components",
+          "type": "flag",
+          "description": "Enumerate installed components.",
+          "use_case": "Surface extension attack surface before deeper manual review."
+        },
+        {
+          "name": "--cookie",
+          "type": "flag",
+          "description": "Send a supplied cookie during the scan.",
+          "use_case": "Test authenticated or partially authenticated Joomla areas."
+        },
+        {
+          "name": "-a, --user-agent",
+          "type": "flag",
+          "description": "Set a custom User-Agent string.",
+          "use_case": "Match browser traffic or engagement-specific header expectations."
+        },
+        {
+          "name": "-r, --random-agent",
+          "type": "flag",
+          "description": "Use a random User-Agent.",
+          "use_case": "Vary basic client fingerprinting during repeated scans."
+        },
+        {
+          "name": "--proxy",
+          "type": "flag",
+          "description": "Route the scan through a proxy.",
+          "use_case": "Capture and inspect scanner requests in Burp or ZAP."
+        },
+        {
+          "name": "--update",
+          "type": "flag",
+          "description": "Update to the latest version.",
+          "use_case": "Refresh scanner logic before relying on results."
+        }
+      ],
+      "notes": [
+        "The OWASP README highlights both version and component enumeration, but each finding still needs manual confirmation and context before it becomes a real issue.",
+        "Joomscan is especially useful when you already know the target is Joomla and want CMS-specific depth quickly."
+      ],
+      "related_tools": [
+        "WhatWeb",
+        "Burp Suite",
+        "ffuf"
+      ]
+    },
+    {
+      "name": "jq",
+      "summary": "JSON filter and pretty-printer that turns API or structured tool output into something you can actually reason about quickly.",
+      "syntax": "jq '<filter>' <FILE_OR_STDIN>",
+      "parameters": [
+        {
+          "name": "<filter>",
+          "description": "jq expression used to transform or extract data."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Output raw strings.",
+          "use_case": "Cleaner shell pipelines and list generation."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Compact output.",
+          "use_case": "One-line-per-object processing in pipelines."
+        },
+        {
+          "name": "keys",
+          "type": "filter",
+          "description": "List object keys.",
+          "use_case": "Quick schema orientation when you do not yet know the JSON shape."
+        }
+      ],
+      "notes": [
+        "jq is one of the fastest ways to make API responses and tool output small enough to think about.",
+        "Save the exact filter you used when it becomes part of your workflow or evidence prep."
+      ],
+      "related_tools": [
+        "httpie",
+        "GraphQLMap",
+        "httpx"
+      ]
+    },
+    {
+      "name": "jwt-tool",
+      "summary": "JWT helper for decoding tokens, checking claims, and testing signing assumptions after you understand the auth flow.",
+      "syntax": "jwt-tool <TOKEN> [operation flags]",
+      "parameters": [
+        {
+          "name": "<TOKEN>",
+          "description": "JWT string captured from the application."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Decode and inspect token contents.",
+          "use_case": "Review header, claims, expiry, and role material."
+        },
+        {
+          "name": "-S",
+          "type": "flag",
+          "description": "Set the signature algorithm to test.",
+          "use_case": "Model or verify signing assumptions during token checks."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Supply a candidate wordlist or secret source.",
+          "use_case": "Scoped HS256-style secret testing."
+        }
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Browser DevTools",
+        "httpie"
+      ]
+    },
+    {
+      "name": "Katana",
+      "summary": "Web crawler for route discovery, asset expansion, and route coverage beyond the links you already know about.",
+      "syntax": "katana -u <URL> [crawl flags]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Seed URL to crawl."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the starting URL.",
+          "use_case": "Scope the crawl to a chosen application or route."
+        },
+        {
+          "name": "-headless",
+          "type": "flag",
+          "description": "Use headless browser capabilities during crawling.",
+          "use_case": "Pick up routes that depend on client-side rendering."
+        },
+        {
+          "name": "-jc",
+          "type": "flag",
+          "description": "Enable JavaScript crawling support.",
+          "use_case": "Expand coverage on JS-heavy applications."
+        }
+      ],
+      "related_tools": [
+        "httpx",
+        "waybackurls",
+        "Browser DevTools"
+      ]
+    },
+    {
+      "name": "kerbrute",
+      "summary": "Kerberos-focused username and password testing tool that is fast enough to be useful and dangerous enough to require explicit lockout awareness.",
+      "syntax": "kerbrute [command] -d <DOMAIN> [--dc <DC>] <input>",
+      "parameters": [
+        {
+          "name": "<DOMAIN>",
+          "description": "Target AD domain such as corp.local."
+        },
+        {
+          "name": "<input>",
+          "description": "Username list, credential combo list, or password list depending on the chosen subcommand."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "userenum",
+          "type": "command",
+          "description": "Enumerate valid usernames via Kerberos.",
+          "use_case": "Build a clean identity list before later auth testing."
+        },
+        {
+          "name": "passwordspray",
+          "type": "command",
+          "description": "Test one password across a list of users.",
+          "use_case": "Measured horizontal testing when policy and timing are understood."
+        },
+        {
+          "name": "--dc",
+          "type": "flag",
+          "description": "Target a specific domain controller.",
+          "use_case": "Avoid DNS ambiguity or keep the traffic pointed where you expect."
+        },
+        {
+          "name": "-t",
+          "type": "flag",
+          "description": "Set thread count.",
+          "use_case": "Throttle concurrency to fit the environment and lockout risk."
+        },
+        {
+          "name": "--safe",
+          "type": "flag",
+          "description": "Abort if a lockout is detected.",
+          "use_case": "Protect the rest of the target list during spray-style work."
+        },
+        {
+          "name": "--hash-file",
+          "type": "flag",
+          "description": "Write any captured AS-REP hashes to a file.",
+          "use_case": "Hand off roast material into offline cracking cleanly."
+        }
+      ],
+      "notes": [
+        "Kerbrute’s README explicitly warns that password testing will increment failed login counts, while user enumeration alone does not.",
+        "Treat thread count, delay, and safe mode as first-class controls, not afterthoughts."
+      ],
+      "related_tools": [
+        "NetExec",
+        "GetNPUsers.py",
+        "hashcat"
+      ]
+    },
+    {
+      "name": "KrbRelayUp",
+      "summary": "Windows wrapper that streamlines local machine Kerberos relay into RBCD or shadow-credential control primitives and then turns them into SYSTEM code execution.",
+      "syntax": "KrbRelayUp.exe <mode> [options]",
+      "parameters": [
+        {
+          "name": "<mode>",
+          "description": "Workflow stage such as relay, spawn, krbscm, or full."
+        },
+        {
+          "name": "-d <FQDN>",
+          "description": "Target domain FQDN for the Kerberos relay workflow."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "relay",
+          "type": "mode",
+          "description": "Coerce local machine Kerberos auth and relay it into LDAP-backed control over the machine.",
+          "use_case": "First phase of the RBCD or shadowcred path."
+        },
+        {
+          "name": "spawn",
+          "type": "mode",
+          "description": "Use the created control primitive to request a service ticket and create a SYSTEM service.",
+          "use_case": "Second phase after relay succeeds."
+        },
+        {
+          "name": "-m, --Method",
+          "type": "flag",
+          "description": "Choose the abuse method, typically rbcd or shadowcred.",
+          "use_case": "Match the follow-on control path to the environment."
+        },
+        {
+          "name": "-c, --CreateNewComputerAccount",
+          "type": "flag",
+          "description": "Create a new machine account for the RBCD path.",
+          "use_case": "Useful when machine-account quota is still available."
+        },
+        {
+          "name": "-ca, --CAEndpoint",
+          "type": "flag",
+          "description": "Specify the AD CS Web Enrollment endpoint for certificate-assisted paths.",
+          "use_case": "Relay to AD CS instead of LDAP when the environment supports it."
+        },
+        {
+          "name": "-ce, --Certificate",
+          "type": "flag",
+          "description": "Provide the certificate or certificate file used during the shadowcred or AD CS stage.",
+          "use_case": "Bridge relay into PKINIT-backed ticket work."
+        },
+        {
+          "name": "-i, --Impersonate",
+          "type": "flag",
+          "description": "Select the user to impersonate during the SPAWN phase.",
+          "use_case": "Choose the local administrator context that will produce the SYSTEM service ticket path."
+        },
+        {
+          "name": "-sc, --ServiceCommand",
+          "type": "flag",
+          "description": "Command line for the service created by SPAWN or krbscm.",
+          "use_case": "Keep the proof command minimal and attributable."
+        }
+      ],
+      "notes": [
+        "KrbRelayUp only makes sense when the domain prerequisites are satisfied. LDAP signing, channel binding, machine-account quota, and the chosen abuse method all change whether the chain works.",
+        "Treat RELAY and SPAWN as two separate checkpoints in your notes so you can explain exactly where the path succeeded or failed."
+      ],
+      "related_tools": [
+        "Rubeus",
+        "Certipy",
+        "krbrelayx"
+      ]
+    },
+    {
+      "name": "krbrelayx",
+      "summary": "Kerberos relay and unconstrained delegation abuse toolkit that also ships helper utilities for DNS, SPN, and authentication trigger workflows.",
+      "syntax": "krbrelayx.py -t <TARGET_URL> [options]",
+      "parameters": [
+        {
+          "name": "<TARGET_URL>",
+          "description": "Target service URL such as ldap://dc or smb://host that matches the intended relay path."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "krbrelayx.py",
+          "type": "entrypoint",
+          "description": "Main Kerberos relay utility.",
+          "use_case": "Relay and delegation workflows tied to a known target service."
+        },
+        {
+          "name": "printerbug.py",
+          "type": "helper",
+          "description": "Trigger the SpoolService bug to induce backconnect authentication.",
+          "use_case": "Authentication trigger support when the environment justifies it."
+        },
+        {
+          "name": "dnstool.py",
+          "type": "helper",
+          "description": "Query or modify AD-integrated DNS records.",
+          "use_case": "DNS record operations within the same toolkit family."
+        },
+        {
+          "name": "addspn.py",
+          "type": "helper",
+          "description": "Query or modify SPN values.",
+          "use_case": "Service principal management during delegation-focused workflows."
+        }
+      ],
+      "notes": [
+        "The README frames krbrelayx as a toolkit, so keep the main relay step tied to the helper you used to create or validate the incoming auth path.",
+        "Write down the target service, SPN assumptions, and any trigger tool you paired with it."
+      ],
+      "related_tools": [
+        "ntlmrelayx.py",
+        "findDelegation.py",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "ldapsearch",
+      "summary": "Direct LDAP client for pulling structured directory data when you want to stay close to the source object model.",
+      "syntax": "ldapsearch -x -H ldap://<TARGET> -D '<BIND_DN>' -w '<PASSWORD>' -b '<BASE_DN>' <FILTER> [attributes]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "LDAP server or domain controller."
+        },
+        {
+          "name": "<BIND_DN>",
+          "description": "Bind user or DN used for authenticated queries."
+        },
+        {
+          "name": "<BASE_DN>",
+          "description": "Search base such as DC=corp,DC=local."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Use simple authentication.",
+          "use_case": "Common for straightforward LDAP bind workflows."
+        },
+        {
+          "name": "-H",
+          "type": "flag",
+          "description": "Specify the LDAP URI.",
+          "use_case": "Point queries at the exact controller or protocol path you want."
+        },
+        {
+          "name": "-D",
+          "type": "flag",
+          "description": "Set the bind DN or user.",
+          "use_case": "Authenticated directory enumeration."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Supply the bind password.",
+          "use_case": "Non-interactive query flows and saved examples."
+        },
+        {
+          "name": "-b",
+          "type": "flag",
+          "description": "Set the search base.",
+          "use_case": "Keep queries scoped to the domain partition you actually want."
+        },
+        {
+          "name": "-LLL",
+          "type": "flag",
+          "description": "Produce cleaner LDIF output.",
+          "use_case": "Easier filtering, parsing, and note-taking."
+        }
+      ],
+      "notes": [
+        "LDAP queries are most useful when you ask for just the attributes that matter to the current question.",
+        "Use LDAP as the structured baseline, then cross-check surprising findings with RPC, SMB, or BloodHound data."
+      ],
+      "related_tools": [
+        "NetExec",
+        "bloodhound-python",
+        "rpcclient"
+      ]
+    },
+    {
+      "name": "linpeas",
+      "summary": "Linux privilege-escalation helper script for broad local checks after you already understand the host and scope.",
+      "syntax": "./linpeas.sh",
+      "parameters": [],
+      "reference_items": [
+        {
+          "name": "./linpeas.sh",
+          "type": "entrypoint",
+          "description": "Run the script from the current directory.",
+          "use_case": "Fast privilege-escalation sweep after manual baselining."
+        }
+      ],
+      "notes": [
+        "Use linpeas after the lighter manual checks so the output is easier to interpret and defend."
+      ],
+      "related_tools": [
+        "sudo",
+        "find",
+        "getcap"
+      ]
+    },
+    {
+      "name": "lookupsid.py",
+      "summary": "Impacket SID lookup helper for RID-driven identity discovery when you want a second protocol view of who exists in the domain.",
+      "syntax": "lookupsid.py <DOMAIN>/<USER>:<PASSWORD>@<TARGET>",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Domain controller or reachable Windows host used for SID lookups."
+        }
+      ],
+      "reference_items": [],
+      "notes": [
+        "Use RID-based lookups as a cross-check against LDAP and RPC results, especially when you are validating naming structure quickly.",
+        "Keep the host and credential path written down because SID results are easiest to reason about in context."
+      ],
+      "related_tools": [
+        "rpcclient",
+        "ldapsearch",
+        "GetADUsers.py"
+      ]
+    },
+    {
+      "name": "msfconsole",
+      "summary": "Primary Metasploit console for loading modules, setting options, running resource scripts, and keeping exploit or post-exploitation work structured.",
+      "syntax": "msfconsole [options]",
+      "parameters": [
+        {
+          "name": "-r <FILE>",
+          "description": "Resource file to execute on startup."
+        },
+        {
+          "name": "-x <COMMANDS>",
+          "description": "Semicolon-separated console commands to run immediately."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-q",
+          "type": "flag",
+          "description": "Suppress the banner at startup.",
+          "use_case": "Cleaner automation, logging, or repeated short console sessions."
+        },
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Execute a resource script.",
+          "use_case": "Replay a tested workflow without retyping every console step."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Run commands on startup.",
+          "use_case": "Script simple one-shot tasks or lab validation flows."
+        },
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Write console output to a file.",
+          "use_case": "Preserve a usable artifact of module output and operator actions."
+        },
+        {
+          "name": "--no-database",
+          "type": "flag",
+          "description": "Disable database support.",
+          "use_case": "Lightweight sessions when you do not need workspace-backed state."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Load a plugin on startup.",
+          "use_case": "Prepare a specialized workflow before the console fully opens."
+        }
+      ],
+      "notes": [
+        "The biggest quality-of-life gain in msfconsole usually comes from resource files and clean option discipline, not from more modules.",
+        "Keep generated artifacts and listener state documented so Metasploit actions stay reproducible outside the live session."
+      ],
+      "related_tools": [
+        "msfvenom",
+        "NetExec",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "msfvenom",
+      "summary": "Standalone Metasploit payload generator for building, formatting, and optionally encoding payloads when delivery requirements are already defined.",
+      "syntax": "msfvenom -p <PAYLOAD> [payload options] -f <FORMAT> [options]",
+      "parameters": [
+        {
+          "name": "-p <PAYLOAD>",
+          "description": "Payload to generate, or -/stdin for custom shellcode."
+        },
+        {
+          "name": "-f <FORMAT>",
+          "description": "Output format such as exe, raw, elf, python, or powershell."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-l, --list",
+          "type": "flag",
+          "description": "List payloads, encoders, formats, and other module types.",
+          "use_case": "Choose a payload path deliberately instead of guessing names."
+        },
+        {
+          "name": "--list-options",
+          "type": "flag",
+          "description": "Show the options for the selected payload.",
+          "use_case": "Confirm exactly which values must be set before generation."
+        },
+        {
+          "name": "-b, --bad-chars",
+          "type": "flag",
+          "description": "Avoid specified bytes in the payload.",
+          "use_case": "Adapt shellcode for filters or protocol-specific constraints."
+        },
+        {
+          "name": "-e, --encoder",
+          "type": "flag",
+          "description": "Apply a specific encoder.",
+          "use_case": "Handle formatting constraints while knowing encoding is not a magic evasion layer."
+        },
+        {
+          "name": "-i, --iterations",
+          "type": "flag",
+          "description": "Repeat encoder passes.",
+          "use_case": "Test payload transformations intentionally in a lab or controlled workflow."
+        },
+        {
+          "name": "-x, --template",
+          "type": "flag",
+          "description": "Use a custom executable template.",
+          "use_case": "Build payloads that must match a particular carrier format."
+        },
+        {
+          "name": "-k, --keep",
+          "type": "flag",
+          "description": "Keep the template behavior and inject as a new thread.",
+          "use_case": "Pair with templates when you understand the target compatibility tradeoffs."
+        },
+        {
+          "name": "-o, --out",
+          "type": "flag",
+          "description": "Write output to a file.",
+          "use_case": "Keep payload generation artifacts versioned and attributable."
+        }
+      ],
+      "notes": [
+        "Metasploit documents that encoding is mainly for payload formatting constraints, not as a reliable antivirus evasion strategy.",
+        "Choose the payload, architecture, platform, and format from the target delivery path backward instead of from habit."
+      ],
+      "related_tools": [
+        "msfconsole",
+        "PowerShell",
+        "python3"
+      ]
+    },
+    {
+      "name": "Naabu",
+      "summary": "Fast port scanner built for quick reachability and port triage before you hand confirmed hosts into heavier service validation.",
+      "syntax": "naabu -host <TARGET> [options] or naabu -list <HOSTS_FILE> [options]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Single target host or IP."
+        },
+        {
+          "name": "<HOSTS_FILE>",
+          "description": "File containing hosts or URLs to probe."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-host",
+          "type": "flag",
+          "description": "Set one or more hosts directly.",
+          "use_case": "Quick port triage on a focused target."
+        },
+        {
+          "name": "-list",
+          "type": "flag",
+          "description": "Load targets from a file.",
+          "use_case": "Batch scanning after a recon pipeline."
+        },
+        {
+          "name": "-top-ports",
+          "type": "flag",
+          "description": "Scan the most common ports first.",
+          "use_case": "Fast initial coverage before broader scans."
+        },
+        {
+          "name": "-rate",
+          "type": "flag",
+          "description": "Control probe rate.",
+          "use_case": "Tune speed to the engagement and network tolerance."
+        },
+        {
+          "name": "-nmap-cli",
+          "type": "flag",
+          "description": "Hand confirmed ports to Nmap.",
+          "use_case": "Bridge fast discovery into deeper service validation."
+        }
+      ],
+      "notes": [
+        "Naabu is best used as a first-pass finder, not the last word on what a service actually is.",
+        "Pair it with a saved output path or Nmap handoff so the discovery phase remains reproducible."
+      ],
+      "related_tools": [
+        "Nmap",
+        "httpx",
+        "Subfinder"
+      ]
+    },
+    {
+      "name": "NetExec",
+      "summary": "AD and Windows operator framework for checking credentials, enumerating protocol-specific data, and validating execution or abuse paths from one interface.",
+      "syntax": "nxc <protocol> <target> -u <user> -p <password> [module flags]",
+      "parameters": [
+        {
+          "name": "<protocol>",
+          "description": "Protocol family such as smb, winrm, ldap, ssh, or mssql."
+        },
+        {
+          "name": "<target>",
+          "description": "Single host, range, CIDR, or file-based target set."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Username or username file.",
+          "use_case": "Authenticate or enumerate across one or more targets."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Password or password file.",
+          "use_case": "Post-auth enumeration or scoped password testing."
+        },
+        {
+          "name": "--shares",
+          "type": "flag",
+          "description": "Enumerate available SMB shares.",
+          "use_case": "Quick access validation after credentials land."
+        },
+        {
+          "name": "--sessions",
+          "type": "flag",
+          "description": "Enumerate live SMB sessions.",
+          "use_case": "Check for active users and lateral movement context."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Execute a command over supported protocols.",
+          "use_case": "Validate execution cleanly once credentials and admin context are proven."
+        },
+        {
+          "name": "--asreproast / --kerberoasting",
+          "type": "flag",
+          "description": "Collect roastable Kerberos material through LDAP workflows.",
+          "use_case": "Move from simple auth success into controlled credential attack paths."
+        },
+        {
+          "name": "-M <MODULE>",
+          "type": "flag",
+          "description": "Load a specific NetExec module.",
+          "use_case": "Use specialized protocol logic without leaving the framework."
+        }
+      ],
+      "notes": [
+        "The NetExec wiki notes that special characters in usernames or passwords should be quoted so your shell does not mutate them first.",
+        "Treat the Pwn3d-style execution signal as a hypothesis you still validate with the least-invasive action that proves the access path."
+      ],
+      "related_tools": [
+        "bloodhound-python",
+        "kerbrute",
+        "rpcclient"
+      ]
+    },
+    {
+      "name": "Nikto",
+      "summary": "Broad web server and misconfiguration scanner that works best after you have already decided the host deserves a noisier validation pass.",
+      "syntax": "nikto -h <URL_OR_HOST> [options]",
+      "parameters": [
+        {
+          "name": "<URL_OR_HOST>",
+          "description": "Target host or full URL."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-h",
+          "type": "flag",
+          "description": "Set the target host or URL.",
+          "use_case": "Point Nikto at the exact service you chose to validate."
+        },
+        {
+          "name": "-ssl",
+          "type": "flag",
+          "description": "Force SSL.",
+          "use_case": "HTTPS services that need explicit scheme handling."
+        },
+        {
+          "name": "-output",
+          "type": "flag",
+          "description": "Write results to a file.",
+          "use_case": "Preserve a reviewable scan artifact."
+        },
+        {
+          "name": "-Format",
+          "type": "flag",
+          "description": "Choose output format.",
+          "use_case": "Align results with your reporting or parsing workflow."
+        }
+      ],
+      "notes": [
+        "Nikto is noisy by design, so only run it after the target and scope justify that noise.",
+        "Treat Nikto findings as leads to verify manually, not final conclusions."
+      ],
+      "related_tools": [
+        "Nuclei",
+        "WhatWeb",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "Nmap",
+      "summary": "Host discovery, port scanning, service detection, and NSE-backed validation for network exposure you can defend in a report.",
+      "syntax": "nmap [scan options] [port options] <TARGET>",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Single host, hostname, range, or CIDR to scan."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-sn",
+          "type": "flag",
+          "description": "Ping scan only and skip port scanning.",
+          "use_case": "Quickly identify live hosts before deeper scans."
+        },
+        {
+          "name": "-sV",
+          "type": "flag",
+          "description": "Probe open ports to determine service and version details.",
+          "use_case": "Turn open ports into actionable service context."
+        },
+        {
+          "name": "-sC",
+          "type": "flag",
+          "description": "Run the default NSE script set.",
+          "use_case": "Low-noise service validation after host confirmation."
+        },
+        {
+          "name": "-Pn",
+          "type": "flag",
+          "description": "Treat targets as online and skip host discovery.",
+          "use_case": "Useful when discovery probes are filtered."
+        },
+        {
+          "name": "-p-",
+          "type": "flag",
+          "description": "Scan the full TCP port range.",
+          "use_case": "Broaden coverage when top ports are not enough."
+        },
+        {
+          "name": "-sU",
+          "type": "flag",
+          "description": "Run a UDP scan.",
+          "use_case": "Add common UDP coverage after TCP triage."
+        },
+        {
+          "name": "--top-ports",
+          "type": "flag",
+          "description": "Scan the most common ports first.",
+          "use_case": "Fast initial coverage with controlled scope."
+        },
+        {
+          "name": "-oA",
+          "type": "flag",
+          "description": "Write normal, XML, and grepable output with one basename.",
+          "use_case": "Keep evidence, parsing, and later reporting aligned."
+        }
+      ],
+      "related_tools": [
+        "Naabu",
+        "Nmap NSE",
+        "Nuclei"
+      ]
+    },
+    {
+      "name": "Nmap NSE",
+      "summary": "Nmap Scripting Engine workflow for attaching script logic to host and service discovery once you already know why those scripts belong in scope.",
+      "syntax": "nmap --script <SCRIPT_OR_CATEGORY> [--script-args <ARGS>] <TARGET>",
+      "parameters": [
+        {
+          "name": "<SCRIPT_OR_CATEGORY>",
+          "description": "Specific script, comma-separated list, or category such as default, vuln, auth, or safe."
+        },
+        {
+          "name": "--script-args <ARGS>",
+          "description": "Arguments passed to the selected scripts."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-sC",
+          "type": "flag",
+          "description": "Run the default script set.",
+          "use_case": "Add quick script coverage to a service scan without hand-picking every script."
+        },
+        {
+          "name": "--script",
+          "type": "flag",
+          "description": "Choose scripts, categories, or directories manually.",
+          "use_case": "Target the exact service logic you care about."
+        },
+        {
+          "name": "--script-args",
+          "type": "flag",
+          "description": "Pass parameters into selected scripts.",
+          "use_case": "Tune authentication, paths, or protocol details cleanly."
+        },
+        {
+          "name": "--script-help",
+          "type": "flag",
+          "description": "Show help for the selected scripts.",
+          "use_case": "Understand what a script really does before running it."
+        },
+        {
+          "name": "--script-trace",
+          "type": "flag",
+          "description": "Trace script traffic.",
+          "use_case": "Debug behavior or show exactly what the script sent on the wire."
+        },
+        {
+          "name": "--script-updatedb",
+          "type": "flag",
+          "description": "Refresh the local script database.",
+          "use_case": "Pick up new or custom scripts before use."
+        }
+      ],
+      "notes": [
+        "Nmap warns that scripts are not sandboxed, so third-party or intrusive NSE content should be treated with the same care as any executable code.",
+        "The best NSE usage usually starts from a known port, service, or hypothesis rather than from dumping every available category on a host."
+      ],
+      "related_tools": [
+        "Nmap",
+        "SMBMap",
+        "snmpwalk"
+      ]
+    },
+    {
+      "name": "ntlmrelayx.py",
+      "summary": "Impacket relay framework for receiving NTLM authentication and forwarding it to controlled target services with explicit scope.",
+      "syntax": "ntlmrelayx.py [relay server options] [-t TARGET] [-tf TARGETS_FILE] [-socks]",
+      "parameters": [
+        {
+          "name": "TARGET",
+          "description": "Single relay destination such as smb://host or ldap://dc."
+        },
+        {
+          "name": "TARGETS_FILE",
+          "description": "File containing the relay targets you want to allow."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-tf",
+          "type": "flag",
+          "description": "Load relay targets from a file.",
+          "use_case": "Keep the destination set explicit and reviewable."
+        },
+        {
+          "name": "-t",
+          "type": "flag",
+          "description": "Relay to a single target.",
+          "use_case": "Narrow proof-of-access workflows."
+        },
+        {
+          "name": "-smb2support",
+          "type": "flag",
+          "description": "Enable SMB2 support.",
+          "use_case": "Modern Windows relay targets."
+        },
+        {
+          "name": "-socks",
+          "type": "flag",
+          "description": "Expose relayed sessions through a SOCKS interface.",
+          "use_case": "Reuse successful relay access deliberately across later tooling."
+        },
+        {
+          "name": "--delegate-access",
+          "type": "flag",
+          "description": "Attempt delegation access changes for a relayed computer account.",
+          "use_case": "Environment-specific AD relay workflows after validation."
+        }
+      ],
+      "notes": [
+        "Relay tooling only makes sense when you already understand the trigger path, target service, and what a successful relay would actually prove.",
+        "Keep a target file, a session note, and a follow-on access plan together from the start."
+      ],
+      "related_tools": [
+        "NetExec",
+        "krbrelayx",
+        "secretsdump.py"
+      ]
+    },
+    {
+      "name": "Nuclei",
+      "summary": "Template-driven validation engine for focused checks after you already know what is live and worth testing.",
+      "syntax": "nuclei -l <INPUT_FILE> [template selectors] [rate flags]",
+      "parameters": [
+        {
+          "name": "<INPUT_FILE>",
+          "description": "File of hosts or URLs to check."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "Read targets from a file.",
+          "use_case": "Point nuclei at the live set you already validated."
+        },
+        {
+          "name": "-severity",
+          "type": "flag",
+          "description": "Limit execution to chosen severity levels.",
+          "use_case": "Keep runs aligned with the signal you care about."
+        },
+        {
+          "name": "-tags",
+          "type": "flag",
+          "description": "Run templates associated with chosen tags.",
+          "use_case": "Target checks like ssrf, ssti, xxe, exposure, or tech."
+        },
+        {
+          "name": "-rate-limit",
+          "type": "flag",
+          "description": "Throttle request volume.",
+          "use_case": "Stay deliberate on sensitive targets."
+        },
+        {
+          "name": "-rl",
+          "type": "flag",
+          "description": "Short form rate limiting flag in some runs.",
+          "use_case": "Keep template execution controlled."
+        }
+      ],
+      "related_tools": [
+        "httpx",
+        "Nmap",
+        "ffuf"
+      ]
+    },
+    {
+      "name": "OWASP ZAP",
+      "summary": "Open-source web testing proxy and DAST platform for capturing traffic, exploring an app, and scaling repeatable scans once the app state is understood.",
+      "syntax": "ZAP desktop or zap.sh -cmd [automation options]",
+      "parameters": [
+        {
+          "name": "Context",
+          "description": "Sites, auth rules, and scope boundaries that tell ZAP what belongs in the test."
+        },
+        {
+          "name": "Captured session",
+          "description": "Authenticated or stateful traffic that makes scanning results meaningful."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Quick Start",
+          "type": "panel",
+          "description": "Guided starting point for manual explore, automated scan, and spider workflows.",
+          "use_case": "Bring a target into ZAP quickly without losing scope awareness."
+        },
+        {
+          "name": "Sites Tree",
+          "type": "panel",
+          "description": "Structured view of discovered routes and content.",
+          "use_case": "Review coverage and select exact requests for manual follow-up."
+        },
+        {
+          "name": "History",
+          "type": "panel",
+          "description": "Traffic log of what ZAP has actually seen.",
+          "use_case": "Use it as the source material for replay, auth review, and evidence."
+        },
+        {
+          "name": "Spider",
+          "type": "feature",
+          "description": "Crawl and enumerate reachable application content.",
+          "use_case": "Expand coverage before committing to active testing."
+        },
+        {
+          "name": "Active Scan",
+          "type": "feature",
+          "description": "Probe for vulnerabilities using active requests.",
+          "use_case": "Run only after scope, auth, and app stability are understood."
+        },
+        {
+          "name": "Automation Framework",
+          "type": "feature",
+          "description": "Define repeatable ZAP workflows as automation plans.",
+          "use_case": "Turn a validated desktop flow into something rerunnable."
+        }
+      ],
+      "notes": [
+        "ZAP becomes much more reliable when contexts and authentication are configured before scanning.",
+        "Treat automated alerts as leads and keep the exact request or workflow that produced them."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Browser DevTools",
+        "curl"
+      ]
+    },
+    {
+      "name": "Param Miner",
+      "summary": "PortSwigger Burp extension for discovering hidden parameters, headers, and cookies that can unlock unexpected behavior and web cache issues.",
+      "syntax": "Burp extension -> guess params / headers / cookies from a selected request",
+      "parameters": [
+        {
+          "name": "selected request",
+          "description": "A request worth mining for hidden inputs."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Guess params",
+          "type": "action",
+          "description": "Guess hidden query or body parameters.",
+          "use_case": "Discover unlinked inputs that change server behavior."
+        },
+        {
+          "name": "Guess headers",
+          "type": "action",
+          "description": "Guess supported headers.",
+          "use_case": "Find cache, routing, or internal behavior toggles."
+        },
+        {
+          "name": "Guess cookies",
+          "type": "action",
+          "description": "Guess hidden cookie names.",
+          "use_case": "Surface alternate session or feature controls."
+        },
+        {
+          "name": "auto-mining",
+          "type": "feature",
+          "description": "Harvest additional words from in-scope traffic.",
+          "use_case": "Improve parameter guesses with target-specific vocabulary."
+        },
+        {
+          "name": "binary search technique",
+          "type": "feature",
+          "description": "Guess large parameter sets efficiently.",
+          "use_case": "Scale hidden-input testing without manually handcrafting wordlists."
+        }
+      ],
+      "notes": [
+        "Param Miner is especially useful for web cache poisoning and hidden-input discovery, but the responses still need manual interpretation.",
+        "Run it against meaningful requests and stable endpoints so the diffs reflect real server logic rather than jitter."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "HTTP Request Smuggler",
+        "qsreplace"
+      ]
+    },
+    {
+      "name": "PetitPotam",
+      "summary": "EFSRPC coercion helper that makes a target authenticate to your chosen UNC listener so you can validate or drive a relay or capture workflow.",
+      "syntax": "petitpotam.py [options] <TARGET> <UNC_PATH>",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Hostname, IP, or authentication target that should be coerced."
+        },
+        {
+          "name": "<UNC_PATH>",
+          "description": "UNC path that points at the listener or relay host you want the target to contact."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-debug",
+          "type": "flag",
+          "description": "Enable verbose output for connection and method details.",
+          "use_case": "Proof, troubleshooting, and method attribution."
+        },
+        {
+          "name": "-method",
+          "type": "flag",
+          "description": "Force a specific coercion method instead of choosing one at random.",
+          "use_case": "Repeatable testing against patched or partially hardened targets."
+        },
+        {
+          "name": "-pipe",
+          "type": "flag",
+          "description": "Choose the named pipe used for the EFSRPC connection.",
+          "use_case": "Adjust the trigger path when defaults are not ideal."
+        },
+        {
+          "name": "-target-ip",
+          "type": "flag",
+          "description": "Set the target IP explicitly when the hostname or NetBIOS name must stay separate.",
+          "use_case": "Targets that need a trusted name but resolve poorly from the operator box."
+        },
+        {
+          "name": "-hashes",
+          "type": "flag",
+          "description": "Authenticate with NTLM hashes.",
+          "use_case": "When password material is not available but hash auth is."
+        },
+        {
+          "name": "-k / -dc-ip",
+          "type": "flag",
+          "description": "Use Kerberos authentication and pin the domain controller when needed.",
+          "use_case": "Ticket-based coercion workflows in domain contexts."
+        }
+      ],
+      "notes": [
+        "The UNC listener name matters. If the victim treats the listener as untrusted, you may only get anonymous fallback instead of useful authentication.",
+        "Save the exact method and listener name you used, especially if you had to rely on NetBIOS or ADIDNS tricks to make the path work."
+      ],
+      "related_tools": [
+        "Coercer",
+        "Responder",
+        "ntlmrelayx.py"
+      ]
+    },
+    {
+      "name": "PKINITtools",
+      "summary": "Small Linux-focused tools for PKINIT-driven Kerberos workflows such as requesting TGTs from certificates, recovering hashes, and performing S4U2Self ticket requests.",
+      "syntax": "python <tool>.py [options]",
+      "parameters": [
+        {
+          "name": "gettgtpkinit.py",
+          "description": "Request a TGT using a certificate and save it to a ccache."
+        },
+        {
+          "name": "getnthash.py",
+          "description": "Recover an NT hash from a PKINIT-derived TGT using the AS-REP key."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "gettgtpkinit.py",
+          "type": "script",
+          "description": "Request a TGT from a PFX or PEM certificate/key pair.",
+          "use_case": "Convert certificate abuse into a cached Kerberos ticket."
+        },
+        {
+          "name": "getnthash.py",
+          "type": "script",
+          "description": "Use Kerberos U2U with the AS-REP key to recover an NT hash.",
+          "use_case": "Extract hash material from a successful PKINIT path."
+        },
+        {
+          "name": "gets4uticket.py",
+          "type": "script",
+          "description": "Request an S4U2Self service ticket from a machine TGT.",
+          "use_case": "Impersonate a user to a service on the same host when the ticket path allows it."
+        },
+        {
+          "name": "-dc-ip",
+          "type": "flag",
+          "description": "Set the domain controller/KDC explicitly.",
+          "use_case": "Keep certificate-driven ticket requests pinned to the right controller."
+        },
+        {
+          "name": "ccache",
+          "type": "artifact",
+          "description": "Store or consume Kerberos tickets from ccache files.",
+          "use_case": "Chain PKINIT steps cleanly across Linux tooling."
+        }
+      ],
+      "notes": [
+        "PKINITtools is a workflow toolkit more than a single command, so ccache handling and the AS-REP key matter as much as the initial certificate.",
+        "These tools fit especially well when Certipy or another AD CS path gives you certificate material but you want Linux-native Kerberos follow-up."
+      ],
+      "related_tools": [
+        "Certipy",
+        "Rubeus",
+        "GetUserSPNs.py"
+      ]
+    },
+    {
+      "name": "PowerShell",
+      "summary": "Windows scripting and object-oriented shell for local enumeration, service review, networking checks, and file transfer.",
+      "syntax": "PowerShell cmdlet or powershell -c <command>",
+      "parameters": [
+        {
+          "name": "Cmdlet",
+          "description": "PowerShell command such as Get-LocalUser, Get-Service, or Test-NetConnection."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Get-LocalUser",
+          "type": "cmdlet",
+          "description": "List local user accounts.",
+          "use_case": "Quick local identity inventory."
+        },
+        {
+          "name": "Get-LocalGroupMember",
+          "type": "cmdlet",
+          "description": "Show group membership for a chosen local group.",
+          "use_case": "Review who belongs to Administrators and other key groups."
+        },
+        {
+          "name": "Get-NetTCPConnection",
+          "type": "cmdlet",
+          "description": "Inspect TCP connections and listeners.",
+          "use_case": "See service exposure and listening ports from PowerShell."
+        },
+        {
+          "name": "Get-Service",
+          "type": "cmdlet",
+          "description": "Inspect system services and status.",
+          "use_case": "Service triage during host orientation."
+        },
+        {
+          "name": "Test-NetConnection",
+          "type": "cmdlet",
+          "description": "Check network reachability and ports.",
+          "use_case": "Validate connectivity before protocol-specific tooling."
+        },
+        {
+          "name": "iwr",
+          "type": "alias",
+          "description": "Alias for Invoke-WebRequest.",
+          "use_case": "Small file transfer and staging workflows."
+        }
+      ],
+      "related_tools": [
+        "certutil",
+        "whoami",
+        "tasklist"
+      ]
+    },
+    {
+      "name": "PowerUp",
+      "summary": "PowerSploit privilege escalation helper for auditing common Windows escalation paths such as modifiable services, weak paths, and hijackable DLL opportunities.",
+      "syntax": "Import-Module .\\PowerUp.ps1; Invoke-PrivescAudit",
+      "parameters": [
+        {
+          "name": "Invoke-PrivescAudit",
+          "description": "Run the main escalation audit workflow formerly known as Invoke-AllChecks."
+        },
+        {
+          "name": "-Verbose",
+          "description": "Optional PowerShell verbosity for seeing audit detail as checks run."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Invoke-PrivescAudit",
+          "type": "function",
+          "description": "Run the full current escalation audit and return a report.",
+          "use_case": "Build a quick baseline of likely local privilege escalation paths."
+        },
+        {
+          "name": "Invoke-AllChecks",
+          "type": "function",
+          "description": "Older name used in many workflows and notes.",
+          "use_case": "Recognize legacy references when reading older playbooks or reports."
+        },
+        {
+          "name": "Get-ModifiableServiceFile",
+          "type": "function",
+          "description": "Find services where the current user can write to the service binary path or config.",
+          "use_case": "Spot service-backed escalation paths tied to writable binaries."
+        },
+        {
+          "name": "Get-ModifiableService",
+          "type": "function",
+          "description": "Find services the current user can modify.",
+          "use_case": "Check for service control or reconfiguration opportunities."
+        },
+        {
+          "name": "Get-ServiceDetail",
+          "type": "function",
+          "description": "Return detailed information about a specified service.",
+          "use_case": "Verify service context before changing anything."
+        },
+        {
+          "name": "Write-HijackDll",
+          "type": "function",
+          "description": "Write out a hijackable DLL.",
+          "use_case": "Support DLL hijack scenarios only after the load path is already proven."
+        }
+      ],
+      "notes": [
+        "PowerUp is best used as a triage layer that points you toward escalation paths you then validate carefully and minimally.",
+        "Because the project is archived, keep your usage grounded in what the current host actually exposes rather than assuming every historic check still fits modern systems."
+      ],
+      "related_tools": [
+        "accesschk",
+        "whoami",
+        "PowerShell"
+      ]
+    },
+    {
+      "name": "Pretender",
+      "summary": "Name-resolution and DHCPv6 takeover tool built for relay workflows, with dry-run visibility and selective spoofing controls that make it safer to operate deliberately.",
+      "syntax": "pretender -i <INTERFACE> [options]",
+      "parameters": [
+        {
+          "name": "<INTERFACE>",
+          "description": "Network interface that should listen for or answer local name-resolution and DHCPv6 traffic."
+        },
+        {
+          "name": "-4 / -6",
+          "description": "IPv4 and IPv6 relay host addresses when the relaying tool runs on a different machine."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "--dry",
+          "type": "flag",
+          "description": "Observe traffic without answering any queries.",
+          "use_case": "Low-noise reconnaissance before spoofing."
+        },
+        {
+          "name": "--no-ra / --no-ra-dns",
+          "type": "flag",
+          "description": "Disable router advertisements fully or keep RA without advertising DNS.",
+          "use_case": "Reduce DHCPv6-side disruption while you tune the attack path."
+        },
+        {
+          "name": "--spoof",
+          "type": "flag",
+          "description": "Restrict replies to selected domains or names.",
+          "use_case": "Scoped relays and cleaner proofs."
+        },
+        {
+          "name": "--delegate-ignored-to",
+          "type": "flag",
+          "description": "Forward ignored queries to a legitimate DNS server.",
+          "use_case": "Keep the attack narrower and less disruptive."
+        },
+        {
+          "name": "--interfaces",
+          "type": "flag",
+          "description": "List interfaces and addresses before you choose one.",
+          "use_case": "Host setup and troubleshooting."
+        },
+        {
+          "name": "--no-lnr / --spoof-types SOA",
+          "type": "flag",
+          "description": "Disable local name-resolution spoofing or narrow the answer types for Kerberos relay workflows.",
+          "use_case": "More targeted krbrelayx-style setups."
+        }
+      ],
+      "notes": [
+        "Pretender is especially useful when you want cleaner DHCPv6 or selective spoofing control than a default Responder run provides.",
+        "If the relay host is separate, record both the spoofing host and the listener host so the path stays understandable."
+      ],
+      "related_tools": [
+        "Responder",
+        "ntlmrelayx.py",
+        "krbrelayx"
+      ]
+    },
+    {
+      "name": "proxychains",
+      "summary": "Socket-hooking wrapper for sending compatible tools through configured SOCKS or HTTP proxies without rewriting every command.",
+      "syntax": "proxychains4 [-q] [-f <CONFIG_FILE>] <COMMAND> [arguments]",
+      "parameters": [
+        {
+          "name": "<COMMAND>",
+          "description": "Program to run through the configured proxy chain."
+        },
+        {
+          "name": "-f <CONFIG_FILE>",
+          "description": "Optional config file to override the default chain settings."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-q",
+          "type": "flag",
+          "description": "Quiet mode.",
+          "use_case": "Keep wrapped tool output cleaner in scripts or saved logs."
+        },
+        {
+          "name": "-f",
+          "type": "flag",
+          "description": "Use a specific config file.",
+          "use_case": "Switch between lab, pivot, and engagement-specific proxy paths cleanly."
+        },
+        {
+          "name": "dynamic_chain",
+          "type": "mode",
+          "description": "Skip dead proxies and use live ones from the configured list.",
+          "use_case": "Maintain resilience when one hop becomes unavailable."
+        },
+        {
+          "name": "strict_chain",
+          "type": "mode",
+          "description": "Use proxies strictly in the configured order.",
+          "use_case": "Preserve a required path through a fixed pivot chain."
+        },
+        {
+          "name": "random_chain",
+          "type": "mode",
+          "description": "Randomize proxy usage from the list.",
+          "use_case": "Rotate paths in a lab or research workflow where order is not fixed."
+        }
+      ],
+      "notes": [
+        "Not every tool behaves well under proxychains, so validate DNS handling, timing, and authentication once before trusting a larger run.",
+        "Separate config files per engagement or pivot chain make reruns much less error-prone."
+      ],
+      "related_tools": [
+        "chisel",
+        "SSH",
+        "curl"
+      ]
+    },
+    {
+      "name": "psexec.py",
+      "summary": "Impacket service-based remote execution helper for situations where that execution footprint is justified and understood.",
+      "syntax": "psexec.py <DOMAIN>/<USER>:<PASSWORD>@<TARGET> [command]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Remote Windows host used for the service-based execution path."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-service-name",
+          "type": "flag",
+          "description": "Set the service name used to trigger the payload.",
+          "use_case": "Operational control over the created service artifact."
+        },
+        {
+          "name": "-remote-binary-name",
+          "type": "flag",
+          "description": "Set the uploaded binary name.",
+          "use_case": "Track or customize the on-host artifact name deliberately."
+        },
+        {
+          "name": "-hashes",
+          "type": "flag",
+          "description": "Authenticate with LM:NT hashes.",
+          "use_case": "Hash-based Windows execution flows."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Ticket-based execution when the environment supports it."
+        }
+      ],
+      "notes": [
+        "Service-based execution is effective but carries a clearer operational footprint than some other channels.",
+        "Write down the host, command, and chosen service/binary names so the action is still defensible later."
+      ],
+      "related_tools": [
+        "wmiexec.py",
+        "smbexec.py",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "qsreplace",
+      "summary": "Pipeline helper that normalizes or replaces query-string values so duplicate parameter combinations collapse into cleaner web testing inputs.",
+      "syntax": "cat urls.txt | qsreplace [-a] <VALUE>",
+      "parameters": [
+        {
+          "name": "<VALUE>",
+          "description": "Replacement or appended value for every query-string parameter."
+        },
+        {
+          "name": "-a",
+          "description": "Append instead of replace, or omit a value to dedupe only."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "replace mode",
+          "type": "mode",
+          "description": "Replace each parameter value with one supplied value.",
+          "use_case": "Generate consistent fuzz inputs for XSS, SSTI, or injection passes."
+        },
+        {
+          "name": "-a",
+          "type": "flag",
+          "description": "Append to existing values instead of replacing them.",
+          "use_case": "Preserve original context while adding a payload suffix."
+        },
+        {
+          "name": "dedupe only",
+          "type": "mode",
+          "description": "Use -a without a value to keep only unique host/path/parameter combinations.",
+          "use_case": "Shrink noisy archived URL sets before broader testing."
+        }
+      ],
+      "notes": [
+        "qsreplace is most valuable before the scan, when the real problem is redundant URL shape rather than missing payload variety.",
+        "Keep one payload family per pass so the resulting callback or response stays easy to attribute."
+      ],
+      "related_tools": [
+        "waybackurls",
+        "Dalfox",
+        "SSTImap"
+      ]
+    },
+    {
+      "name": "Responder",
+      "summary": "Name-resolution poisoner with built-in rogue services for capturing or relaying authentication, commonly used to validate broadcast name-resolution exposure and collect NetNTLM material.",
+      "syntax": "Responder.py -I <INTERFACE> [options]",
+      "parameters": [
+        {
+          "name": "<INTERFACE>",
+          "description": "Network interface Responder should bind to for poisoning or analysis."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-A",
+          "type": "flag",
+          "description": "Analyze mode that listens without answering.",
+          "use_case": "Baseline the environment before active poisoning."
+        },
+        {
+          "name": "--dhcpv6",
+          "type": "flag",
+          "description": "Enable DHCPv6 takeover behavior.",
+          "use_case": "IPv6-assisted credential capture or relay positioning."
+        },
+        {
+          "name": "-b",
+          "type": "flag",
+          "description": "Force HTTP Basic authentication.",
+          "use_case": "Targets where cleartext HTTP auth is a more useful proof than challenge-response capture."
+        },
+        {
+          "name": "-P",
+          "type": "flag",
+          "description": "Enable the Proxy-Auth server.",
+          "use_case": "WPAD and proxy-auth capture paths."
+        },
+        {
+          "name": "-I",
+          "type": "flag",
+          "description": "Choose the listening interface.",
+          "use_case": "Essential setup for any Responder run."
+        },
+        {
+          "name": "-v",
+          "type": "flag",
+          "description": "Verbose output.",
+          "use_case": "See what traffic was answered and which auth material came back."
+        },
+        {
+          "name": "--lm / --disable-ess",
+          "type": "flag",
+          "description": "Adjust authentication handling for edge-case downgrade or compatibility testing.",
+          "use_case": "Only when you can explain why you need weaker auth behavior."
+        }
+      ],
+      "notes": [
+        "Responder is easy to overuse. Start in analyze mode, keep the runtime short, and document the hosts and protocols that actually spoke to you.",
+        "When authentication material lands, record whether the right next step is relay, offline cracking, or simply proving the exposure and stopping there."
+      ],
+      "related_tools": [
+        "Pretender",
+        "ntlmrelayx.py",
+        "hashcat"
+      ]
+    },
+    {
+      "name": "rpcclient",
+      "summary": "Samba RPC client for pulling domain, user, and share-adjacent information over the older RPC path when it still answers the question fastest.",
+      "syntax": "rpcclient -U 'user%pass' <TARGET> -c '<commands>'",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Target domain controller or Windows host."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-U",
+          "type": "flag",
+          "description": "Supply username and password inline.",
+          "use_case": "Fast authenticated RPC checks from Linux."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Run one or more semicolon-separated RPC commands.",
+          "use_case": "Automate a small RPC query batch without dropping into the shell."
+        },
+        {
+          "name": "enumdomusers",
+          "type": "rpc command",
+          "description": "List domain users.",
+          "use_case": "Quick user inventory over RPC."
+        },
+        {
+          "name": "querydispinfo",
+          "type": "rpc command",
+          "description": "Display additional user info.",
+          "use_case": "Cross-check names, RIDs, and descriptive identity details."
+        },
+        {
+          "name": "lookupnames",
+          "type": "rpc command",
+          "description": "Resolve names through RPC.",
+          "use_case": "Map identities across protocols when outputs disagree."
+        }
+      ],
+      "notes": [
+        "RPC is especially useful when you want a second view of identity data without switching into a heavier framework.",
+        "Capture the exact command batch you ran so the output is still explainable later."
+      ],
+      "related_tools": [
+        "ldapsearch",
+        "SMBMap",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "Rubeus",
+      "summary": "Windows-focused C# Kerberos toolkit for ticket requests, roasting, delegation abuse, ticket injection, and PKINIT-backed operations on a domain-joined or Windows operator host.",
+      "syntax": "Rubeus.exe <command> [options]",
+      "parameters": [
+        {
+          "name": "<command>",
+          "description": "Action such as asktgt, kerberoast, asreproast, s4u, ptt, dump, harvest, or describe."
+        },
+        {
+          "name": "/nowrap",
+          "description": "Common output control to keep ticket and hash material easier to pipe or save."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "asktgt",
+          "type": "command",
+          "description": "Request a TGT from a password, hash, or AES key.",
+          "use_case": "Turn known credentials into live Kerberos material on Windows."
+        },
+        {
+          "name": "kerberoast",
+          "type": "command",
+          "description": "Request roastable service tickets and emit crackable material.",
+          "use_case": "Collect focused TGS material from high-value service accounts."
+        },
+        {
+          "name": "asreproast",
+          "type": "command",
+          "description": "Collect AS-REP roastable material.",
+          "use_case": "Identify and export no-preauth accounts for offline cracking."
+        },
+        {
+          "name": "s4u",
+          "type": "command",
+          "description": "Perform S4U-related delegation abuse.",
+          "use_case": "Request service tickets as another user when the delegation assumptions are satisfied."
+        },
+        {
+          "name": "ptt",
+          "type": "command",
+          "description": "Pass a ticket into the current or selected logon session.",
+          "use_case": "Apply a prepared ticket only where you need it."
+        },
+        {
+          "name": "/opsec",
+          "type": "flag",
+          "description": "Use the tool's opsec-aware variants where supported.",
+          "use_case": "Reduce obvious artifacts when the command supports a quieter path."
+        }
+      ],
+      "notes": [
+        "Rubeus is strongest when you already know why you need a specific ticket action rather than browsing commands until something sticks.",
+        "The README covers many ticket paths, so save the source credential material, target SPN, and injection destination together."
+      ],
+      "related_tools": [
+        "Certipy",
+        "PKINITtools",
+        "hashcat"
+      ]
+    },
+    {
+      "name": "SecLists",
+      "summary": "Curated wordlist collection for usernames, passwords, fuzz values, DNS, content discovery, patterns, and payloads used throughout offensive testing.",
+      "syntax": "Use targeted files from /usr/share/seclists/...",
+      "parameters": [
+        {
+          "name": "list path",
+          "description": "Specific list file chosen for the workflow instead of the entire repository."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Discovery/",
+          "type": "directory",
+          "description": "Lists for DNS, web content, hosts, and reconnaissance workflows.",
+          "use_case": "Content and subdomain discovery with scope-appropriate list sizes."
+        },
+        {
+          "name": "Fuzzing/",
+          "type": "directory",
+          "description": "Inputs for parameter, header, and request fuzzing.",
+          "use_case": "Targeted mutation once the insertion point is already understood."
+        },
+        {
+          "name": "Passwords/",
+          "type": "directory",
+          "description": "Password and credential candidate lists.",
+          "use_case": "Offline cracking or carefully controlled auth testing."
+        },
+        {
+          "name": "Payloads/",
+          "type": "directory",
+          "description": "Ready-made payload collections for common bug classes.",
+          "use_case": "Seed manual or automated testing with a sane starting set."
+        },
+        {
+          "name": "Pattern-Matching/",
+          "type": "directory",
+          "description": "Patterns for grep and artifact review workflows.",
+          "use_case": "Find secrets, tokens, or interesting strings faster in collected data."
+        }
+      ],
+      "notes": [
+        "The SecLists maintainers frame it as a companion collection, which is a good reminder to choose the smallest relevant list instead of the loudest one.",
+        "Write down the exact path you used when a list becomes part of an evidence trail or repeatable workflow."
+      ],
+      "related_tools": [
+        "ffuf",
+        "CeWL",
+        "dirsearch"
+      ]
+    },
+    {
+      "name": "secretsdump.py",
+      "summary": "Impacket dump helper for extracting credential material from local SAM, LSA, or DC-specific paths when the privilege path is already validated.",
+      "syntax": "secretsdump.py <DOMAIN>/<USER>:<PASSWORD>@<TARGET> [dump scope flags]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Windows host or domain controller you are reviewing."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-just-dc",
+          "type": "flag",
+          "description": "Scope the dump to DC material.",
+          "use_case": "Avoid unrelated local paths when the directory is the real question."
+        },
+        {
+          "name": "-just-dc-user",
+          "type": "flag",
+          "description": "Scope the dump to one DC account.",
+          "use_case": "Tighter evidence handling for one high-value target."
+        },
+        {
+          "name": "-use-vss",
+          "type": "flag",
+          "description": "Use VSS-based collection.",
+          "use_case": "Alternative collection path when direct methods are not the right fit."
+        },
+        {
+          "name": "-hashes",
+          "type": "flag",
+          "description": "Authenticate with LM:NT hashes.",
+          "use_case": "Hash-based operator workflows."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Ticket-centric domain operations."
+        }
+      ],
+      "notes": [
+        "Dump scope matters. Choose the smallest dump that answers the assessment question cleanly.",
+        "Keep output handling, file names, and source host notes tight because credential artifacts become reporting-sensitive immediately."
+      ],
+      "related_tools": [
+        "hashcat",
+        "wmiexec.py",
+        "psexec.py"
+      ]
+    },
+    {
+      "name": "smbclient",
+      "summary": "Samba SMB/CIFS client for listing shares, browsing remote paths, and moving files when you want direct manual control instead of a larger framework.",
+      "syntax": "smbclient //<HOST>/<SHARE> [options] or smbclient -L <HOST> [options]",
+      "parameters": [
+        {
+          "name": "//<HOST>/<SHARE>",
+          "description": "Specific share to connect to interactively."
+        },
+        {
+          "name": "-U [DOMAIN/]USER[%PASS]",
+          "description": "Credentials used for the SMB connection."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-L",
+          "type": "flag",
+          "description": "List shares available on a host.",
+          "use_case": "Quickly confirm what the target exposes before connecting to a share."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Run semicolon-separated commands non-interactively.",
+          "use_case": "Script repeatable listing or file-copy tasks."
+        },
+        {
+          "name": "--use-kerberos",
+          "type": "flag",
+          "description": "Control Kerberos use for authentication.",
+          "use_case": "Align the auth path with domain context or ticket-based workflows."
+        },
+        {
+          "name": "--pw-nt-hash",
+          "type": "flag",
+          "description": "Treat the supplied password value as an NT hash.",
+          "use_case": "Pass-the-hash style validation where supported."
+        },
+        {
+          "name": "--client-protection",
+          "type": "flag",
+          "description": "Choose signing or encryption behavior for the client connection.",
+          "use_case": "Match target policy and avoid confusing auth failures."
+        },
+        {
+          "name": "-g",
+          "type": "flag",
+          "description": "Produce grepable output.",
+          "use_case": "Capture share listings or scripted results cleanly."
+        }
+      ],
+      "notes": [
+        "The Samba manual notes that some servers are sensitive to name casing, so weird failures can be naming issues rather than credential issues.",
+        "smbclient is ideal when you want to prove access, browse content, or stage files without the extra abstraction of a heavier tool."
+      ],
+      "related_tools": [
+        "SMBMap",
+        "NetExec",
+        "impacket-smbserver"
+      ]
+    },
+    {
+      "name": "smbexec.py",
+      "summary": "Impacket SMB execution helper that avoids the same RemComSvc approach as psexec and gives you another deliberate Windows exec path.",
+      "syntax": "smbexec.py <DOMAIN>/<USER>:<PASSWORD>@<TARGET> [command]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Remote Windows host."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-share",
+          "type": "flag",
+          "description": "Set the share used for output retrieval.",
+          "use_case": "Control where the tool writes and reads command output."
+        },
+        {
+          "name": "-mode",
+          "type": "flag",
+          "description": "Choose SERVER or SHARE mode.",
+          "use_case": "Adapt output handling to the route and environment."
+        },
+        {
+          "name": "-hashes",
+          "type": "flag",
+          "description": "Authenticate with LM:NT hashes.",
+          "use_case": "Hash-based execution workflows."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Ticket-based Windows execution."
+        }
+      ],
+      "notes": [
+        "Know which share and mode you are using before you rely on the output path.",
+        "This is most useful as a deliberate alternative when another exec channel is noisier or less reliable in the environment."
+      ],
+      "related_tools": [
+        "psexec.py",
+        "wmiexec.py",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "SMBMap",
+      "summary": "SMB-centric enumeration tool for reviewing shares, permissions, and lightweight actions without leaving the SMB workflow.",
+      "syntax": "smbmap -H <TARGET> [-u USER -p PASS] [options]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Target SMB host."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-H",
+          "type": "flag",
+          "description": "Set the target host.",
+          "use_case": "Point SMBMap at the exact SMB service you want to inspect."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the username.",
+          "use_case": "Authenticated share review."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Set the password.",
+          "use_case": "Post-auth SMB checks."
+        },
+        {
+          "name": "-R",
+          "type": "flag",
+          "description": "Recursively list share contents.",
+          "use_case": "Review deeper file structure after initial share discovery."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Execute a command.",
+          "use_case": "Scoped post-auth action once access is already validated."
+        }
+      ],
+      "notes": [
+        "SMBMap is especially useful for understanding where read, write, and traversal permissions differ across shares.",
+        "Save share names and effective permissions, not just whether the command returned output."
+      ],
+      "related_tools": [
+        "smbclient",
+        "NetExec",
+        "enum4linux-ng"
+      ]
+    },
+    {
+      "name": "snmpwalk",
+      "summary": "SNMP subtree walker for pulling structured management data from a device once you know the agent is reachable and the chosen OID path matters.",
+      "syntax": "snmpwalk [OPTIONS] <AGENT> [OID]",
+      "parameters": [
+        {
+          "name": "<AGENT>",
+          "description": "Target hostname or IP running an SNMP agent."
+        },
+        {
+          "name": "[OID]",
+          "description": "Optional base OID to walk; defaults to the standard mib-2 subtree when omitted."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-v",
+          "type": "flag",
+          "description": "Choose SNMP version 1, 2c, or 3.",
+          "use_case": "Match the target auth model before testing access."
+        },
+        {
+          "name": "-c",
+          "type": "flag",
+          "description": "Set the community string for SNMPv1/v2c.",
+          "use_case": "Validate default or provided community access quickly."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the SNMPv3 security name.",
+          "use_case": "Use user-based auth when a target requires v3."
+        },
+        {
+          "name": "-A / -X",
+          "type": "flag",
+          "description": "Set SNMPv3 auth and privacy passphrases.",
+          "use_case": "Complete authenticated SNMPv3 testing cleanly."
+        },
+        {
+          "name": "-O",
+          "type": "flag",
+          "description": "Control output formatting.",
+          "use_case": "Switch between human-friendly and parser-friendly results."
+        },
+        {
+          "name": "-C",
+          "type": "flag",
+          "description": "Set application-specific behavior such as printing counts or end OIDs.",
+          "use_case": "Tune the walk when the subtree is large or you need better timing evidence."
+        }
+      ],
+      "notes": [
+        "The Net-SNMP manual highlights that omitting the OID walks the default mib-2 subtree, which can be broader than you actually need.",
+        "Targeted OIDs keep the result set readable and make it easier to explain why the collected data matters."
+      ],
+      "related_tools": [
+        "Nmap",
+        "Nmap NSE",
+        "Naabu"
+      ]
+    },
+    {
+      "name": "sqlmap",
+      "summary": "SQL injection automation for validated injection points where the request format and parameter behavior are already understood.",
+      "syntax": "sqlmap -u <URL> [options] or sqlmap -r <REQUEST_FILE> [options]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "The target URL containing the injectable parameter."
+        },
+        {
+          "name": "<REQUEST_FILE>",
+          "description": "Saved raw request with headers, cookies, and body already captured."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the target URL directly.",
+          "use_case": "Simple GET-based injection points."
+        },
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Load a raw request from file.",
+          "use_case": "Replay authenticated, JSON, or complex POST requests."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Limit testing to specific parameters.",
+          "use_case": "Keep the run scoped and reviewable."
+        },
+        {
+          "name": "--batch",
+          "type": "flag",
+          "description": "Run non-interactively with default answers.",
+          "use_case": "Useful when replaying a request you already validated and want a clean automated run."
+        },
+        {
+          "name": "--risk",
+          "type": "flag",
+          "description": "Raise or lower the aggressiveness of payload classes.",
+          "use_case": "Expand checks only after the target is validated and in scope."
+        },
+        {
+          "name": "--level",
+          "type": "flag",
+          "description": "Increase the number of tests and injection points attempted.",
+          "use_case": "Broaden coverage after a controlled baseline."
+        },
+        {
+          "name": "--dbs",
+          "type": "flag",
+          "description": "Enumerate database names.",
+          "use_case": "Prove reach once injection is confirmed."
+        },
+        {
+          "name": "--tables",
+          "type": "flag",
+          "description": "Enumerate tables in a chosen database.",
+          "use_case": "Move from DB discovery to object discovery."
+        },
+        {
+          "name": "--dump",
+          "type": "flag",
+          "description": "Dump rows from selected tables.",
+          "use_case": "Controlled evidence collection after scoping the target data."
+        }
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "curl",
+        "Nuclei"
+      ]
+    },
+    {
+      "name": "SSH",
+      "summary": "Transport tool for shell access and compact port forwarding when you want the smallest tunnel that solves the routing problem.",
+      "syntax": "ssh [connection options] user@host",
+      "parameters": [
+        {
+          "name": "user@host",
+          "description": "The SSH identity and destination host."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-L",
+          "type": "flag",
+          "description": "Create a local port forward.",
+          "use_case": "Expose an internal service back to your workstation."
+        },
+        {
+          "name": "-D",
+          "type": "flag",
+          "description": "Create a local SOCKS proxy.",
+          "use_case": "Pivot multiple tools through one SSH tunnel."
+        }
+      ],
+      "related_tools": [
+        "chisel",
+        "proxychains",
+        "nc"
+      ]
+    },
+    {
+      "name": "SSTImap",
+      "summary": "Server-side template injection automation helper for identifying template engines, validating render contexts, and replaying non-trivial requests.",
+      "syntax": "python3 sstimap.py -u <URL_WITH_PARAMETER> [-i PARAM] [action flags]",
+      "parameters": [
+        {
+          "name": "<URL_WITH_PARAMETER>",
+          "description": "URL containing the suspect injectable parameter."
+        },
+        {
+          "name": "PARAM",
+          "description": "Explicit parameter name to focus on."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Set the target URL.",
+          "use_case": "Direct testing of a GET-style injection point."
+        },
+        {
+          "name": "-i",
+          "type": "flag",
+          "description": "Specify the parameter to test.",
+          "use_case": "Focus SSTImap on the parameter you already suspect."
+        },
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Replay a raw request from file.",
+          "use_case": "Preserve auth, headers, and body structure for complex routes."
+        },
+        {
+          "name": "--os-cmd",
+          "type": "flag",
+          "description": "Execute a single operating system command after confirmation.",
+          "use_case": "Tightly scoped validation after the engine and context are already known."
+        },
+        {
+          "name": "--os-shell",
+          "type": "flag",
+          "description": "Prompt for an OS shell after confirmation.",
+          "use_case": "Interactive follow-up only after you have a solid reason to need it."
+        }
+      ],
+      "notes": [
+        "SSTImap’s README makes it clear that the real value is identifying the engine, context, and capabilities before rerunning with deeper actions.",
+        "Capture the detected engine and confirmed injection tag so later reproduction does not start from zero."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "Browser DevTools",
+        "Dalfox"
+      ]
+    },
+    {
+      "name": "Subfinder",
+      "summary": "Passive subdomain collector for building an initial host list before validation and probing.",
+      "syntax": "subfinder -d <DOMAIN> [options]",
+      "parameters": [
+        {
+          "name": "<DOMAIN>",
+          "description": "The root domain you want to enumerate."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Set the target domain.",
+          "use_case": "Primary passive subdomain collection."
+        },
+        {
+          "name": "-silent",
+          "type": "flag",
+          "description": "Trim the output down to results.",
+          "use_case": "Cleaner pipes into dnsx, httpx, or files."
+        }
+      ],
+      "related_tools": [
+        "Amass",
+        "dnsx",
+        "httpx"
+      ]
+    },
+    {
+      "name": "Wappalyzer",
+      "summary": "Technology fingerprinting tool that inspects pages for frameworks, analytics, servers, and application clues using more than just headers alone.",
+      "syntax": "Wappalyzer browser extension or node src/drivers/npm/cli.js <URL>",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Target page or route to fingerprint."
+        },
+        {
+          "name": "authenticated state",
+          "description": "Optional logged-in page state when the interesting stack only appears after auth."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "CLI driver",
+          "type": "mode",
+          "description": "Run the npm CLI driver against a URL.",
+          "use_case": "Capture a repeatable fingerprint from the terminal."
+        },
+        {
+          "name": "Chrome extension",
+          "type": "mode",
+          "description": "Load the browser extension for live page inspection.",
+          "use_case": "Fingerprint apps while browsing real authenticated flows."
+        },
+        {
+          "name": "headers",
+          "type": "signal",
+          "description": "Inspect response headers as part of detection.",
+          "use_case": "Spot server and framework clues early."
+        },
+        {
+          "name": "JavaScript variables",
+          "type": "signal",
+          "description": "Use exposed client-side variables and scripts for detection.",
+          "use_case": "Identify SPAs, analytics, and front-end frameworks that headers miss."
+        },
+        {
+          "name": "DOM and HTML patterns",
+          "type": "signal",
+          "description": "Match page structure, meta tags, and markup signatures.",
+          "use_case": "Confirm stack hints from the rendered application itself."
+        }
+      ],
+      "notes": [
+        "The official project README emphasizes that detections are built from multiple signals, so treat every technology result as a clue worth confirming.",
+        "Run it on routes that actually matter, because the login page and the authenticated app often expose very different stack details."
+      ],
+      "related_tools": [
+        "Browser DevTools",
+        "WhatWeb",
+        "httpx"
+      ]
+    },
+    {
+      "name": "waybackurls",
+      "summary": "Archive URL collector that pulls what the Wayback Machine knows about a domain so you can mine old parameters, paths, and forgotten application surfaces.",
+      "syntax": "cat domains.txt | waybackurls > urls.txt",
+      "parameters": [
+        {
+          "name": "stdin domain list",
+          "description": "Line-delimited domains to query against the Wayback Machine."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "stdin input",
+          "type": "input",
+          "description": "Accepts line-delimited domains on stdin.",
+          "use_case": "Drop it directly into recon pipelines without extra wrapper code."
+        },
+        {
+          "name": "stdout output",
+          "type": "output",
+          "description": "Writes discovered URLs to stdout.",
+          "use_case": "Pipe results into dedupe, filtering, or fuzz preparation tools."
+        },
+        {
+          "name": "archived coverage",
+          "type": "feature",
+          "description": "Queries the Wayback Machine for known URLs under the domain.",
+          "use_case": "Recover older routes, parameters, and forgotten app branches."
+        }
+      ],
+      "notes": [
+        "Archived URLs are excellent lead generators, but every interesting result still needs live validation.",
+        "Pair waybackurls with dedupe and parameter normalization before launching heavier checks."
+      ],
+      "related_tools": [
+        "qsreplace",
+        "httpx",
+        "Katana"
+      ]
+    },
+    {
+      "name": "WhatWeb",
+      "summary": "Technology scanner built to answer what a website is running before you switch to stack-specific validation.",
+      "syntax": "whatweb [options] <URL>",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Target web application URL."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-a",
+          "type": "flag",
+          "description": "Set aggression level.",
+          "use_case": "Trade speed and depth depending on how much fingerprinting you want."
+        },
+        {
+          "name": "-v",
+          "type": "flag",
+          "description": "Verbose output.",
+          "use_case": "See more detail when triaging technology clues."
+        },
+        {
+          "name": "--log-brief",
+          "type": "flag",
+          "description": "Write a concise output file.",
+          "use_case": "Preserve a simple fingerprint artifact for later review."
+        }
+      ],
+      "notes": [
+        "WhatWeb is useful when you want repeatable CLI fingerprinting you can save alongside other recon output.",
+        "Treat the detections as hypotheses to confirm, not as absolute ground truth."
+      ],
+      "related_tools": [
+        "Wappalyzer",
+        "httpx",
+        "WPScan"
+      ]
+    },
+    {
+      "name": "winPEAS",
+      "summary": "Windows privilege-escalation helper binary for surfacing common misconfigurations and local escalation paths.",
+      "syntax": "winPEASx64.exe",
+      "parameters": [],
+      "reference_items": [
+        {
+          "name": "winPEASx64.exe",
+          "type": "entrypoint",
+          "description": "Run the Windows PEAS binary directly on the host.",
+          "use_case": "Broad Windows local privilege-escalation review after manual checks."
+        }
+      ],
+      "notes": [
+        "Keep the output tied to the manual checks you already performed so the findings stay explainable."
+      ],
+      "related_tools": [
+        "whoami",
+        "PowerUp",
+        "accesschk"
+      ]
+    },
+    {
+      "name": "wmiexec.py",
+      "summary": "Impacket WMI execution helper for command execution over the WMI/DCOM path when that channel fits the host and logging profile best.",
+      "syntax": "wmiexec.py <DOMAIN>/<USER>:<PASSWORD>@<TARGET> [command]",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Remote Windows host."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-nooutput",
+          "type": "flag",
+          "description": "Do not retrieve command output.",
+          "use_case": "One-shot execution paths where output handling is not required."
+        },
+        {
+          "name": "-codec",
+          "type": "flag",
+          "description": "Set the output codec.",
+          "use_case": "Handle non-default output encodings more cleanly."
+        },
+        {
+          "name": "-shell-type",
+          "type": "flag",
+          "description": "Choose the command processor.",
+          "use_case": "Switch shell behavior to fit the remote environment."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Use Kerberos authentication.",
+          "use_case": "Fit into ticket-based Windows operator workflows."
+        }
+      ],
+      "notes": [
+        "Use WMI because it matches the host and objective, not because it is simply another exec option on the shelf.",
+        "Document the output path and command processor choice so later troubleshooting is easier."
+      ],
+      "related_tools": [
+        "psexec.py",
+        "smbexec.py",
+        "NetExec"
+      ]
+    },
+    {
+      "name": "WPScan",
+      "summary": "WordPress-focused scanner for user, plugin, and theme discovery once you already know the target is WordPress.",
+      "syntax": "wpscan --url <URL> [enumeration flags]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "WordPress site URL."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "--url",
+          "type": "flag",
+          "description": "Set the target URL.",
+          "use_case": "Point WPScan at the specific WordPress instance."
+        },
+        {
+          "name": "--enumerate",
+          "type": "flag",
+          "description": "Choose what to enumerate such as users, plugins, themes, or versions.",
+          "use_case": "Target enumeration to the exposure you care about."
+        }
+      ],
+      "related_tools": [
+        "WhatWeb",
+        "Nuclei",
+        "Burp Suite"
+      ]
+    },
+    {
+      "name": "xfreerdp",
+      "summary": "FreeRDP client for connecting to Windows and RDP-enabled hosts when you need a controllable command-line path into a remote desktop session.",
+      "syntax": "xfreerdp /v:<SERVER> [/u:<USER>] [/p:<PASSWORD>] [options]",
+      "parameters": [
+        {
+          "name": "/v:<SERVER>",
+          "description": "Target RDP server and optional port."
+        },
+        {
+          "name": "/u:<USER>",
+          "description": "Username for the remote session, optionally including domain context."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "/p:<PASSWORD>",
+          "type": "flag",
+          "description": "Supply the password on the command line.",
+          "use_case": "Fast lab validation when non-interactive auth is acceptable."
+        },
+        {
+          "name": "/d:<DOMAIN>",
+          "type": "flag",
+          "description": "Set the domain explicitly.",
+          "use_case": "Avoid ambiguity in domain-authenticated environments."
+        },
+        {
+          "name": "/cert:ignore",
+          "type": "flag",
+          "description": "Ignore certificate validation errors.",
+          "use_case": "Lab or internal cases where the target certificate is self-signed and you already understand the trust tradeoff."
+        },
+        {
+          "name": "+clipboard",
+          "type": "flag",
+          "description": "Enable clipboard redirection.",
+          "use_case": "Controlled operator workflows that need copy/paste between systems."
+        },
+        {
+          "name": "/dynamic-resolution",
+          "type": "flag",
+          "description": "Resize the session dynamically.",
+          "use_case": "Make the session easier to work with from different client window sizes."
+        },
+        {
+          "name": "/f",
+          "type": "flag",
+          "description": "Use fullscreen mode.",
+          "use_case": "Longer interactive sessions where window management matters."
+        }
+      ],
+      "notes": [
+        "The FreeRDP user manual recommends separate /u, /d, and /p values because backslashes in domain-qualified usernames are easy to mis-handle in shells.",
+        "Certificate handling and redirection settings should match the reason you are connecting, not just habit."
+      ],
+      "related_tools": [
+        "NetExec",
+        "SSH",
+        "PowerShell"
+      ]
+    }
+  ]
+}

