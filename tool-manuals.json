@@ -616,38 +616,84 @@
     },
     {
       "name": "curl",
-      "summary": "Low-friction HTTP client for replaying exact requests, checking headers, sending forms, and validating behavior outside the browser.",
-      "syntax": "curl [request options] <URL>",
+      "summary": "Reliable HTTP request workbench for replaying exact traffic, measuring response changes, handling cookies, testing virtual hosts, and moving from browser/proxy evidence to reproducible terminal commands.",
+      "syntax": "curl -sSki [request options] <URL>",
       "parameters": [
         {
           "name": "<URL>",
-          "description": "The full target URL you want to request."
+          "description": "The full target URL you want to request, including scheme and path."
+        },
+        {
+          "name": "<TARGET>",
+          "description": "Target host, IP, URL, or service endpoint used by saved curl examples."
+        },
+        {
+          "name": "TOKEN",
+          "description": "Bearer token, API key, or other authorization value copied from an in-scope session."
+        },
+        {
+          "name": "cookies.txt",
+          "description": "Cookie jar file used with -b and -c to preserve state between requests."
+        },
+        {
+          "name": "headers.txt / body.html",
+          "description": "Evidence files for separated response headers and response body output."
         }
       ],
       "reference_items": [
         {
+          "name": "-sS",
+          "type": "flag",
+          "description": "Run quietly while still showing errors.",
+          "use_case": "Cleaner terminal output without hiding connection or TLS failures."
+        },
+        {
+          "name": "-i",
+          "type": "flag",
+          "description": "Include response headers with the body.",
+          "use_case": "Inspect cookies, redirects, cache headers, and body content together."
+        },
+        {
           "name": "-I",
           "type": "flag",
-          "description": "Fetch headers only.",
-          "use_case": "Quickly inspect status codes, redirects, and response headers."
+          "description": "Fetch response headers only.",
+          "use_case": "Quick status, redirect, and server-header checks."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Allow insecure TLS connections.",
+          "use_case": "Use only when a lab, staging, or appliance certificate is expected to be untrusted."
+        },
+        {
+          "name": "-L",
+          "type": "flag",
+          "description": "Follow redirects.",
+          "use_case": "Map login flows, canonical host redirects, and download links."
         },
         {
           "name": "-H",
           "type": "flag",
           "description": "Add a custom header to the request.",
-          "use_case": "Replay cookies, auth tokens, host headers, and content types."
+          "use_case": "Replay auth tokens, Host headers, content types, and client hints."
         },
         {
-          "name": "--data",
+          "name": "--data-raw",
           "type": "flag",
-          "description": "Send request body data, typically for POST-style requests.",
-          "use_case": "Replay form and API requests from Burp or DevTools."
+          "description": "Send an exact request body without @ file expansion.",
+          "use_case": "Replay form bodies and payloads copied from Burp or DevTools."
         },
         {
-          "name": "-b",
+          "name": "--json",
           "type": "flag",
-          "description": "Send cookies with the request.",
-          "use_case": "Test authenticated routes without the browser."
+          "description": "Send JSON and set JSON content headers automatically on modern curl versions.",
+          "use_case": "Quick API checks when you do not need to preserve a raw captured request."
+        },
+        {
+          "name": "-b / -c",
+          "type": "flags",
+          "description": "Read cookies from a jar and write cookies to a jar.",
+          "use_case": "Keep login or redirect workflows reproducible across multiple requests."
         },
         {
           "name": "-F",
@@ -656,16 +702,48 @@
           "use_case": "Upload testing and file handling validation."
         },
         {
-          "name": "-O",
+          "name": "-o / -O",
+          "type": "flags",
+          "description": "Write the response to a chosen file or the remote filename.",
+          "use_case": "Save evidence, bodies, downloads, and staged files predictably."
+        },
+        {
+          "name": "-w",
           "type": "flag",
-          "description": "Write the response to a local file named after the remote resource.",
-          "use_case": "Fast tool transfer or sample download."
+          "description": "Print selected response metrics after the request.",
+          "use_case": "Compare status, size, timing, redirect targets, and final URLs."
+        },
+        {
+          "name": "--resolve",
+          "type": "flag",
+          "description": "Pin a hostname and port to a specific IP for this request.",
+          "use_case": "Test virtual hosts and SNI routing without editing system resolver files."
+        },
+        {
+          "name": "--path-as-is",
+          "type": "flag",
+          "description": "Send the URL path without dot-segment normalization.",
+          "use_case": "Traversal and path parsing tests where normalization would hide the probe."
+        },
+        {
+          "name": "-f",
+          "type": "flag",
+          "description": "Fail on HTTP error status codes for transfer workflows.",
+          "use_case": "Make downloads and scripted fetches stop cleanly when the server returns an error."
         }
       ],
       "related_tools": [
         "httpie",
         "Burp Suite",
-        "httpx"
+        "jq",
+        "httpx",
+        "ffuf"
+      ],
+      "notes": [
+        "Prefer -sS over plain -s so curl stays quiet without hiding errors.",
+        "Use -k deliberately: an unexpected certificate failure is often useful signal, not just annoyance.",
+        "Capture a baseline with -w, -D, or -o before changing payloads so behavior changes are measurable.",
+        "Build the exact request in Burp or DevTools first, then trim the curl command to the smallest reproducible proof."
       ]
     },
     {

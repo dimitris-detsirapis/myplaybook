@@ -11,7 +11,10 @@ const placeholderDescriptions = {
     "<BASELINE_SIZE>": "Known baseline response size used to filter noise.",
     "<BASE_DN>": "LDAP base DN such as DC=corp,DC=local.",
     "<CIDR>": "CIDR network range to scan.",
-    "<NAMESERVER>": "Specific DNS server you want to query."
+    "<NAMESERVER>": "Specific DNS server you want to query.",
+    "<ASREP_KEY>": "Kerberos AS-REP key material used by the selected command.",
+    "<AES256_HEX>": "AES-256 Kerberos key in hexadecimal form.",
+    "<PID>": "Process ID used by the selected local command."
 };
 
 const shellHelperDefaults = {
@@ -97,11 +100,8 @@ const shellHelperChecklist = [
     "Keep your callback host, port, and transport written down so reruns stay clean."
 ];
 
-const placeholderStorageKey = "io_placeholder_values";
-let pendingPlaceholderRequest = null;
 let toolManualLoadPromise = null;
 let hasLoadedToolManualOverrides = false;
-let sessionPlaceholderValues = readPlaceholderValues();
 
 const savedModePreference = localStorage.getItem("io_mode");
 let currentModeIndex = modes.findIndex(mode => mode.id === savedModePreference);
@@ -126,7 +126,6 @@ const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
 const categoryListDiv = document.getElementById("category-list");
 const payloadContainer = document.getElementById("payload-container");
 const searchBox = document.getElementById("search-box");
-const placeholderBtn = document.getElementById("placeholder-btn");
 const homeDashboard = document.getElementById("home-dashboard");
 const resultsMeta = document.getElementById("results-meta");
 const clearSearchBtn = document.getElementById("clear-search-btn");
@@ -168,6 +167,59 @@ let expandedSidebarPaths = new Set();
 let expandedSidebarModules = new Set();
 let isSidebarCollapsed = localStorage.getItem("io_sidebar_collapsed") === "1";
 let hasInitializedSidebarState = false;
+
+function injectManualButtonStyles() {
+    if (document.getElementById("manual-button-style")) {
+        return;
+    }
+
+    const style = document.createElement("style");
+    style.id = "manual-button-style";
+    style.textContent = `
+        .tool-actions .doc-pill,
+        .manual-hero-actions .doc-pill {
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 15px;
+            border-color: rgba(var(--accent-rgb), 0.3);
+            background:
+                linear-gradient(180deg, rgba(var(--accent-rgb), 0.18), rgba(var(--accent-rgb), 0.08)),
+                var(--surface-muted);
+            color: var(--accent-strong);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 16px 32px -28px var(--shadow);
+        }
+
+        .tool-actions .doc-pill::after,
+        .manual-hero-actions .doc-pill::after {
+            content: "open_in_new";
+            font-family: "Material Symbols Outlined";
+            font-size: 1rem;
+            font-weight: 400;
+            letter-spacing: 0;
+            line-height: 1;
+        }
+
+        .manual-hero-actions .doc-pill {
+            min-height: 46px;
+            padding: 0 18px;
+            font-size: 0.82rem;
+        }
+
+        .tool-actions .doc-pill:hover,
+        .manual-hero-actions .doc-pill:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 18px 36px -26px var(--shadow);
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 function applyTheme(index) {
     const mode = modes[index] || modes[0];
@@ -273,7 +325,9 @@ function escapeHtml(input = "") {
     return String(input)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
 function normalizeText(value) {
@@ -437,182 +491,6 @@ function getTermMatchStrength(token, searchTerms = [], allowFuzzy = false) {
     }
 
     return bestStrength;
-}
-
-function readPlaceholderValues() {
-    try {
-        const saved = sessionStorage.getItem(placeholderStorageKey);
-        const parsed = saved ? JSON.parse(saved) : {};
-        return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (error) {
-        return {};
-    }
-}
-
-function persistPlaceholderValues() {
-    try {
-        sessionStorage.setItem(placeholderStorageKey, JSON.stringify(sessionPlaceholderValues));
-    } catch (error) {
-        // Ignore storage failures and keep the values in memory.
-    }
-}
-
-function getManagedPlaceholders(extraPlaceholders = []) {
-    return getUniqueValues([
-        ...Object.keys(placeholderDescriptions),
-        ...Object.keys(sessionPlaceholderValues || {}),
-        ...extraPlaceholders
-    ]).sort((a, b) => a.localeCompare(b));
-}
-
-function applyPlaceholderValues(command = "") {
-    return extractPlaceholders(command).reduce((output, placeholder) => {
-        const value = sessionPlaceholderValues[placeholder];
-        return value ? output.replaceAll(placeholder, value) : output;
-    }, String(command));
-}
-
-function updatePlaceholderButton() {
-    if (!placeholderBtn) {
-        return;
-    }
-
-    const count = Object.keys(sessionPlaceholderValues).filter(key => sessionPlaceholderValues[key]).length;
-    placeholderBtn.textContent = count > 0 ? `Session Vars ${count}` : "Session Vars";
-    placeholderBtn.setAttribute("title", count > 0 ? `${count} saved placeholder value${count === 1 ? "" : "s"}` : "Set placeholder values for copy actions");
-}
-
-function buildPlaceholderFormMarkup(placeholders = [], options = {}) {
-    const {
-        intro = "Save values once and reuse them across copied commands for this browser session.",
-        submitLabel = "Save values",
-        showClear = true
-    } = options;
-
-    return `
-        <form class="placeholder-form" onsubmit="savePlaceholderValues(event)">
-            <div class="modal-block">
-                <span class="modal-label">Session values</span>
-                <p class="sources-copy">${escapeHtml(intro)}</p>
-            </div>
-            <div class="placeholder-grid">
-                ${placeholders.map(placeholder => `
-                    <label class="placeholder-field">
-                        <span class="manual-inline-label">${escapeHtml(placeholder)}</span>
-                        <input
-                            class="placeholder-input"
-                            type="text"
-                            name="${escapeHtml(placeholder)}"
-                            value="${escapeHtml(sessionPlaceholderValues[placeholder] || "")}"
-                            placeholder="${escapeHtml(placeholderDescriptions[placeholder] || "Set a session value")}"
-                        >
-                        <span class="placeholder-help">${escapeHtml(placeholderDescriptions[placeholder] || "Used as a saved command placeholder.")}</span>
-                    </label>
-                `).join("")}
-            </div>
-            <div class="placeholder-actions">
-                <button class="secondary-btn" type="submit">${escapeHtml(submitLabel)}</button>
-                ${showClear ? `<button class="secondary-btn" type="button" onclick="clearPlaceholderValues()">Clear saved values</button>` : ""}
-            </div>
-        </form>
-    `;
-}
-
-function focusFirstPlaceholderInput() {
-    const firstInput = modalBody.querySelector(".placeholder-input");
-    if (firstInput instanceof HTMLElement) {
-        firstInput.focus();
-        if ("select" in firstInput) {
-            firstInput.select();
-        }
-    }
-}
-
-function openPlaceholderModal(placeholders = [], options = {}) {
-    modalTitle.innerText = options.title || "Session variables";
-    modalBody.innerHTML = buildPlaceholderFormMarkup(placeholders, options);
-    modal.style.display = "block";
-    window.setTimeout(focusFirstPlaceholderInput, 0);
-}
-
-function openPlaceholderManager() {
-    openPlaceholderModal(getManagedPlaceholders(), {
-        title: "Session variables",
-        intro: "These values are used when you copy commands containing placeholders like <TARGET> or <DOMAIN>.",
-        submitLabel: "Save session values"
-    });
-}
-
-function savePlaceholderValues(event) {
-    event.preventDefault();
-
-    const form = event.currentTarget;
-    if (!(form instanceof HTMLFormElement)) {
-        return;
-    }
-
-    const formData = new FormData(form);
-    Object.keys(Object.fromEntries(formData.entries())).forEach(placeholder => {
-        const rawValue = String(formData.get(placeholder) || "").trim();
-        if (rawValue) {
-            sessionPlaceholderValues[placeholder] = rawValue;
-        } else {
-            delete sessionPlaceholderValues[placeholder];
-        }
-    });
-
-    persistPlaceholderValues();
-    updatePlaceholderButton();
-
-    const pendingRequest = pendingPlaceholderRequest;
-    pendingPlaceholderRequest = null;
-    closeModal();
-
-    if (pendingRequest?.resolve) {
-        pendingRequest.resolve(true);
-    }
-}
-
-function clearPlaceholderValues() {
-    sessionPlaceholderValues = {};
-    persistPlaceholderValues();
-    updatePlaceholderButton();
-
-    if (modal.style.display === "block" && modalTitle.innerText === "Session variables") {
-        openPlaceholderManager();
-    }
-}
-
-function ensurePlaceholderValues(placeholders = []) {
-    const missingPlaceholders = placeholders.filter(placeholder => !sessionPlaceholderValues[placeholder]);
-
-    if (missingPlaceholders.length === 0) {
-        return Promise.resolve(true);
-    }
-
-    return new Promise(resolve => {
-        pendingPlaceholderRequest = { resolve };
-        openPlaceholderModal(getManagedPlaceholders(missingPlaceholders), {
-            title: "Session variables",
-            intro: "This command includes placeholders. Save the missing values below and the copied command will use them automatically for this session.",
-            submitLabel: "Save and copy"
-        });
-    });
-}
-
-async function resolveCommandForCopy(command = "") {
-    const placeholders = extractPlaceholders(command);
-
-    if (placeholders.length === 0) {
-        return String(command || "");
-    }
-
-    const hasValues = await ensurePlaceholderValues(placeholders);
-    if (!hasValues) {
-        return "";
-    }
-
-    return applyPlaceholderValues(command);
 }
 
 function isWorkflowEntry(item = {}) {
@@ -2767,19 +2645,14 @@ function clearSearch() {
     goHome();
 }
 
-async function copyCommandById(entryId, button) {
+function copyCommandById(entryId, button) {
     const item = currentViewDB.find(entry => entry.entryId === entryId) || db.find(entry => entry.entryId === entryId);
 
     if (!item) {
         return;
     }
 
-    const resolvedCommand = await resolveCommandForCopy(item.command);
-    if (!resolvedCommand) {
-        return;
-    }
-
-    copyInlineText(resolvedCommand, button);
+    copyInlineText(item.command, button);
 }
 
 function showNotesModal(item) {
@@ -2863,11 +2736,6 @@ function openSourcesModal() {
 
 function closeModal() {
     modal.style.display = "none";
-
-    if (pendingPlaceholderRequest?.resolve) {
-        pendingPlaceholderRequest.resolve(false);
-        pendingPlaceholderRequest = null;
-    }
 }
 
 function isEditableElement(element) {
@@ -2919,9 +2787,9 @@ document.addEventListener("keydown", event => {
     }
 });
 
+injectManualButtonStyles();
 applyTheme(currentModeIndex);
 applySidebarState();
-updatePlaceholderButton();
 
 fetchJsonFile("data.json")
     .then(data => {

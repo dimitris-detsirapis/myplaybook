@@ -23,7 +23,7 @@ This project was made to solve that problem by turning a personal operator knowl
 - Support typo-tolerant search so rushed queries still land on useful results
 - Group commands inside real workflow stages instead of dumping them into a flat cheat sheet
 - Attach compact manuals, syntax guidance, flags, and related tools to the same workflow view
-- Save session placeholder values like `<TARGET>` or `<DOMAIN>` for faster copy/paste during a run
+- Surface reusable command inputs like `<TARGET>` or `<DOMAIN>` inside tool manuals
 - Stay lightweight and portable because the app is fully static
 
 ## How It Was Built
@@ -32,7 +32,7 @@ The app is built with plain HTML, CSS, and JavaScript.
 
 - `index.html` provides the shell and layout
 - `style.css` defines the visual system, layout, and responsive behavior
-- `script.js` handles rendering, routing, search, copy actions, placeholder values, and UI state
+- `script.js` handles rendering, routing, search, copy actions, parameter extraction, and UI state
 - `data.json` stores the workflows, entries, metadata, and navigation structure
 - `tool-manuals.json` stores curated tool manuals, parameter notes, flags, and related-tool references
 

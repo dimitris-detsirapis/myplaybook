@@ -49,7 +49,7 @@ git push -u origin main
 
 - `data.json`: workflows, paths, entries, tags, notes, examples, and source metadata
 - `tool-manuals.json`: curated manuals, syntax, parameter notes, flags, and related tools
-- `script.js`: rendering, search logic, placeholder handling, routing, and UI behavior
+- `script.js`: rendering, search logic, parameter extraction, routing, and UI behavior
 - `style.css`: theme, spacing, component styling, and responsive layout
 
 ## Good Release Check
@@ -71,5 +71,4 @@ The project is meant to stay useful for junior and mid-level pentesters, so keep
 - Structured around real workflow stages
 - Clear enough to use during an assessment
 - Open to contributions without becoming messy
-
 
