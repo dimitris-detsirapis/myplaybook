@@ -1133,6 +1133,126 @@
       ]
     },
     {
+      "name": "EyeWitness",
+      "summary": "Rapid web screenshot and triage tool for turning URL lists, Nmap XML, or Nessus XML into a reviewable visual report.",
+      "syntax": "eyewitness --web -f <HOSTS_FILE> -d <OUTPUT_DIR> --headless",
+      "parameters": [
+        {
+          "name": "<HOSTS_FILE>",
+          "description": "A file containing URLs or hosts to screenshot."
+        },
+        {
+          "name": "<NMAP_XML>",
+          "description": "Nmap XML output to import when targets came from service discovery."
+        },
+        {
+          "name": "<OUTPUT_DIR>",
+          "description": "Directory where EyeWitness should write its report and screenshot artifacts."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "--web",
+          "type": "flag",
+          "description": "Use the HTTP screenshot workflow.",
+          "use_case": "Run visual triage against web targets."
+        },
+        {
+          "name": "-f",
+          "type": "flag",
+          "description": "Read targets from a line-separated file.",
+          "use_case": "Feed in URLs from httpx, Nuclei, or manual curation."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Read Nmap XML or Nessus XML.",
+          "use_case": "Turn scan output into screenshot review without manually extracting URLs."
+        },
+        {
+          "name": "-d",
+          "type": "flag",
+          "description": "Set the output directory.",
+          "use_case": "Keep screenshots and reports with the rest of the recon artifacts."
+        },
+        {
+          "name": "--headless",
+          "type": "flag",
+          "description": "Run browser automation without a visible browser window.",
+          "use_case": "Batch screenshotting on a workstation or VM."
+        }
+      ],
+      "notes": [
+        "Kali packages EyeWitness, and current Kali tooling associates it with the default toolset. The install button is still useful on minimal builds or repaired environments.",
+        "Run it after live-host validation so screenshot time is spent on targets that actually answer."
+      ],
+      "related_tools": [
+        "httpx",
+        "Aquatone",
+        "Nmap"
+      ]
+    },
+    {
+      "name": "Aquatone",
+      "summary": "Archived visual inspection tool that screenshots large web target sets and writes a clustered HTML report.",
+      "syntax": "cat <HOSTS_FILE> | aquatone -out <OUTPUT_DIR>",
+      "parameters": [
+        {
+          "name": "<HOSTS_FILE>",
+          "description": "A list of hosts, domains, IPs, or URLs to feed into Aquatone."
+        },
+        {
+          "name": "<NMAP_XML>",
+          "description": "Nmap or Masscan XML output when using -nmap mode."
+        },
+        {
+          "name": "<OUTPUT_DIR>",
+          "description": "Directory where Aquatone should write reports, screenshots, headers, and session data."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-out",
+          "type": "flag",
+          "description": "Set the destination directory for generated output.",
+          "use_case": "Keep the report and screenshots organized with the assessment artifacts."
+        },
+        {
+          "name": "-nmap",
+          "type": "flag",
+          "description": "Parse input as Nmap or Masscan XML.",
+          "use_case": "Screenshot web services discovered during port scanning."
+        },
+        {
+          "name": "-ports",
+          "type": "flag",
+          "description": "Set custom ports or aliases such as small, medium, large, or xlarge.",
+          "use_case": "Match visual discovery to the ports that matter for the target."
+        },
+        {
+          "name": "-chrome-path",
+          "type": "flag",
+          "description": "Point Aquatone at a specific Chrome or Chromium executable.",
+          "use_case": "Fix screenshot capture when the browser is not in a standard path."
+        },
+        {
+          "name": "-silent",
+          "type": "flag",
+          "description": "Suppress normal output except errors.",
+          "use_case": "Keep pipeline output cleaner during batch runs."
+        }
+      ],
+      "notes": [
+        "The upstream Aquatone repository is archived and read-only. Keep it for compatibility with older workflows, but prefer maintained screenshot tooling for new recon pipelines.",
+        "The upstream README recommends Chromium for more reliable headless screenshot behavior."
+      ],
+      "related_tools": [
+        "EyeWitness",
+        "httpx",
+        "Nmap"
+      ]
+    },
+    {
       "name": "Feroxbuster",
       "summary": "Recursive content discovery tool that is especially useful when you want fast route expansion with flexible wordlists and extensions.",
       "syntax": "feroxbuster -u <URL> -w <WORDLIST> [options]",
@@ -1282,6 +1402,613 @@
         "Feroxbuster",
         "Gobuster",
         "Burp Suite"
+      ]
+    },
+    {
+      "name": "find",
+      "summary": "Core Linux file-search command for walking directories and matching files by name, type, size, time, owner, permissions, and actions.",
+      "syntax": "find <START_PATH> [tests] [actions]",
+      "parameters": [
+        {
+          "name": "<START_PATH>",
+          "description": "Directory where the search begins. Use . for the current directory, /var/www for web roots, or / for a full filesystem pass."
+        },
+        {
+          "name": "[tests]",
+          "description": "Match conditions such as name, type, size, owner, time, or permissions."
+        },
+        {
+          "name": "[actions]",
+          "description": "What find should do with each match. The default action is to print matching paths."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-name '<PATTERN>'",
+          "type": "test",
+          "description": "Match a case-sensitive shell glob such as '*.conf' or 'id_rsa'.",
+          "use_case": "Find exact filename patterns quickly."
+        },
+        {
+          "name": "-iname '<PATTERN>'",
+          "type": "test",
+          "description": "Match a filename pattern without caring about case.",
+          "use_case": "Catch README, readme, ReadMe, and similar casing variations."
+        },
+        {
+          "name": "-type f|d|l",
+          "type": "test",
+          "description": "Restrict matches to regular files, directories, or symbolic links.",
+          "use_case": "Avoid noisy mixed results when you know what object kind you need."
+        },
+        {
+          "name": "-maxdepth <N>",
+          "type": "option",
+          "description": "Limit how far below the start path find will descend.",
+          "use_case": "Keep broad searches readable and fast."
+        },
+        {
+          "name": "-mindepth <N>",
+          "type": "option",
+          "description": "Ignore matches above a minimum depth.",
+          "use_case": "Skip the starting directory itself or shallow parent folders."
+        },
+        {
+          "name": "-size +100M",
+          "type": "test",
+          "description": "Match files by size. Prefix with + for larger than, - for smaller than.",
+          "use_case": "Find large archives, dumps, backups, or media files."
+        },
+        {
+          "name": "-mtime -7",
+          "type": "test",
+          "description": "Match files modified within the last seven days.",
+          "use_case": "Spot recent deployments, logs, uploads, or changed configs."
+        },
+        {
+          "name": "-mmin -60",
+          "type": "test",
+          "description": "Match files modified within the last sixty minutes.",
+          "use_case": "Investigate very recent writes during active troubleshooting."
+        },
+        {
+          "name": "-user <USER>",
+          "type": "test",
+          "description": "Match files owned by a specific user.",
+          "use_case": "Review what an app, service, or current user owns."
+        },
+        {
+          "name": "-group <GROUP>",
+          "type": "test",
+          "description": "Match files owned by a specific group.",
+          "use_case": "Trace group-based access paths and shared directories."
+        },
+        {
+          "name": "-perm -4000",
+          "type": "test",
+          "description": "Match files where the SUID bit is set.",
+          "use_case": "Baseline local privilege boundaries."
+        },
+        {
+          "name": "-perm /222",
+          "type": "test",
+          "description": "Match files writable by owner, group, or others.",
+          "use_case": "Look for writable files or directories worth reviewing."
+        },
+        {
+          "name": "-empty",
+          "type": "test",
+          "description": "Match empty files or directories.",
+          "use_case": "Clean up noise or find placeholder artifacts."
+        },
+        {
+          "name": "-readable",
+          "type": "test",
+          "description": "Match files the current user can read.",
+          "use_case": "Reduce permission-denied churn in constrained shells."
+        },
+        {
+          "name": "-writable",
+          "type": "test",
+          "description": "Match files the current user can write.",
+          "use_case": "Find writable locations for staging, evidence, or misconfiguration review."
+        },
+        {
+          "name": "-executable",
+          "type": "test",
+          "description": "Match files the current user can execute.",
+          "use_case": "Review runnable scripts and binaries in interesting paths."
+        },
+        {
+          "name": "-printf '<FORMAT>'",
+          "type": "action",
+          "description": "Print custom fields such as size, owner, permissions, and path.",
+          "use_case": "Make results sortable and evidence-friendly."
+        },
+        {
+          "name": "-ls",
+          "type": "action",
+          "description": "Print matches in an ls-style long format.",
+          "use_case": "See permissions, ownership, size, and path in one pass."
+        },
+        {
+          "name": "-exec <COMMAND> {} \\;",
+          "type": "action",
+          "description": "Run a command once per match, replacing {} with the current path.",
+          "use_case": "Inspect each match individually."
+        },
+        {
+          "name": "-exec <COMMAND> {} +",
+          "type": "action",
+          "description": "Run a command with many matches at once.",
+          "use_case": "Faster bulk processing when the command accepts many paths."
+        },
+        {
+          "name": "-xdev",
+          "type": "option",
+          "description": "Do not descend into directories on other filesystems.",
+          "use_case": "Keep a / search out of mounted shares, procfs, or container mounts."
+        },
+        {
+          "name": "-prune",
+          "type": "action",
+          "description": "Skip a matched directory branch.",
+          "use_case": "Exclude noisy paths such as .git, node_modules, proc, or mounted backups."
+        },
+        {
+          "name": "-delete",
+          "type": "action",
+          "description": "Delete matched files.",
+          "use_case": "Use only for intentional cleanup after proving the match set first."
+        },
+        {
+          "name": "2>/dev/null",
+          "type": "shell redirection",
+          "description": "Hide permission-denied errors from stderr.",
+          "use_case": "Keep broad enumeration output readable."
+        }
+      ],
+      "notes": [
+        "Put the start path first, then tests, then actions. That shape keeps find commands readable under pressure.",
+        "Start narrow with -maxdepth or a specific path before searching / across the whole host.",
+        "Run destructive actions such as -delete only after you have printed and reviewed the same match set."
+      ],
+      "related_tools": [
+        "grep",
+        "file",
+        "getcap",
+        "sudo"
+      ]
+    },
+    {
+      "name": "getcap",
+      "summary": "Linux capability viewer for finding files with privilege-related capabilities that are not visible through SUID checks alone.",
+      "syntax": "getcap [-r] <START_PATH>",
+      "parameters": [
+        {
+          "name": "<START_PATH>",
+          "description": "File or directory tree to inspect for file capabilities."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Recurse through directories.",
+          "use_case": "Review a whole filesystem or application tree."
+        },
+        {
+          "name": "cap_setuid+ep",
+          "type": "capability",
+          "description": "Capability that can allow a binary to alter user identity.",
+          "use_case": "High-priority local privilege review."
+        },
+        {
+          "name": "cap_net_raw+ep",
+          "type": "capability",
+          "description": "Capability often used for raw sockets.",
+          "use_case": "Understand network tooling and packet-capture permissions."
+        }
+      ],
+      "notes": [
+        "Pair getcap with SUID review because modern systems can expose privilege through either mechanism.",
+        "Most capability findings need binary-specific validation before they become an escalation path."
+      ],
+      "related_tools": [
+        "find",
+        "sudo",
+        "linpeas"
+      ]
+    },
+    {
+      "name": "grep",
+      "summary": "Core text-search command for finding strings, patterns, config clues, and evidence inside files or command output.",
+      "syntax": "grep [options] '<PATTERN>' <FILE_OR_PATH>",
+      "parameters": [
+        {
+          "name": "<PATTERN>",
+          "description": "Text or regular expression to search for."
+        },
+        {
+          "name": "<FILE_OR_PATH>",
+          "description": "File, directory, or stdin stream to search."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-R",
+          "type": "flag",
+          "description": "Search directories recursively.",
+          "use_case": "Review a project, config tree, or web root."
+        },
+        {
+          "name": "-n",
+          "type": "flag",
+          "description": "Print matching line numbers.",
+          "use_case": "Make hits easy to reopen and cite."
+        },
+        {
+          "name": "-i",
+          "type": "flag",
+          "description": "Match case-insensitively.",
+          "use_case": "Catch Password, password, PASSWORD, and similar variants."
+        },
+        {
+          "name": "-E",
+          "type": "flag",
+          "description": "Use extended regular expressions.",
+          "use_case": "Write cleaner alternation such as password|secret|token."
+        },
+        {
+          "name": "-F",
+          "type": "flag",
+          "description": "Treat the pattern as fixed text instead of a regex.",
+          "use_case": "Search for strings containing regex characters safely."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Match whole words only.",
+          "use_case": "Reduce noisy partial matches."
+        },
+        {
+          "name": "-v",
+          "type": "flag",
+          "description": "Invert the match.",
+          "use_case": "Filter out known-noisy lines."
+        },
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Print only the matching text.",
+          "use_case": "Extract values for a pipeline."
+        },
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "Print only filenames with matches.",
+          "use_case": "Build a short file list before opening each result."
+        },
+        {
+          "name": "--include='*.conf'",
+          "type": "flag",
+          "description": "Search only matching filenames during recursive searches.",
+          "use_case": "Keep config searches focused."
+        },
+        {
+          "name": "--exclude-dir=.git",
+          "type": "flag",
+          "description": "Skip a directory during recursive searches.",
+          "use_case": "Avoid noisy dependency, cache, and repository metadata folders."
+        }
+      ],
+      "notes": [
+        "Use grep for fast text confirmation, then open the surrounding file context before reporting a finding.",
+        "Prefer -F for literal secrets or tokens and -E only when you actually need a regex."
+      ],
+      "related_tools": [
+        "find",
+        "jq",
+        "file"
+      ]
+    },
+    {
+      "name": "ip",
+      "summary": "Modern Linux network inspection command for addresses, links, routes, neighbors, and quick local network orientation.",
+      "syntax": "ip [options] <object> <command>",
+      "parameters": [
+        {
+          "name": "<object>",
+          "description": "Network object such as addr, link, route, or neigh."
+        },
+        {
+          "name": "<command>",
+          "description": "Action for that object, such as show, add, or get."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "addr",
+          "type": "object",
+          "description": "Show or manage interface addresses.",
+          "use_case": "Confirm IPs, interface names, and link state."
+        },
+        {
+          "name": "link",
+          "type": "object",
+          "description": "Show or manage network interfaces.",
+          "use_case": "Check MAC addresses, MTU, and up/down state."
+        },
+        {
+          "name": "route",
+          "type": "object",
+          "description": "Show or manage routing table entries.",
+          "use_case": "Identify default gateways and reachable internal subnets."
+        },
+        {
+          "name": "neigh",
+          "type": "object",
+          "description": "Show neighbor/ARP table entries.",
+          "use_case": "Spot nearby hosts the system has already talked to."
+        },
+        {
+          "name": "-br",
+          "type": "flag",
+          "description": "Print brief output.",
+          "use_case": "Make interface and address review easier to scan."
+        },
+        {
+          "name": "-4 / -6",
+          "type": "flag",
+          "description": "Limit output to IPv4 or IPv6.",
+          "use_case": "Separate address families during network notes."
+        },
+        {
+          "name": "route get <TARGET>",
+          "type": "command",
+          "description": "Show how the host would route traffic to a target.",
+          "use_case": "Confirm interface, source IP, and gateway before testing reachability."
+        }
+      ],
+      "notes": [
+        "Read addresses, routes, and listening sockets together; one view alone rarely explains the whole host.",
+        "Brief mode is excellent for notes, but full output is better when you need interface flags and detail."
+      ],
+      "related_tools": [
+        "ss",
+        "Nmap",
+        "Shell"
+      ]
+    },
+    {
+      "name": "ps",
+      "summary": "Process listing command for seeing what is running, who owns it, and which command line started it.",
+      "syntax": "ps aux [--sort=<KEY>]",
+      "parameters": [
+        {
+          "name": "--sort=<KEY>",
+          "description": "Sort key such as -%mem, -%cpu, user, pid, or start_time."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "aux",
+          "type": "option set",
+          "description": "Common BSD-style view showing all users, terminal-less processes, and command lines.",
+          "use_case": "Fast broad process orientation."
+        },
+        {
+          "name": "--sort=-%mem",
+          "type": "flag",
+          "description": "Sort by memory usage descending.",
+          "use_case": "Surface heavy applications, databases, and agents."
+        },
+        {
+          "name": "--sort=-%cpu",
+          "type": "flag",
+          "description": "Sort by CPU usage descending.",
+          "use_case": "Find busy or suspicious processes quickly."
+        },
+        {
+          "name": "-ef",
+          "type": "option set",
+          "description": "POSIX-style full process listing.",
+          "use_case": "Alternative format that is common in scripts and docs."
+        },
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Choose output columns.",
+          "use_case": "Build readable process views for notes."
+        }
+      ],
+      "notes": [
+        "Process command lines can contain secrets. Handle captured output carefully.",
+        "Pair ps with systemctl when you need to connect a process back to a managed service."
+      ],
+      "related_tools": [
+        "systemctl",
+        "ss",
+        "grep"
+      ]
+    },
+    {
+      "name": "ss",
+      "summary": "Modern socket inspection command for seeing listening ports, established connections, protocols, and process ownership.",
+      "syntax": "ss [options]",
+      "parameters": [],
+      "reference_items": [
+        {
+          "name": "-t",
+          "type": "flag",
+          "description": "Show TCP sockets.",
+          "use_case": "Review web, SSH, database, and other TCP services."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Show UDP sockets.",
+          "use_case": "Catch DNS, VPN, discovery, and telemetry listeners."
+        },
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "Show listening sockets.",
+          "use_case": "Build the local service map."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Show process information when permitted.",
+          "use_case": "Tie ports back to owning programs."
+        },
+        {
+          "name": "-n",
+          "type": "flag",
+          "description": "Do not resolve service names or hostnames.",
+          "use_case": "Keep output fast and literal."
+        },
+        {
+          "name": "-a",
+          "type": "flag",
+          "description": "Show all sockets.",
+          "use_case": "Broader review when listening-only output is not enough."
+        },
+        {
+          "name": "state established",
+          "type": "filter",
+          "description": "Filter to established connections.",
+          "use_case": "See active peer relationships."
+        }
+      ],
+      "notes": [
+        "Use sudo with ss -p when process names are hidden from an unprivileged user.",
+        "Localhost-only listeners often matter as much as externally reachable services."
+      ],
+      "related_tools": [
+        "ip",
+        "ps",
+        "Nmap"
+      ]
+    },
+    {
+      "name": "sudo",
+      "summary": "Privilege delegation command used to list or run commands allowed by sudoers policy for the current user.",
+      "syntax": "sudo [options] <COMMAND>",
+      "parameters": [
+        {
+          "name": "<COMMAND>",
+          "description": "Command to run through sudo policy."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "List commands the current user may run.",
+          "use_case": "First sudo check during Linux privilege review."
+        },
+        {
+          "name": "-u <USER>",
+          "type": "flag",
+          "description": "Run as a specific user.",
+          "use_case": "Validate a permitted user context explicitly."
+        },
+        {
+          "name": "-i",
+          "type": "flag",
+          "description": "Run the target user's login shell.",
+          "use_case": "Understand environment changes when sudo allows shell access."
+        },
+        {
+          "name": "-S",
+          "type": "flag",
+          "description": "Read the password from standard input.",
+          "use_case": "Scripted lab workflows where stdin handling is intentional."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Invalidate cached credentials.",
+          "use_case": "Retest sudo behavior from a clean authentication state."
+        }
+      ],
+      "notes": [
+        "Capture sudo -l output before testing any allowed command. The policy is the evidence trail.",
+        "Wildcards, environment preservation, editors, pagers, and interpreters deserve extra review."
+      ],
+      "related_tools": [
+        "find",
+        "getcap",
+        "linpeas"
+      ]
+    },
+    {
+      "name": "systemctl",
+      "summary": "systemd service manager for listing, inspecting, and understanding services, timers, units, and startup behavior on Linux hosts.",
+      "syntax": "systemctl <command> [unit]",
+      "parameters": [
+        {
+          "name": "<command>",
+          "description": "Action such as status, list-units, list-timers, cat, or show."
+        },
+        {
+          "name": "[unit]",
+          "description": "Optional systemd unit name such as nginx.service or backup.timer."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "status <unit>",
+          "type": "command",
+          "description": "Show state, recent logs, and process information for a unit.",
+          "use_case": "Understand one service quickly."
+        },
+        {
+          "name": "list-units",
+          "type": "command",
+          "description": "List loaded active units.",
+          "use_case": "Baseline running service inventory."
+        },
+        {
+          "name": "--type=service",
+          "type": "flag",
+          "description": "Limit output to service units.",
+          "use_case": "Keep service review readable."
+        },
+        {
+          "name": "--state=running",
+          "type": "flag",
+          "description": "Show units currently in a running state.",
+          "use_case": "Focus on live services first."
+        },
+        {
+          "name": "list-timers",
+          "type": "command",
+          "description": "List timer units and next run times.",
+          "use_case": "Find scheduled jobs managed by systemd."
+        },
+        {
+          "name": "cat <unit>",
+          "type": "command",
+          "description": "Print the unit file and drop-ins.",
+          "use_case": "Review ExecStart, user context, writable paths, and override files."
+        },
+        {
+          "name": "show <unit>",
+          "type": "command",
+          "description": "Print structured unit properties.",
+          "use_case": "Pull exact user, group, path, and dependency values."
+        }
+      ],
+      "notes": [
+        "Use systemctl to connect process names to startup configuration and service identities.",
+        "Unit files, drop-ins, writable service paths, and timer commands are often more useful than the service name alone."
+      ],
+      "related_tools": [
+        "ps",
+        "ss",
+        "find"
       ]
     },
     {

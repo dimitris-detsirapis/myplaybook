@@ -7,6 +7,12 @@ const placeholderDescriptions = {
     "<TARGET>": "Target host, IP, URL, or service endpoint you want to inspect.",
     "<DOMAIN>": "Root domain or zone you want to enumerate or validate.",
     "<HOSTS_FILE>": "Input file containing hosts or URLs, usually one per line.",
+    "<FILE>": "File you want to read, inspect, search, or pass into the selected command.",
+    "<START_PATH>": "Directory where the search should begin, such as . for the current tree or /var/www for web files.",
+    "<PATTERN>": "Name, glob, or text pattern you want the command to match.",
+    "<USER>": "Username or account context used by the selected local or remote command.",
+    "<NMAP_XML>": "Nmap XML output file to import into screenshot or triage tooling.",
+    "<OUTPUT_DIR>": "Directory where the tool should write reports, screenshots, or generated artifacts.",
     "<REQUEST_FILE>": "Saved raw request captured from Burp or another client.",
     "<BASELINE_SIZE>": "Known baseline response size used to filter noise.",
     "<BASE_DN>": "LDAP base DN such as DC=corp,DC=local.",
@@ -100,6 +106,631 @@ const shellHelperChecklist = [
     "Keep your callback host, port, and transport written down so reruns stay clean."
 ];
 
+const kaliDefaultInstallSource = {
+    label: "Kali metapackages",
+    url: "https://www.kali.org/docs/general-use/metapackages/"
+};
+
+const pdtmInstallSource = {
+    label: "ProjectDiscovery PDTM install",
+    url: "https://docs.projectdiscovery.io/opensource/pdtm/install"
+};
+
+const pdtmUsageSource = {
+    label: "ProjectDiscovery PDTM usage",
+    url: "https://docs.projectdiscovery.io/opensource/pdtm/usage"
+};
+
+function buildInstallRecord({
+    status = "Install on demand",
+    baseline = "Not tracked against the Kali default baseline yet.",
+    summary = "",
+    methods = [],
+    sources = []
+} = {}) {
+    return {
+        status,
+        baseline,
+        summary,
+        methods,
+        sources: getUniqueValuesByKey([kaliDefaultInstallSource, ...sources], "url")
+    };
+}
+
+function getUniqueValuesByKey(values = [], key) {
+    const seen = new Set();
+    const output = [];
+
+    values.forEach(value => {
+        const id = value?.[key];
+        if (!id || seen.has(id)) {
+            return;
+        }
+
+        seen.add(id);
+        output.push(value);
+    });
+
+    return output;
+}
+
+function buildAptInstallRecord(toolName, packageName, {
+    commandName = toolName.toLowerCase(),
+    sourceUrl = `https://www.kali.org/tools/${packageName}/`,
+    sourceLabel = `Kali Tools: ${packageName}`,
+    defaultStatus = false,
+    summary = "",
+    notes = [],
+    verifyCommand = `${commandName} -h`,
+    extraMethods = []
+} = {}) {
+    return buildInstallRecord({
+        status: defaultStatus ? "Kali default package" : "Non-default Kali package",
+        baseline: defaultStatus
+            ? "Kali currently includes this in the default desktop toolset; the apt command is still useful for minimal installs or repairs."
+            : "Not part of the kali-linux-default baseline used here; install it when this workflow needs it.",
+        summary: summary || `${toolName} is available from the Kali repositories as ${packageName}.`,
+        methods: [
+            {
+                label: "Kali apt",
+                description: `Install the Kali package named ${packageName}.`,
+                commands: [
+                    "sudo apt update",
+                    `sudo apt install ${packageName}`,
+                    verifyCommand
+                ].filter(Boolean),
+                notes,
+                source_label: sourceLabel,
+                source_url: sourceUrl
+            },
+            ...extraMethods
+        ],
+        sources: [{ label: sourceLabel, url: sourceUrl }]
+    });
+}
+
+function buildProjectDiscoveryInstallRecord(toolName, packageName, pdtmName, {
+    aptCommandName = pdtmName,
+    pdtmCommandName = pdtmName,
+    sourceUrl = `https://www.kali.org/tools/${packageName}/`,
+    sourceLabel = `Kali Tools: ${packageName}`,
+    notes = []
+} = {}) {
+    return buildAptInstallRecord(toolName, packageName, {
+        commandName: aptCommandName,
+        sourceUrl,
+        sourceLabel,
+        summary: `${toolName} is not in kali-linux-default. Kali packages it as ${packageName}; ProjectDiscovery PDTM is a good alternative when you want upstream-managed binaries.`,
+        notes,
+        verifyCommand: `${aptCommandName} -h`,
+        extraMethods: [
+            {
+                label: "ProjectDiscovery PDTM",
+                description: "Use ProjectDiscovery's tool manager to install or update the upstream binary.",
+                commands: [
+                    "go install -v github.com/projectdiscovery/pdtm/cmd/pdtm@latest",
+                    `pdtm -install ${pdtmName}`,
+                    `${pdtmCommandName} -h`
+                ],
+                notes: [
+                    "PDTM installs binaries under $HOME/.pdtm/go/bin by default and can add that path for you.",
+                    "Use one installation path consistently so Kali package names and upstream binary names do not collide."
+                ],
+                source_label: "ProjectDiscovery PDTM",
+                source_url: pdtmUsageSource.url
+            }
+        ]
+    });
+}
+
+function buildGoInstallRecord(toolName, modulePath, {
+    binaryName = toolName.toLowerCase(),
+    summary = "",
+    sourceLabel = toolName,
+    sourceUrl = "",
+    notes = []
+} = {}) {
+    return buildInstallRecord({
+        status: "Non-default upstream Go install",
+        baseline: "Not part of kali-linux-default; install from upstream when you need it.",
+        summary: summary || `${toolName} is usually installed from upstream with Go.`,
+        methods: [
+            {
+                label: "Go install",
+                description: "Build and place the binary in your Go bin directory.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install golang-go",
+                    `go install ${modulePath}@latest`,
+                    "export PATH=\"$PATH:$(go env GOPATH)/bin\"",
+                    `${binaryName} -h`
+                ],
+                notes: [
+                    "Persist the PATH line in your shell profile if the command is not found after install.",
+                    ...notes
+                ],
+                source_label: sourceLabel,
+                source_url: sourceUrl
+            }
+        ],
+        sources: sourceUrl ? [{ label: sourceLabel, url: sourceUrl }] : []
+    });
+}
+
+function buildPipxInstallRecord(toolName, packageSpec, {
+    binaryName = toolName.toLowerCase(),
+    summary = "",
+    sourceLabel = toolName,
+    sourceUrl = "",
+    notes = []
+} = {}) {
+    return buildInstallRecord({
+        status: "Non-default Python install",
+        baseline: "Not part of kali-linux-default; use an isolated Python install to avoid touching Kali's system Python.",
+        summary: summary || `${toolName} is best installed in an isolated pipx environment on Kali.`,
+        methods: [
+            {
+                label: "pipx",
+                description: "Install into its own Python environment.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install pipx",
+                    "pipx ensurepath",
+                    `pipx install ${packageSpec}`,
+                    `${binaryName} -h`
+                ],
+                notes,
+                source_label: sourceLabel,
+                source_url: sourceUrl
+            }
+        ],
+        sources: sourceUrl ? [{ label: sourceLabel, url: sourceUrl }] : []
+    });
+}
+
+function buildBurpExtensionInstallRecord(toolName, {
+    bappUrl,
+    summary = "",
+    notes = []
+} = {}) {
+    return buildInstallRecord({
+        status: "Burp extension",
+        baseline: "Not a Kali system package; install it inside Burp Suite when you need that workflow.",
+        summary: summary || `${toolName} is installed from Burp Suite's BApp Store.`,
+        methods: [
+            {
+                label: "Burp BApp Store",
+                description: "Install from inside Burp Suite Professional or Community when the extension supports your edition.",
+                commands: [
+                    "Burp Suite -> Extensions -> BApp Store",
+                    `Search for '${toolName}'`,
+                    "Install the extension and verify it appears under Extensions -> Installed"
+                ],
+                notes,
+                source_label: `PortSwigger BApp: ${toolName}`,
+                source_url: bappUrl
+            }
+        ],
+        sources: bappUrl ? [{ label: `PortSwigger BApp: ${toolName}`, url: bappUrl }] : []
+    });
+}
+
+const toolInstallationCatalog = new Map([
+    ["accesschk", buildInstallRecord({
+        status: "Windows helper",
+        baseline: "Not a Kali tool; stage the Sysinternals binary on Windows hosts only when scope allows it.",
+        summary: "AccessChk is distributed by Microsoft Sysinternals as a Windows executable.",
+        methods: [
+            {
+                label: "PowerShell download",
+                description: "Download and extract AccessChk on a Windows system.",
+                commands: [
+                    "Invoke-WebRequest https://download.sysinternals.com/files/AccessChk.zip -OutFile AccessChk.zip",
+                    "Expand-Archive .\\AccessChk.zip .\\AccessChk",
+                    ".\\AccessChk\\accesschk.exe /accepteula -h"
+                ],
+                notes: [
+                    "Keep the download source and hash in your evidence notes if this binary is staged during an assessment."
+                ],
+                source_label: "Microsoft Sysinternals AccessChk",
+                source_url: "https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk"
+            }
+        ],
+        sources: [{ label: "Microsoft Sysinternals AccessChk", url: "https://learn.microsoft.com/en-us/sysinternals/downloads/accesschk" }]
+    })],
+    ["Aquatone", buildInstallRecord({
+        status: "Non-default archived binary",
+        baseline: "Not packaged in Kali. The upstream repository is archived, so prefer modern screenshot tooling unless Aquatone is specifically needed.",
+        summary: "Aquatone is installed from the archived upstream release and needs Chrome or Chromium available for screenshots.",
+        methods: [
+            {
+                label: "Upstream release",
+                description: "Install Chromium, download the latest archived Linux release, and place the binary on PATH.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install chromium unzip",
+                    "tmpdir=$(mktemp -d)",
+                    "curl -L -o \"$tmpdir/aquatone.zip\" https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip",
+                    "unzip \"$tmpdir/aquatone.zip\" -d \"$tmpdir\"",
+                    "sudo install \"$tmpdir/aquatone\" /usr/local/bin/aquatone",
+                    "aquatone -version"
+                ],
+                notes: [
+                    "The upstream README recommends Chromium over Google Chrome for headless reliability.",
+                    "The GitHub repository is read-only, so expect this tool to age."
+                ],
+                source_label: "Aquatone README",
+                source_url: "https://github.com/michenriksen/aquatone"
+            }
+        ],
+        sources: [{ label: "Aquatone README", url: "https://github.com/michenriksen/aquatone" }]
+    })],
+    ["chisel", buildAptInstallRecord("chisel", "chisel", {
+        sourceUrl: "https://www.kali.org/tools/chisel/",
+        notes: ["Install the matching client/server binary on the side that needs to initiate the tunnel."]
+    })],
+    ["Clairvoyance", buildPipxInstallRecord("Clairvoyance", "clairvoyance", {
+        binaryName: "clairvoyance",
+        sourceLabel: "Clairvoyance",
+        sourceUrl: "https://github.com/nikitastupin/clairvoyance",
+        summary: "Clairvoyance is not in kali-linux-default; upstream documents pip and Docker installs."
+    })],
+    ["Coercer", buildAptInstallRecord("Coercer", "coercer", {
+        sourceUrl: "https://www.kali.org/tools/coercer/"
+    })],
+    ["Dalfox", buildGoInstallRecord("Dalfox", "github.com/hahwul/dalfox/v2", {
+        binaryName: "dalfox",
+        sourceLabel: "Dalfox install guide",
+        sourceUrl: "https://dalfox.hahwul.com/page/installation/"
+    })],
+    ["dirsearch", buildAptInstallRecord("dirsearch", "dirsearch", {
+        sourceUrl: "https://www.kali.org/tools/dirsearch/"
+    })],
+    ["dnstool.py", buildAptInstallRecord("dnstool.py", "krbrelayx", {
+        commandName: "dnstool.py",
+        sourceUrl: "https://www.kali.org/tools/krbrelayx/",
+        verifyCommand: "dnstool.py -h",
+        notes: ["dnstool.py is installed by the krbrelayx Kali package."]
+    })],
+    ["dnsx", buildProjectDiscoveryInstallRecord("dnsx", "dnsx", "dnsx", {
+        sourceUrl: "https://www.kali.org/tools/dnsx/"
+    })],
+    ["DOM Invader", buildInstallRecord({
+        status: "Bundled Burp browser feature",
+        baseline: "Not a Kali command-line package; use it from Burp Suite's embedded browser.",
+        summary: "DOM Invader is available inside Burp Suite's browser-based testing workflow.",
+        methods: [
+            {
+                label: "Burp Suite",
+                description: "Enable and use DOM Invader from Burp's browser.",
+                commands: [
+                    "Burp Suite -> Proxy -> Intercept -> Open browser",
+                    "Open the DOM Invader tab in the embedded browser devtools",
+                    "Enable the checks needed for the target page"
+                ],
+                notes: ["Availability depends on the Burp Suite version and edition."],
+                source_label: "PortSwigger DOM Invader",
+                source_url: "https://portswigger.net/burp/documentation/desktop/tools/dom-invader"
+            }
+        ],
+        sources: [{ label: "PortSwigger DOM Invader", url: "https://portswigger.net/burp/documentation/desktop/tools/dom-invader" }]
+    })],
+    ["Droopescan", buildPipxInstallRecord("Droopescan", "droopescan", {
+        binaryName: "droopescan",
+        sourceLabel: "Droopescan",
+        sourceUrl: "https://github.com/SamJoan/droopescan"
+    })],
+    ["enum4linux-ng", buildAptInstallRecord("enum4linux-ng", "enum4linux-ng", {
+        sourceUrl: "https://www.kali.org/tools/enum4linux-ng/"
+    })],
+    ["EyeWitness", buildAptInstallRecord("EyeWitness", "eyewitness", {
+        commandName: "eyewitness",
+        sourceUrl: "https://www.kali.org/tools/eyewitness/",
+        defaultStatus: true,
+        summary: "EyeWitness is available as a Kali package and is currently associated with Kali's default toolset, but the command is useful on minimal installs too.",
+        notes: ["The upstream project also offers a virtualenv setup path, but the Kali package is the simplest path on Kali."]
+    })],
+    ["Feroxbuster", buildAptInstallRecord("Feroxbuster", "feroxbuster", {
+        commandName: "feroxbuster",
+        sourceUrl: "https://www.kali.org/tools/feroxbuster/"
+    })],
+    ["gf", buildGoInstallRecord("gf", "github.com/tomnomnom/gf", {
+        binaryName: "gf",
+        sourceLabel: "gf",
+        sourceUrl: "https://github.com/tomnomnom/gf"
+    })],
+    ["GraphQLMap", buildInstallRecord({
+        status: "Non-default Python install",
+        baseline: "Not part of kali-linux-default; install from upstream in an isolated environment.",
+        summary: "GraphQLMap is installed from the upstream repository.",
+        methods: [
+            {
+                label: "venv from Git",
+                description: "Clone the project and install it editable inside a virtual environment.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install git python3-venv",
+                    "git clone https://github.com/swisskyrepo/GraphQLmap ~/tools/GraphQLmap",
+                    "cd ~/tools/GraphQLmap",
+                    "python3 -m venv .venv",
+                    "source .venv/bin/activate",
+                    "pip install --editable .",
+                    "graphqlmap -h"
+                ],
+                notes: ["Keep the virtual environment active when running the tool unless you add a wrapper script."],
+                source_label: "GraphQLMap",
+                source_url: "https://github.com/swisskyrepo/GraphQLmap"
+            }
+        ],
+        sources: [{ label: "GraphQLMap", url: "https://github.com/swisskyrepo/GraphQLmap" }]
+    })],
+    ["HTTP Request Smuggler", buildBurpExtensionInstallRecord("HTTP Request Smuggler", {
+        bappUrl: "https://portswigger.net/bappstore/aaaa60ef945341e8a450217a54a11646"
+    })],
+    ["httpie", buildAptInstallRecord("httpie", "httpie", {
+        sourceUrl: "https://www.kali.org/tools/httpie/"
+    })],
+    ["httpx", buildProjectDiscoveryInstallRecord("httpx", "httpx-toolkit", "httpx", {
+        aptCommandName: "httpx-toolkit",
+        pdtmCommandName: "httpx",
+        sourceUrl: "https://www.kali.org/tools/httpx-toolkit/",
+        notes: ["Kali names the binary httpx-toolkit to avoid a conflict with the Python httpx package."]
+    })],
+    ["InQL", buildBurpExtensionInstallRecord("InQL", {
+        bappUrl: "https://portswigger.net/bappstore/296e9a0730384be4b2fffef7b4e19b1f",
+        summary: "InQL is usually installed as a Burp extension for GraphQL testing."
+    })],
+    ["interactsh-client", buildInstallRecord({
+        status: "Non-default ProjectDiscovery install",
+        baseline: "Not part of kali-linux-default; install from ProjectDiscovery when out-of-band interaction testing is in scope.",
+        summary: "interactsh-client is an upstream ProjectDiscovery tool; PDTM or Go install keeps it current.",
+        methods: [
+            {
+                label: "ProjectDiscovery PDTM",
+                description: "Use ProjectDiscovery's tool manager to install the upstream binary.",
+                commands: [
+                    "go install -v github.com/projectdiscovery/pdtm/cmd/pdtm@latest",
+                    "pdtm -install interactsh",
+                    "interactsh-client -h"
+                ],
+                notes: ["PDTM installs binaries under $HOME/.pdtm/go/bin by default."],
+                source_label: "ProjectDiscovery PDTM",
+                source_url: pdtmUsageSource.url
+            },
+            {
+                label: "Go install",
+                description: "Build interactsh-client directly from upstream.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install golang-go",
+                    "go install github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest",
+                    "export PATH=\"$PATH:$(go env GOPATH)/bin\"",
+                    "interactsh-client -h"
+                ],
+                notes: ["Persist the PATH line in your shell profile if the command is not found after install."],
+                source_label: "ProjectDiscovery interactsh",
+                source_url: "https://docs.projectdiscovery.io/tools/interactsh/usage"
+            }
+        ],
+        sources: [pdtmInstallSource, pdtmUsageSource, { label: "ProjectDiscovery interactsh", url: "https://docs.projectdiscovery.io/tools/interactsh/usage" }]
+    })],
+    ["Joomscan", buildAptInstallRecord("Joomscan", "joomscan", {
+        commandName: "joomscan",
+        sourceUrl: "https://www.kali.org/tools/joomscan/"
+    })],
+    ["jq", buildAptInstallRecord("jq", "jq", {
+        commandName: "jq",
+        sourceUrl: "https://jqlang.org/download/",
+        sourceLabel: "jq download",
+        summary: "jq is not part of the kali-linux-default tool baseline used here, but it is available through apt."
+    })],
+    ["jwt-tool", buildInstallRecord({
+        status: "Non-default Python install",
+        baseline: "Not part of kali-linux-default; install from upstream in a dedicated directory.",
+        summary: "jwt_tool is distributed from its upstream GitHub repository.",
+        methods: [
+            {
+                label: "Git clone",
+                description: "Clone jwt_tool and install its Python requirements in an isolated environment.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install git python3-venv",
+                    "git clone https://github.com/ticarpi/jwt_tool ~/tools/jwt_tool",
+                    "cd ~/tools/jwt_tool",
+                    "python3 -m venv .venv",
+                    "source .venv/bin/activate",
+                    "pip install -r requirements.txt",
+                    "python3 jwt_tool.py -h"
+                ],
+                notes: ["Create a shell alias if you want to call it as jwt-tool from anywhere."],
+                source_label: "jwt_tool",
+                source_url: "https://github.com/ticarpi/jwt_tool"
+            }
+        ],
+        sources: [{ label: "jwt_tool", url: "https://github.com/ticarpi/jwt_tool" }]
+    })],
+    ["Katana", buildProjectDiscoveryInstallRecord("Katana", "katana", "katana", {
+        sourceUrl: "https://www.kali.org/tools/katana/"
+    })],
+    ["kerbrute", buildGoInstallRecord("kerbrute", "github.com/ropnop/kerbrute", {
+        binaryName: "kerbrute",
+        sourceLabel: "kerbrute",
+        sourceUrl: "https://github.com/ropnop/kerbrute"
+    })],
+    ["KrbRelayUp", buildInstallRecord({
+        status: "Windows upstream binary",
+        baseline: "Not a Kali package; build or download it for Windows-side AD CS and relay testing only when scope allows it.",
+        summary: "KrbRelayUp is a Windows-focused GhostPack-style tool distributed from GitHub.",
+        methods: [
+            {
+                label: "Release binary",
+                description: "Download a release on your analysis box and stage only when appropriate.",
+                commands: [
+                    "Open https://github.com/Dec0ne/KrbRelayUp/releases",
+                    "Download the release artifact you intend to use",
+                    "Verify the file and stage it according to the engagement rules"
+                ],
+                notes: ["Prefer building from source when binary provenance matters."],
+                source_label: "KrbRelayUp",
+                source_url: "https://github.com/Dec0ne/KrbRelayUp"
+            }
+        ],
+        sources: [{ label: "KrbRelayUp", url: "https://github.com/Dec0ne/KrbRelayUp" }]
+    })],
+    ["krbrelayx", buildAptInstallRecord("krbrelayx", "krbrelayx", {
+        sourceUrl: "https://www.kali.org/tools/krbrelayx/"
+    })],
+    ["Naabu", buildProjectDiscoveryInstallRecord("Naabu", "naabu", "naabu", {
+        sourceUrl: "https://www.kali.org/tools/naabu/"
+    })],
+    ["Nuclei", buildProjectDiscoveryInstallRecord("Nuclei", "nuclei", "nuclei", {
+        sourceUrl: "https://www.kali.org/tools/nuclei/",
+        notes: ["Run nuclei -update-templates after install if you need the latest community templates."]
+    })],
+    ["OWASP ZAP", buildAptInstallRecord("OWASP ZAP", "zaproxy", {
+        commandName: "zaproxy",
+        sourceUrl: "https://www.kali.org/tools/zaproxy/"
+    })],
+    ["Param Miner", buildBurpExtensionInstallRecord("Param Miner", {
+        bappUrl: "https://portswigger.net/bappstore/17d2949a985c4b7ca092728dba871943"
+    })],
+    ["PetitPotam", buildInstallRecord({
+        status: "Non-default Python script",
+        baseline: "Not part of kali-linux-default; clone upstream when this coercion check is in scope.",
+        summary: "PetitPotam is a Python script that depends on Impacket.",
+        methods: [
+            {
+                label: "Git clone",
+                description: "Clone the script and ensure Impacket is available.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install git python3-impacket",
+                    "git clone https://github.com/ly4k/PetitPotam ~/tools/PetitPotam",
+                    "python3 ~/tools/PetitPotam/petitpotam.py -h"
+                ],
+                notes: ["The upstream README lists Impacket as the required dependency."],
+                source_label: "PetitPotam",
+                source_url: "https://github.com/ly4k/PetitPotam"
+            }
+        ],
+        sources: [{ label: "PetitPotam", url: "https://github.com/ly4k/PetitPotam" }]
+    })],
+    ["PKINITtools", buildInstallRecord({
+        status: "Non-default Python scripts",
+        baseline: "Not part of kali-linux-default; install from upstream in a dedicated directory.",
+        summary: "PKINITtools is distributed as Python scripts from upstream GitHub.",
+        methods: [
+            {
+                label: "Git clone",
+                description: "Clone the repository and install Python requirements in a virtual environment.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install git python3-venv",
+                    "git clone https://github.com/dirkjanm/PKINITtools ~/tools/PKINITtools",
+                    "cd ~/tools/PKINITtools",
+                    "python3 -m venv .venv",
+                    "source .venv/bin/activate",
+                    "pip install -r requirements.txt",
+                    "python3 gettgtpkinit.py -h"
+                ],
+                notes: ["Keep the virtual environment active while using the scripts."],
+                source_label: "PKINITtools",
+                source_url: "https://github.com/dirkjanm/PKINITtools"
+            }
+        ],
+        sources: [{ label: "PKINITtools", url: "https://github.com/dirkjanm/PKINITtools" }]
+    })],
+    ["Pretender", buildInstallRecord({
+        status: "Non-default upstream build",
+        baseline: "Not part of kali-linux-default; build from upstream when this relay-support workflow is in scope.",
+        summary: "Pretender can be built from source with Go.",
+        methods: [
+            {
+                label: "Go build",
+                description: "Clone the repository and build the binary.",
+                commands: [
+                    "sudo apt update",
+                    "sudo apt install git golang-go",
+                    "git clone https://github.com/RedTeamPentesting/pretender ~/tools/pretender",
+                    "cd ~/tools/pretender",
+                    "go build",
+                    "sudo install pretender /usr/local/bin/pretender",
+                    "pretender --help"
+                ],
+                notes: ["Pretender supports Linux and Windows builds through Go."],
+                source_label: "Pretender",
+                source_url: "https://github.com/RedTeamPentesting/pretender"
+            }
+        ],
+        sources: [{ label: "Pretender", url: "https://github.com/RedTeamPentesting/pretender" }]
+    })],
+    ["qsreplace", buildGoInstallRecord("qsreplace", "github.com/tomnomnom/qsreplace", {
+        binaryName: "qsreplace",
+        sourceLabel: "qsreplace",
+        sourceUrl: "https://github.com/tomnomnom/qsreplace"
+    })],
+    ["Rubeus", buildInstallRecord({
+        status: "Windows upstream binary",
+        baseline: "Not a Kali package; build or download it for Windows/Kerberos workflows only when scope allows it.",
+        summary: "Rubeus is a Windows Kerberos tool from GhostPack.",
+        methods: [
+            {
+                label: "Release or build",
+                description: "Use a trusted release or build from source before staging.",
+                commands: [
+                    "Open https://github.com/GhostPack/Rubeus",
+                    "Build from source with Visual Studio or obtain a trusted release artifact",
+                    "Verify the file and stage it according to the engagement rules"
+                ],
+                notes: ["Record provenance and hashes for any binary you stage."],
+                source_label: "Rubeus",
+                source_url: "https://github.com/GhostPack/Rubeus"
+            }
+        ],
+        sources: [{ label: "Rubeus", url: "https://github.com/GhostPack/Rubeus" }]
+    })],
+    ["SecLists", buildAptInstallRecord("SecLists", "seclists", {
+        commandName: "ls /usr/share/seclists",
+        sourceUrl: "https://www.kali.org/tools/seclists/",
+        verifyCommand: "ls /usr/share/seclists"
+    })],
+    ["SSTImap", buildAptInstallRecord("SSTImap", "sstimap", {
+        commandName: "sstimap",
+        sourceUrl: "https://www.kali.org/tools/sstimap/"
+    })],
+    ["Subfinder", buildProjectDiscoveryInstallRecord("Subfinder", "subfinder", "subfinder", {
+        sourceUrl: "https://www.kali.org/tools/subfinder/"
+    })],
+    ["Wappalyzer", buildInstallRecord({
+        status: "Browser extension or upstream project",
+        baseline: "Not a Kali command-line package; use the browser extension or an explicit CLI alternative.",
+        summary: "Wappalyzer is typically used as a browser extension in this playbook.",
+        methods: [
+            {
+                label: "Browser extension",
+                description: "Install from your browser's extension store.",
+                commands: [
+                    "Open the Chrome Web Store or Firefox Add-ons",
+                    "Search for Wappalyzer",
+                    "Install the extension and pin it for quick target checks"
+                ],
+                notes: ["For CLI fingerprinting on Kali, WhatWeb and httpx -tech-detect are usually simpler."]
+            }
+        ],
+        sources: [{ label: "Wappalyzer project", url: "https://www.wappalyzer.com/" }]
+    })],
+    ["waybackurls", buildGoInstallRecord("waybackurls", "github.com/tomnomnom/waybackurls", {
+        binaryName: "waybackurls",
+        sourceLabel: "waybackurls",
+        sourceUrl: "https://github.com/tomnomnom/waybackurls"
+    })],
+    ["xfreerdp", buildAptInstallRecord("xfreerdp", "freerdp3-x11", {
+        commandName: "xfreerdp",
+        sourceUrl: "https://www.kali.org/tools/freerdp3/",
+        verifyCommand: "xfreerdp /version"
+    })]
+]);
+
 let toolManualLoadPromise = null;
 let hasLoadedToolManualOverrides = false;
 
@@ -177,6 +808,7 @@ function injectManualButtonStyles() {
     style.id = "manual-button-style";
     style.textContent = `
         .tool-actions .doc-pill,
+        .tool-actions .install-pill,
         .manual-hero-actions .doc-pill {
             gap: 8px;
             min-height: 40px;
@@ -194,9 +826,32 @@ function injectManualButtonStyles() {
                 0 16px 32px -28px var(--shadow);
         }
 
+        .tool-actions .install-pill,
+        .manual-hero-actions .install-pill {
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 15px;
+            border-color: rgba(var(--accent-rgb), 0.2);
+            background: var(--surface-muted);
+            color: var(--text-soft);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
         .tool-actions .doc-pill::after,
         .manual-hero-actions .doc-pill::after {
             content: "open_in_new";
+            font-family: "Material Symbols Outlined";
+            font-size: 1rem;
+            font-weight: 400;
+            letter-spacing: 0;
+            line-height: 1;
+        }
+
+        .tool-actions .install-pill::after,
+        .manual-hero-actions .install-pill::after {
+            content: "download";
             font-family: "Material Symbols Outlined";
             font-size: 1rem;
             font-weight: 400;
@@ -210,12 +865,41 @@ function injectManualButtonStyles() {
             font-size: 0.82rem;
         }
 
+        .manual-hero-actions {
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .manual-hero-actions .install-pill {
+            min-height: 42px;
+            padding: 0 16px;
+            font-size: 0.78rem;
+        }
+
         .tool-actions .doc-pill:hover,
+        .tool-actions .install-pill:hover,
+        .manual-hero-actions .install-pill:hover,
         .manual-hero-actions .doc-pill:hover {
             transform: translateY(-1px);
             box-shadow:
                 inset 0 1px 0 rgba(255, 255, 255, 0.1),
                 0 18px 36px -26px var(--shadow);
+        }
+
+        .install-method {
+            padding-top: 4px;
+            border-top: 1px solid var(--line);
+        }
+
+        .install-command-stack {
+            display: grid;
+            gap: 10px;
+        }
+
+        @media (max-width: 1180px) {
+            .manual-hero-actions {
+                align-items: flex-start;
+            }
         }
     `;
     document.head.appendChild(style);
@@ -582,6 +1266,30 @@ function getToolManualOverride(toolName) {
     return toolManualOverrideByName.get(toolName) || {};
 }
 
+function getToolInstallationOverride(toolName, override = {}) {
+    return override.installation || toolInstallationCatalog.get(toolName) || null;
+}
+
+function getToolInstallationSearchText(installation = null) {
+    if (!installation) {
+        return [];
+    }
+
+    return [
+        installation.status,
+        installation.baseline,
+        installation.summary,
+        ...(installation.methods || []).flatMap(method => [
+            method.label,
+            method.description,
+            ...(method.commands || []),
+            ...(method.notes || []),
+            method.source_label
+        ]),
+        ...(installation.sources || []).flatMap(source => [source.label, source.url])
+    ];
+}
+
 function mergeReferenceItems(primary = [], secondary = []) {
     const seen = new Set();
     const output = [];
@@ -675,7 +1383,7 @@ function buildToolParameters(items, override = {}) {
 }
 
 function buildDerivedReferenceItems(items, override = {}) {
-    return (override.reference_items || []).slice(0, 14);
+    return (override.reference_items || []).slice(0, 24);
 }
 
 function buildToolNotes(items, override = {}) {
@@ -723,6 +1431,7 @@ function buildToolManualRecord(toolName, items) {
     const relatedTools = buildRelatedTools(toolName, items, override);
     const syntax = buildDerivedToolSyntax(items, override);
     const summary = buildDerivedToolSummary(toolName, items, override);
+    const installation = getToolInstallationOverride(toolName, override);
 
     const searchText = normalizeText([
         toolName,
@@ -736,7 +1445,8 @@ function buildToolManualRecord(toolName, items) {
         ...referenceItems.flatMap(item => [item.name, item.type, item.description, item.use_case]),
         ...getUniqueValues(items.flatMap(item => item.flags || [])),
         ...(notes || []),
-        ...(relatedTools || [])
+        ...(relatedTools || []),
+        ...getToolInstallationSearchText(installation)
     ].join(" "));
 
     return {
@@ -747,6 +1457,7 @@ function buildToolManualRecord(toolName, items) {
         reference_items: referenceItems,
         notes,
         related_tools: relatedTools,
+        installation,
         workflows,
         stages,
         platforms,
@@ -1925,6 +2636,22 @@ function buildCommandMarkup(item, isOpen) {
     `;
 }
 
+function buildInstallButtonMarkup(toolName, installation = null) {
+    if (!installation) {
+        return "";
+    }
+
+    return `
+        <button
+            class="secondary-btn inline-btn install-pill"
+            type="button"
+            onclick="openInstallModal(decodeURIComponent('${encodeInlineValue(toolName)}'))"
+        >
+            Install steps
+        </button>
+    `;
+}
+
 function buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex) {
     const manual = getToolManual(toolGroup.name);
     const platformMarkup = toolGroup.platforms
@@ -1946,7 +2673,8 @@ function buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex) {
             </a>
         `
         : "";
-    const hasAssistantCard = Boolean(manual.summary || manual.syntax || referenceMarkup || manualMarkup);
+    const installMarkup = buildInstallButtonMarkup(toolGroup.name, manual.installation);
+    const hasAssistantCard = Boolean(manual.summary || manual.syntax || referenceMarkup || manualMarkup || installMarkup);
     const isToolOpen = activeView.tool
         ? isActiveToolLocation(pathGroup.name, moduleGroup.name, toolGroup.name)
         : activeView.query
@@ -1992,6 +2720,7 @@ function buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex) {
                                         Open manual
                                     </button>
                                     ${manualMarkup}
+                                    ${installMarkup}
                                 </div>
                             </div>
                         ` : `
@@ -2003,6 +2732,7 @@ function buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex) {
                                 >
                                     Open manual
                                 </button>
+                                ${installMarkup}
                             </div>
                         `}
                     </div>
@@ -2230,6 +2960,7 @@ function renderToolManualPage(toolName) {
     const manualMarkup = toolManual.manual_url
         ? `<a class="doc-link doc-pill" href="${escapeHtml(toolManual.manual_url)}" target="_blank" rel="noreferrer">${escapeHtml(toolManual.manual_label || "Manual")}</a>`
         : "";
+    const installMarkup = buildInstallButtonMarkup(toolManual.name, toolManual.installation);
     const coverageMarkup = [
         buildManualCoverageBlock("Stages", toolManual.stages),
         buildManualCoverageBlock("Workflows", toolManual.workflows),
@@ -2318,6 +3049,7 @@ function renderToolManualPage(toolName) {
                 </div>
                 <div class="manual-hero-actions">
                     ${manualMarkup}
+                    ${installMarkup}
                 </div>
             </div>
             ${coverageMarkup ? `
@@ -2653,6 +3385,106 @@ function copyCommandById(entryId, button) {
     }
 
     copyInlineText(item.command, button);
+}
+
+function copyInstallCommand(toolName, methodIndex, commandIndex, button) {
+    const installation = getToolManual(toolName).installation;
+    const command = installation?.methods?.[methodIndex]?.commands?.[commandIndex];
+
+    if (!command) {
+        return;
+    }
+
+    copyInlineText(command, button);
+}
+
+function buildInstallMethodMarkup(toolName, method, methodIndex) {
+    const commands = method.commands || [];
+    const notes = method.notes || [];
+    const methodSource = method.source_url
+        ? [{ label: method.source_label || "Install source", url: method.source_url }]
+        : [];
+
+    return `
+        <div class="modal-block install-method">
+            <div>
+                <span class="modal-label">${escapeHtml(method.label || "Install method")}</span>
+                ${method.description ? `<p class="sources-copy">${escapeHtml(method.description)}</p>` : ""}
+            </div>
+            ${commands.length > 0 ? `
+                <div class="install-command-stack">
+                    ${commands.map((command, commandIndex) => buildCodeShellMarkup(
+                        `<code>${escapeHtml(command)}</code>`,
+                        `onclick="copyInstallCommand(decodeURIComponent('${encodeInlineValue(toolName)}'), ${methodIndex}, ${commandIndex}, this)"`,
+                        method.label || "Install"
+                    )).join("")}
+                </div>
+            ` : ""}
+            ${notes.length > 0 ? `
+                <div class="manual-note-list">
+                    ${notes.map(note => `<div class="guide-item">${escapeHtml(note)}</div>`).join("")}
+                </div>
+            ` : ""}
+            ${methodSource.length > 0 ? buildInstallSourceLinks(methodSource) : ""}
+        </div>
+    `;
+}
+
+function buildInstallSourceLinks(sources = []) {
+    const uniqueSources = getUniqueValuesByKey(sources, "url");
+    if (uniqueSources.length === 0) {
+        return "";
+    }
+
+    return `
+        <div class="sources-list">
+            ${uniqueSources.map(source => `
+                <a class="source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">
+                    <span>${escapeHtml(source.label || source.url)}</span>
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </a>
+            `).join("")}
+        </div>
+    `;
+}
+
+function openInstallModal(toolName) {
+    const toolManual = getToolManual(toolName);
+    const installation = toolManual.installation;
+
+    modalTitle.innerText = `${toolManual.name} install steps`;
+
+    if (!installation) {
+        modalBody.innerHTML = `
+            <div class="modal-block">
+                <span class="modal-label">No install note</span>
+                <p class="sources-copy">No non-default Kali installation steps are saved for this tool yet.</p>
+            </div>
+        `;
+        modal.style.display = "block";
+        return;
+    }
+
+    const methodSources = (installation.methods || [])
+        .filter(method => method.source_url)
+        .map(method => ({ label: method.source_label || "Install source", url: method.source_url }));
+    const sources = getUniqueValuesByKey([...(installation.sources || []), ...methodSources], "url");
+
+    modalBody.innerHTML = `
+        <div class="modal-block">
+            <span class="modal-label">${escapeHtml(installation.status || "Install note")}</span>
+            ${installation.summary ? `<p class="sources-copy">${escapeHtml(installation.summary)}</p>` : ""}
+            ${installation.baseline ? `<p class="sources-copy">${escapeHtml(installation.baseline)}</p>` : ""}
+        </div>
+        ${(installation.methods || []).map((method, methodIndex) => buildInstallMethodMarkup(toolManual.name, method, methodIndex)).join("")}
+        ${sources.length > 0 ? `
+            <div class="modal-block">
+                <span class="modal-label">Sources</span>
+                ${buildInstallSourceLinks(sources)}
+            </div>
+        ` : ""}
+    `;
+    modal.style.display = "block";
 }
 
 function showNotesModal(item) {

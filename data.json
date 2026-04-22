@@ -414,6 +414,8 @@
         "tools": [
           "httpx",
           "WhatWeb",
+          "EyeWitness",
+          "Aquatone",
           "Katana",
           "waybackurls",
           "WPScan",
@@ -608,6 +610,14 @@
         "url": "https://github.com/urbanadventurer/WhatWeb"
       },
       {
+        "label": "EyeWitness",
+        "url": "https://www.kali.org/tools/eyewitness/"
+      },
+      {
+        "label": "Aquatone",
+        "url": "https://github.com/michenriksen/aquatone"
+      },
+      {
         "label": "Samba smbclient",
         "url": "https://www.samba.org/samba/docs/current/man-html/smbclient.1.html"
       },
@@ -756,9 +766,19 @@
         "manual_url": "https://github.com/cddmp/enum4linux-ng"
       },
       {
+        "name": "EyeWitness",
+        "manual_label": "Kali EyeWitness",
+        "manual_url": "https://www.kali.org/tools/eyewitness/"
+      },
+      {
         "name": "exiftool",
         "manual_label": "ExifTool",
         "manual_url": "https://exiftool.org/"
+      },
+      {
+        "name": "Aquatone",
+        "manual_label": "Aquatone",
+        "manual_url": "https://github.com/michenriksen/aquatone"
       },
       {
         "name": "Feroxbuster",
@@ -3931,6 +3951,90 @@
     },
     {
       "category": "Information Gathering - Web Edition",
+      "tool": "EyeWitness",
+      "platform": "Web",
+      "title": "Capture Screenshots from a URL List",
+      "description": "Use EyeWitness when you want a screenshot-heavy report with server clues and a quick visual triage pass.",
+      "command": "eyewitness --web -f <HOSTS_FILE> -d <OUTPUT_DIR> --headless --no-prompt",
+      "tip": "Best after httpx or another validator gives you a clean list of live web URLs.",
+      "tags": [
+        "eyewitness",
+        "screenshots",
+        "web",
+        "triage"
+      ],
+      "reference_label": "Kali EyeWitness",
+      "reference_url": "https://www.kali.org/tools/eyewitness/",
+      "help_menu": "Why: a visual report makes large web surfaces much easier to prioritize.\nUse when: you need screenshots, titles, and server hints for many URLs.",
+      "path": "Recon & Surface Mapping",
+      "module": "Web Surface Mapping",
+      "type": "Command"
+    },
+    {
+      "category": "Information Gathering - Web Edition",
+      "tool": "EyeWitness",
+      "platform": "Web",
+      "title": "Import Nmap XML into EyeWitness",
+      "description": "Feed Nmap XML into EyeWitness so service discovery can turn directly into screenshot review.",
+      "command": "eyewitness --web -x <NMAP_XML> -d <OUTPUT_DIR> --headless --no-prompt",
+      "tip": "Useful when the web targets came from port scanning instead of a URL list.",
+      "tags": [
+        "eyewitness",
+        "nmap",
+        "screenshots",
+        "xml"
+      ],
+      "reference_label": "Kali EyeWitness",
+      "reference_url": "https://www.kali.org/tools/eyewitness/",
+      "help_menu": "Why: Nmap XML import keeps service discovery and visual triage connected.\nUse when: your scan found HTTP services across unusual ports.",
+      "path": "Recon & Surface Mapping",
+      "module": "Web Surface Mapping",
+      "type": "Command"
+    },
+    {
+      "category": "Information Gathering - Web Edition",
+      "tool": "Aquatone",
+      "platform": "Web",
+      "title": "Build an Aquatone Visual Report",
+      "description": "Pipe a live URL or host list into Aquatone to generate a screenshot report for quick web surface review.",
+      "command": "cat <HOSTS_FILE> | aquatone -out <OUTPUT_DIR>",
+      "tip": "Aquatone is archived, so keep it as a compatibility option and prefer maintained screenshot tooling for new pipelines.",
+      "tags": [
+        "aquatone",
+        "screenshots",
+        "web",
+        "report"
+      ],
+      "reference_label": "Aquatone",
+      "reference_url": "https://github.com/michenriksen/aquatone",
+      "help_menu": "Why: Aquatone clusters screenshots into a compact HTML report.\nUse when: you specifically want Aquatone-style output or are replaying an older recon workflow.",
+      "path": "Recon & Surface Mapping",
+      "module": "Web Surface Mapping",
+      "type": "Command"
+    },
+    {
+      "category": "Information Gathering - Web Edition",
+      "tool": "Aquatone",
+      "platform": "Web",
+      "title": "Import Nmap XML into Aquatone",
+      "description": "Use Aquatone's Nmap parser when your web targets came from a port scan and you want screenshot output.",
+      "command": "cat <NMAP_XML> | aquatone -nmap -out <OUTPUT_DIR>",
+      "tip": "Set a dedicated output directory so screenshots, headers, HTML, and reports stay together.",
+      "tags": [
+        "aquatone",
+        "nmap",
+        "screenshots",
+        "xml"
+      ],
+      "reference_label": "Aquatone",
+      "reference_url": "https://github.com/michenriksen/aquatone",
+      "help_menu": "Why: Nmap XML import lets a service scan become a visual review queue.\nUse when: you have many HTTP-like services across mixed ports.",
+      "path": "Recon & Surface Mapping",
+      "module": "Web Surface Mapping",
+      "type": "Command"
+    },
+    {
+      "category": "Information Gathering - Web Edition",
       "tool": "Katana",
       "platform": "Web",
       "title": "Crawl a Site for Links and Paths",
@@ -4217,6 +4321,153 @@
       "help_menu": "Why: faster to read and edit than curl when you are shaping JSON requests.\nUse for: login flows, API tokens, and quick request-response comparisons.",
       "reference_label": "HTTPie CLI",
       "reference_url": "https://httpie.io/docs/cli"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "Shell",
+      "platform": "Linux",
+      "title": "Show Current Directory and Files",
+      "description": "Run the two safest orientation commands first: print where you are, then list visible and hidden files with permissions.",
+      "command": "pwd && ls -la",
+      "tip": "This is the basic starting point when you land in an unfamiliar shell or directory.",
+      "tags": [
+        "linux",
+        "fundamentals",
+        "files",
+        "orientation"
+      ],
+      "help_menu": "Why: pwd prevents path confusion, and ls -la shows hidden files, owners, groups, modes, sizes, and timestamps.\nLook for: config files, dotfiles, backups, writable directories, and unexpected ownership.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/coreutils/manual/html_node/index.html",
+      "reference_label": "GNU Coreutils"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "find",
+      "platform": "Linux",
+      "title": "Find Files by Name",
+      "description": "Search below a starting directory for files matching a name or glob pattern. This is the everyday find shape to memorize first.",
+      "command": "find <START_PATH> -type f -name '<PATTERN>' 2>/dev/null",
+      "tip": "Use . as the start path for the current directory, and quote patterns like '*.conf' so the shell does not expand them too early.",
+      "tags": [
+        "linux",
+        "files",
+        "find",
+        "basics"
+      ],
+      "help_menu": "Why: name searches are the fastest way to locate configs, keys, backups, logs, and app files.\nParameters: <START_PATH> is where find begins, -type f keeps results to files, and -name matches the filename pattern.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/findutils/manual/html_node/find_html/Invoking-find.html",
+      "reference_label": "GNU find"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "find",
+      "platform": "Linux",
+      "title": "Find Directories by Name",
+      "description": "Search for directories with a case-insensitive pattern when you are mapping an application tree or looking for common folder names.",
+      "command": "find <START_PATH> -type d -iname '<PATTERN>' 2>/dev/null",
+      "tip": "Good patterns include '*backup*', '*upload*', '*config*', '*log*', and framework-specific folder names.",
+      "tags": [
+        "linux",
+        "directories",
+        "find",
+        "basics"
+      ],
+      "help_menu": "Why: directories reveal how an app is laid out before you inspect individual files.\nParameters: -type d keeps only directories, and -iname makes the pattern case-insensitive.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/findutils/manual/html_node/find_html/Invoking-find.html",
+      "reference_label": "GNU find"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "find",
+      "platform": "Linux",
+      "title": "Find Recently Modified Files",
+      "description": "List files changed recently so deployments, uploads, rotated logs, and active working directories stand out.",
+      "command": "find <START_PATH> -maxdepth 3 -type f -mtime -7 -ls 2>/dev/null",
+      "tip": "Change -mtime -7 to -mtime -1 for the last day, or use -mmin -60 for the last hour.",
+      "tags": [
+        "linux",
+        "files",
+        "timestamps",
+        "find"
+      ],
+      "help_menu": "Why: recent changes often point to where the application actually runs or where operators have been working.\nParameters: -maxdepth limits noise, -mtime -7 means modified in the last seven days, and -ls prints useful metadata.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/findutils/manual/html_node/find_html/Invoking-find.html",
+      "reference_label": "GNU find"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "find",
+      "platform": "Linux",
+      "title": "Find Large Files",
+      "description": "Locate large files that may be backups, dumps, archives, media, or logs worth reviewing during host baselining.",
+      "command": "find <START_PATH> -type f -size +100M -printf '%s %p\\n' 2>/dev/null | sort -nr | head",
+      "tip": "Raise or lower +100M depending on the host size and how noisy the result set is.",
+      "tags": [
+        "linux",
+        "files",
+        "size",
+        "find"
+      ],
+      "help_menu": "Why: unusually large files often reveal backups, exported databases, compressed app bundles, and rotated logs.\nParameters: -size +100M matches files larger than 100 MB, and -printf makes the output sortable.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/findutils/manual/html_node/find_html/Invoking-find.html",
+      "reference_label": "GNU find"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "find",
+      "platform": "Linux",
+      "title": "Find Writable Directories",
+      "description": "Show directories the current user can write to, which helps with staging, cleanup planning, and misconfiguration review.",
+      "command": "find <START_PATH> -type d -writable -not -path '/proc/*' 2>/dev/null",
+      "tip": "Start with a narrow path like /var/www, /opt, or the app directory before searching the whole filesystem.",
+      "tags": [
+        "linux",
+        "permissions",
+        "writable",
+        "find"
+      ],
+      "help_menu": "Why: writable directories tell you where you can safely create temporary files and where permissions may be too loose.\nParameters: -writable tests your current effective access, and -not -path excludes a noisy virtual filesystem.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/findutils/manual/html_node/find_html/Invoking-find.html",
+      "reference_label": "GNU find"
+    },
+    {
+      "category": "Linux Fundamentals",
+      "tool": "find",
+      "platform": "Linux",
+      "title": "Find Files Owned by a User",
+      "description": "List files owned by a specific account so service ownership, app data, and user-controlled paths are easier to understand.",
+      "command": "find <START_PATH> -user <USER> -type f -ls 2>/dev/null",
+      "tip": "Try service users such as www-data, nginx, apache, postgres, mysql, or the user you landed as.",
+      "tags": [
+        "linux",
+        "ownership",
+        "permissions",
+        "find"
+      ],
+      "help_menu": "Why: ownership patterns explain which service or user can modify each part of the application.\nParameters: -user selects the account owner, -type f keeps output to files, and -ls shows mode, owner, group, size, and path.",
+      "path": "Scoping & Setup",
+      "module": "Linux Host Baseline",
+      "type": "Command",
+      "reference_url": "https://www.gnu.org/software/findutils/manual/html_node/find_html/Invoking-find.html",
+      "reference_label": "GNU find"
     },
     {
       "category": "Linux Fundamentals",
