@@ -3261,8 +3261,9 @@ function loadToolView(toolName, contextPath = null, contextModule = null) {
     renderToolManualPage(toolName);
 }
 
-function loadView(filterPath = null, filterModule = null, filterTool = null, searchQuery = "") {
+function loadView(filterPath = null, filterModule = null, filterTool = null, searchQuery = "", options = {}) {
     const query = searchQuery.trim();
+    const { syncUrl = true } = options;
 
     activeView = {
         type: query
@@ -3335,7 +3336,9 @@ function loadView(filterPath = null, filterModule = null, filterTool = null, sea
         return;
     }
 
-    syncUrlState();
+    if (syncUrl) {
+        syncUrlState();
+    }
     renderSidebar();
 
     if (activeView.type === "search") {
@@ -3382,8 +3385,14 @@ function goHome() {
 }
 
 function executeSearch(query) {
-    searchBox.value = query;
-    loadView(null, null, null, query);
+    const normalizedQuery = query.trim();
+    searchBox.value = normalizedQuery;
+
+    if (normalizedQuery.length > 0) {
+        loadView(null, null, null, normalizedQuery, { syncUrl: true });
+    } else {
+        goHome();
+    }
 }
 
 function clearSearch() {
@@ -3604,9 +3613,17 @@ window.addEventListener("click", event => {
 searchBox.addEventListener("input", event => {
     const query = event.target.value.trim();
     if (query.length > 0) {
-        loadView(null, null, null, query);
+        // Keep the live filter responsive without rewriting the URL on every keystroke.
+        loadView(null, null, null, query, { syncUrl: false });
     } else {
         goHome();
+    }
+});
+
+searchBox.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        executeSearch(event.target.value);
     }
 });
 
