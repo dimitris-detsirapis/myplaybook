@@ -125,6 +125,66 @@
       ]
     },
     {
+      "name": "Aquatone",
+      "summary": "Archived visual inspection tool that screenshots large web target sets and writes a clustered HTML report.",
+      "syntax": "cat <HOSTS_FILE> | aquatone -out <OUTPUT_DIR>",
+      "parameters": [
+        {
+          "name": "<HOSTS_FILE>",
+          "description": "A list of hosts, domains, IPs, or URLs to feed into Aquatone."
+        },
+        {
+          "name": "<NMAP_XML>",
+          "description": "Nmap or Masscan XML output when using -nmap mode."
+        },
+        {
+          "name": "<OUTPUT_DIR>",
+          "description": "Directory where Aquatone should write reports, screenshots, headers, and session data."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-out",
+          "type": "flag",
+          "description": "Set the destination directory for generated output.",
+          "use_case": "Keep the report and screenshots organized with the assessment artifacts."
+        },
+        {
+          "name": "-nmap",
+          "type": "flag",
+          "description": "Parse input as Nmap or Masscan XML.",
+          "use_case": "Screenshot web services discovered during port scanning."
+        },
+        {
+          "name": "-ports",
+          "type": "flag",
+          "description": "Set custom ports or aliases such as small, medium, large, or xlarge.",
+          "use_case": "Match visual discovery to the ports that matter for the target."
+        },
+        {
+          "name": "-chrome-path",
+          "type": "flag",
+          "description": "Point Aquatone at a specific Chrome or Chromium executable.",
+          "use_case": "Fix screenshot capture when the browser is not in a standard path."
+        },
+        {
+          "name": "-silent",
+          "type": "flag",
+          "description": "Suppress normal output except errors.",
+          "use_case": "Keep pipeline output cleaner during batch runs."
+        }
+      ],
+      "notes": [
+        "The upstream Aquatone repository is archived and read-only. Keep it for compatibility with older workflows, but prefer maintained screenshot tooling for new recon pipelines.",
+        "The upstream README recommends Chromium for more reliable headless screenshot behavior."
+      ],
+      "related_tools": [
+        "EyeWitness",
+        "httpx",
+        "Nmap"
+      ]
+    },
+    {
       "name": "bloodhound-python",
       "summary": "Collector for AD relationship data that feeds BloodHound-style graph analysis without relying on the GUI first.",
       "syntax": "bloodhound-python -u <user> -p <password> -d <DOMAIN> [collection flags]",
@@ -489,6 +549,99 @@
         "GraphQLMap",
         "Burp Suite"
       ]
+    },
+    {
+      "name": "CMSeeK",
+      "summary": "CMS detection and focused CMS scanning suite for quickly routing WordPress, Joomla, Drupal, and other CMS targets into the right deeper workflow.",
+      "syntax": "python3 cmseek.py -u <URL> [options]",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "Target CMS URL to fingerprint."
+        },
+        {
+          "name": "-l <FILE>",
+          "description": "File containing multiple target URLs."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-u, --url",
+          "type": "flag",
+          "description": "Set a single target URL.",
+          "use_case": "Fingerprint one suspected CMS host."
+        },
+        {
+          "name": "-l, --list",
+          "type": "flag",
+          "description": "Scan targets from a file.",
+          "use_case": "Batch-check a curated list of candidate CMS hosts."
+        },
+        {
+          "name": "--follow-redirect",
+          "type": "flag",
+          "description": "Follow redirects during scanning.",
+          "use_case": "Handle canonical-host redirects cleanly."
+        },
+        {
+          "name": "--strict-cms",
+          "type": "flag",
+          "description": "Check only against selected CMS IDs.",
+          "use_case": "Reduce false positives when you already have a strong hypothesis."
+        },
+        {
+          "name": "--random-agent",
+          "type": "flag",
+          "description": "Use a random User-Agent.",
+          "use_case": "Vary the basic client fingerprint during repeated lab checks."
+        },
+        {
+          "name": "--update",
+          "type": "flag",
+          "description": "Update CMSeeK from Git.",
+          "use_case": "Refresh signatures before relying on output."
+        }
+      ],
+      "notes": [
+        "CMSeeK is most useful as a router: identify the CMS family, then switch to app-specific tools and manual checks.",
+        "The upstream project includes brute-force modules; keep those disabled unless password testing is explicitly in scope."
+      ],
+      "related_tools": [
+        "WPScan",
+        "Joomscan",
+        "Droopescan",
+        "WhatWeb"
+      ],
+      "installation": {
+        "status": "Upstream Python install",
+        "baseline": "Not tracked against the Kali desktop default baseline here; the upstream Git install is the most predictable path.",
+        "summary": "CMSeeK is usually run from its upstream Git repository with Python requirements installed locally.",
+        "methods": [
+          {
+            "label": "Git clone",
+            "description": "Clone the upstream project and install its Python requirements.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install git python3-pip",
+              "git clone https://github.com/Tuhinshubhra/CMSeeK ~/tools/CMSeeK",
+              "cd ~/tools/CMSeeK",
+              "pip install -r requirements.txt",
+              "python3 cmseek.py --help"
+            ],
+            "notes": [
+              "Keep CMSeeK in its own directory so updates and result files stay contained."
+            ],
+            "source_label": "CMSeeK",
+            "source_url": "https://github.com/Tuhinshubhra/CMSeeK"
+          }
+        ],
+        "sources": [
+          {
+            "label": "CMSeeK",
+            "url": "https://github.com/Tuhinshubhra/CMSeeK"
+          }
+        ]
+      }
     },
     {
       "name": "Coercer",
@@ -1193,66 +1346,6 @@
       ]
     },
     {
-      "name": "Aquatone",
-      "summary": "Archived visual inspection tool that screenshots large web target sets and writes a clustered HTML report.",
-      "syntax": "cat <HOSTS_FILE> | aquatone -out <OUTPUT_DIR>",
-      "parameters": [
-        {
-          "name": "<HOSTS_FILE>",
-          "description": "A list of hosts, domains, IPs, or URLs to feed into Aquatone."
-        },
-        {
-          "name": "<NMAP_XML>",
-          "description": "Nmap or Masscan XML output when using -nmap mode."
-        },
-        {
-          "name": "<OUTPUT_DIR>",
-          "description": "Directory where Aquatone should write reports, screenshots, headers, and session data."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "-out",
-          "type": "flag",
-          "description": "Set the destination directory for generated output.",
-          "use_case": "Keep the report and screenshots organized with the assessment artifacts."
-        },
-        {
-          "name": "-nmap",
-          "type": "flag",
-          "description": "Parse input as Nmap or Masscan XML.",
-          "use_case": "Screenshot web services discovered during port scanning."
-        },
-        {
-          "name": "-ports",
-          "type": "flag",
-          "description": "Set custom ports or aliases such as small, medium, large, or xlarge.",
-          "use_case": "Match visual discovery to the ports that matter for the target."
-        },
-        {
-          "name": "-chrome-path",
-          "type": "flag",
-          "description": "Point Aquatone at a specific Chrome or Chromium executable.",
-          "use_case": "Fix screenshot capture when the browser is not in a standard path."
-        },
-        {
-          "name": "-silent",
-          "type": "flag",
-          "description": "Suppress normal output except errors.",
-          "use_case": "Keep pipeline output cleaner during batch runs."
-        }
-      ],
-      "notes": [
-        "The upstream Aquatone repository is archived and read-only. Keep it for compatibility with older workflows, but prefer maintained screenshot tooling for new recon pipelines.",
-        "The upstream README recommends Chromium for more reliable headless screenshot behavior."
-      ],
-      "related_tools": [
-        "EyeWitness",
-        "httpx",
-        "Nmap"
-      ]
-    },
-    {
       "name": "Feroxbuster",
       "summary": "Recursive content discovery tool that is especially useful when you want fast route expansion with flexible wordlists and extensions.",
       "syntax": "feroxbuster -u <URL> -w <WORDLIST> [options]",
@@ -1581,437 +1674,6 @@
       ]
     },
     {
-      "name": "getcap",
-      "summary": "Linux capability viewer for finding files with privilege-related capabilities that are not visible through SUID checks alone.",
-      "syntax": "getcap [-r] <START_PATH>",
-      "parameters": [
-        {
-          "name": "<START_PATH>",
-          "description": "File or directory tree to inspect for file capabilities."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "-r",
-          "type": "flag",
-          "description": "Recurse through directories.",
-          "use_case": "Review a whole filesystem or application tree."
-        },
-        {
-          "name": "cap_setuid+ep",
-          "type": "capability",
-          "description": "Capability that can allow a binary to alter user identity.",
-          "use_case": "High-priority local privilege review."
-        },
-        {
-          "name": "cap_net_raw+ep",
-          "type": "capability",
-          "description": "Capability often used for raw sockets.",
-          "use_case": "Understand network tooling and packet-capture permissions."
-        }
-      ],
-      "notes": [
-        "Pair getcap with SUID review because modern systems can expose privilege through either mechanism.",
-        "Most capability findings need binary-specific validation before they become an escalation path."
-      ],
-      "related_tools": [
-        "find",
-        "sudo",
-        "linpeas"
-      ]
-    },
-    {
-      "name": "grep",
-      "summary": "Core text-search command for finding strings, patterns, config clues, and evidence inside files or command output.",
-      "syntax": "grep [options] '<PATTERN>' <FILE_OR_PATH>",
-      "parameters": [
-        {
-          "name": "<PATTERN>",
-          "description": "Text or regular expression to search for."
-        },
-        {
-          "name": "<FILE_OR_PATH>",
-          "description": "File, directory, or stdin stream to search."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "-R",
-          "type": "flag",
-          "description": "Search directories recursively.",
-          "use_case": "Review a project, config tree, or web root."
-        },
-        {
-          "name": "-n",
-          "type": "flag",
-          "description": "Print matching line numbers.",
-          "use_case": "Make hits easy to reopen and cite."
-        },
-        {
-          "name": "-i",
-          "type": "flag",
-          "description": "Match case-insensitively.",
-          "use_case": "Catch Password, password, PASSWORD, and similar variants."
-        },
-        {
-          "name": "-E",
-          "type": "flag",
-          "description": "Use extended regular expressions.",
-          "use_case": "Write cleaner alternation such as password|secret|token."
-        },
-        {
-          "name": "-F",
-          "type": "flag",
-          "description": "Treat the pattern as fixed text instead of a regex.",
-          "use_case": "Search for strings containing regex characters safely."
-        },
-        {
-          "name": "-w",
-          "type": "flag",
-          "description": "Match whole words only.",
-          "use_case": "Reduce noisy partial matches."
-        },
-        {
-          "name": "-v",
-          "type": "flag",
-          "description": "Invert the match.",
-          "use_case": "Filter out known-noisy lines."
-        },
-        {
-          "name": "-o",
-          "type": "flag",
-          "description": "Print only the matching text.",
-          "use_case": "Extract values for a pipeline."
-        },
-        {
-          "name": "-l",
-          "type": "flag",
-          "description": "Print only filenames with matches.",
-          "use_case": "Build a short file list before opening each result."
-        },
-        {
-          "name": "--include='*.conf'",
-          "type": "flag",
-          "description": "Search only matching filenames during recursive searches.",
-          "use_case": "Keep config searches focused."
-        },
-        {
-          "name": "--exclude-dir=.git",
-          "type": "flag",
-          "description": "Skip a directory during recursive searches.",
-          "use_case": "Avoid noisy dependency, cache, and repository metadata folders."
-        }
-      ],
-      "notes": [
-        "Use grep for fast text confirmation, then open the surrounding file context before reporting a finding.",
-        "Prefer -F for literal secrets or tokens and -E only when you actually need a regex."
-      ],
-      "related_tools": [
-        "find",
-        "jq",
-        "file"
-      ]
-    },
-    {
-      "name": "ip",
-      "summary": "Modern Linux network inspection command for addresses, links, routes, neighbors, and quick local network orientation.",
-      "syntax": "ip [options] <object> <command>",
-      "parameters": [
-        {
-          "name": "<object>",
-          "description": "Network object such as addr, link, route, or neigh."
-        },
-        {
-          "name": "<command>",
-          "description": "Action for that object, such as show, add, or get."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "addr",
-          "type": "object",
-          "description": "Show or manage interface addresses.",
-          "use_case": "Confirm IPs, interface names, and link state."
-        },
-        {
-          "name": "link",
-          "type": "object",
-          "description": "Show or manage network interfaces.",
-          "use_case": "Check MAC addresses, MTU, and up/down state."
-        },
-        {
-          "name": "route",
-          "type": "object",
-          "description": "Show or manage routing table entries.",
-          "use_case": "Identify default gateways and reachable internal subnets."
-        },
-        {
-          "name": "neigh",
-          "type": "object",
-          "description": "Show neighbor/ARP table entries.",
-          "use_case": "Spot nearby hosts the system has already talked to."
-        },
-        {
-          "name": "-br",
-          "type": "flag",
-          "description": "Print brief output.",
-          "use_case": "Make interface and address review easier to scan."
-        },
-        {
-          "name": "-4 / -6",
-          "type": "flag",
-          "description": "Limit output to IPv4 or IPv6.",
-          "use_case": "Separate address families during network notes."
-        },
-        {
-          "name": "route get <TARGET>",
-          "type": "command",
-          "description": "Show how the host would route traffic to a target.",
-          "use_case": "Confirm interface, source IP, and gateway before testing reachability."
-        }
-      ],
-      "notes": [
-        "Read addresses, routes, and listening sockets together; one view alone rarely explains the whole host.",
-        "Brief mode is excellent for notes, but full output is better when you need interface flags and detail."
-      ],
-      "related_tools": [
-        "ss",
-        "Nmap",
-        "Shell"
-      ]
-    },
-    {
-      "name": "ps",
-      "summary": "Process listing command for seeing what is running, who owns it, and which command line started it.",
-      "syntax": "ps aux [--sort=<KEY>]",
-      "parameters": [
-        {
-          "name": "--sort=<KEY>",
-          "description": "Sort key such as -%mem, -%cpu, user, pid, or start_time."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "aux",
-          "type": "option set",
-          "description": "Common BSD-style view showing all users, terminal-less processes, and command lines.",
-          "use_case": "Fast broad process orientation."
-        },
-        {
-          "name": "--sort=-%mem",
-          "type": "flag",
-          "description": "Sort by memory usage descending.",
-          "use_case": "Surface heavy applications, databases, and agents."
-        },
-        {
-          "name": "--sort=-%cpu",
-          "type": "flag",
-          "description": "Sort by CPU usage descending.",
-          "use_case": "Find busy or suspicious processes quickly."
-        },
-        {
-          "name": "-ef",
-          "type": "option set",
-          "description": "POSIX-style full process listing.",
-          "use_case": "Alternative format that is common in scripts and docs."
-        },
-        {
-          "name": "-o",
-          "type": "flag",
-          "description": "Choose output columns.",
-          "use_case": "Build readable process views for notes."
-        }
-      ],
-      "notes": [
-        "Process command lines can contain secrets. Handle captured output carefully.",
-        "Pair ps with systemctl when you need to connect a process back to a managed service."
-      ],
-      "related_tools": [
-        "systemctl",
-        "ss",
-        "grep"
-      ]
-    },
-    {
-      "name": "ss",
-      "summary": "Modern socket inspection command for seeing listening ports, established connections, protocols, and process ownership.",
-      "syntax": "ss [options]",
-      "parameters": [],
-      "reference_items": [
-        {
-          "name": "-t",
-          "type": "flag",
-          "description": "Show TCP sockets.",
-          "use_case": "Review web, SSH, database, and other TCP services."
-        },
-        {
-          "name": "-u",
-          "type": "flag",
-          "description": "Show UDP sockets.",
-          "use_case": "Catch DNS, VPN, discovery, and telemetry listeners."
-        },
-        {
-          "name": "-l",
-          "type": "flag",
-          "description": "Show listening sockets.",
-          "use_case": "Build the local service map."
-        },
-        {
-          "name": "-p",
-          "type": "flag",
-          "description": "Show process information when permitted.",
-          "use_case": "Tie ports back to owning programs."
-        },
-        {
-          "name": "-n",
-          "type": "flag",
-          "description": "Do not resolve service names or hostnames.",
-          "use_case": "Keep output fast and literal."
-        },
-        {
-          "name": "-a",
-          "type": "flag",
-          "description": "Show all sockets.",
-          "use_case": "Broader review when listening-only output is not enough."
-        },
-        {
-          "name": "state established",
-          "type": "filter",
-          "description": "Filter to established connections.",
-          "use_case": "See active peer relationships."
-        }
-      ],
-      "notes": [
-        "Use sudo with ss -p when process names are hidden from an unprivileged user.",
-        "Localhost-only listeners often matter as much as externally reachable services."
-      ],
-      "related_tools": [
-        "ip",
-        "ps",
-        "Nmap"
-      ]
-    },
-    {
-      "name": "sudo",
-      "summary": "Privilege delegation command used to list or run commands allowed by sudoers policy for the current user.",
-      "syntax": "sudo [options] <COMMAND>",
-      "parameters": [
-        {
-          "name": "<COMMAND>",
-          "description": "Command to run through sudo policy."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "-l",
-          "type": "flag",
-          "description": "List commands the current user may run.",
-          "use_case": "First sudo check during Linux privilege review."
-        },
-        {
-          "name": "-u <USER>",
-          "type": "flag",
-          "description": "Run as a specific user.",
-          "use_case": "Validate a permitted user context explicitly."
-        },
-        {
-          "name": "-i",
-          "type": "flag",
-          "description": "Run the target user's login shell.",
-          "use_case": "Understand environment changes when sudo allows shell access."
-        },
-        {
-          "name": "-S",
-          "type": "flag",
-          "description": "Read the password from standard input.",
-          "use_case": "Scripted lab workflows where stdin handling is intentional."
-        },
-        {
-          "name": "-k",
-          "type": "flag",
-          "description": "Invalidate cached credentials.",
-          "use_case": "Retest sudo behavior from a clean authentication state."
-        }
-      ],
-      "notes": [
-        "Capture sudo -l output before testing any allowed command. The policy is the evidence trail.",
-        "Wildcards, environment preservation, editors, pagers, and interpreters deserve extra review."
-      ],
-      "related_tools": [
-        "find",
-        "getcap",
-        "linpeas"
-      ]
-    },
-    {
-      "name": "systemctl",
-      "summary": "systemd service manager for listing, inspecting, and understanding services, timers, units, and startup behavior on Linux hosts.",
-      "syntax": "systemctl <command> [unit]",
-      "parameters": [
-        {
-          "name": "<command>",
-          "description": "Action such as status, list-units, list-timers, cat, or show."
-        },
-        {
-          "name": "[unit]",
-          "description": "Optional systemd unit name such as nginx.service or backup.timer."
-        }
-      ],
-      "reference_items": [
-        {
-          "name": "status <unit>",
-          "type": "command",
-          "description": "Show state, recent logs, and process information for a unit.",
-          "use_case": "Understand one service quickly."
-        },
-        {
-          "name": "list-units",
-          "type": "command",
-          "description": "List loaded active units.",
-          "use_case": "Baseline running service inventory."
-        },
-        {
-          "name": "--type=service",
-          "type": "flag",
-          "description": "Limit output to service units.",
-          "use_case": "Keep service review readable."
-        },
-        {
-          "name": "--state=running",
-          "type": "flag",
-          "description": "Show units currently in a running state.",
-          "use_case": "Focus on live services first."
-        },
-        {
-          "name": "list-timers",
-          "type": "command",
-          "description": "List timer units and next run times.",
-          "use_case": "Find scheduled jobs managed by systemd."
-        },
-        {
-          "name": "cat <unit>",
-          "type": "command",
-          "description": "Print the unit file and drop-ins.",
-          "use_case": "Review ExecStart, user context, writable paths, and override files."
-        },
-        {
-          "name": "show <unit>",
-          "type": "command",
-          "description": "Print structured unit properties.",
-          "use_case": "Pull exact user, group, path, and dependency values."
-        }
-      ],
-      "notes": [
-        "Use systemctl to connect process names to startup configuration and service identities.",
-        "Unit files, drop-ins, writable service paths, and timer commands are often more useful than the service name alone."
-      ],
-      "related_tools": [
-        "ps",
-        "ss",
-        "find"
-      ]
-    },
-    {
       "name": "findDelegation.py",
       "summary": "Impacket helper for surfacing delegation configurations that influence Kerberos abuse paths and service trust boundaries.",
       "syntax": "findDelegation.py <DOMAIN>/<USER>:<PASSWORD> -dc-ip <DC_IP>",
@@ -2099,6 +1761,46 @@
         "ldapsearch",
         "kerbrute",
         "bloodhound-python"
+      ]
+    },
+    {
+      "name": "getcap",
+      "summary": "Linux capability viewer for finding files with privilege-related capabilities that are not visible through SUID checks alone.",
+      "syntax": "getcap [-r] <START_PATH>",
+      "parameters": [
+        {
+          "name": "<START_PATH>",
+          "description": "File or directory tree to inspect for file capabilities."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-r",
+          "type": "flag",
+          "description": "Recurse through directories.",
+          "use_case": "Review a whole filesystem or application tree."
+        },
+        {
+          "name": "cap_setuid+ep",
+          "type": "capability",
+          "description": "Capability that can allow a binary to alter user identity.",
+          "use_case": "High-priority local privilege review."
+        },
+        {
+          "name": "cap_net_raw+ep",
+          "type": "capability",
+          "description": "Capability often used for raw sockets.",
+          "use_case": "Understand network tooling and packet-capture permissions."
+        }
+      ],
+      "notes": [
+        "Pair getcap with SUID review because modern systems can expose privilege through either mechanism.",
+        "Most capability findings need binary-specific validation before they become an escalation path."
+      ],
+      "related_tools": [
+        "find",
+        "sudo",
+        "linpeas"
       ]
     },
     {
@@ -2214,6 +1916,366 @@
       ]
     },
     {
+      "name": "git",
+      "summary": "Version control client used for cloning GitLab repositories, inspecting history, reviewing remotes, and cleaning token-bearing repository configuration.",
+      "syntax": "git clone <REPO_URL> <DIR> | git log --oneline --all",
+      "parameters": [
+        {
+          "name": "<REPO_DIR>",
+          "description": "Local repository directory."
+        },
+        {
+          "name": "<TOKEN>",
+          "description": "Credential or access token used only when in scope."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "clone",
+          "type": "command",
+          "description": "Copy a remote repository locally.",
+          "use_case": "Review GitLab code and history offline."
+        },
+        {
+          "name": "log --all",
+          "type": "command",
+          "description": "Show commits across branches.",
+          "use_case": "Look for deleted secrets or risky changes."
+        },
+        {
+          "name": "remote -v",
+          "type": "command",
+          "description": "List configured remotes.",
+          "use_case": "Check whether token-bearing URLs need cleanup."
+        },
+        {
+          "name": "grep",
+          "type": "command",
+          "description": "Search tracked content.",
+          "use_case": "Find config, credentials, endpoints, and TODO clues."
+        }
+      ],
+      "notes": [
+        "After token-authenticated clones, run git remote -v and remove embedded tokens from .git/config.",
+        "Review history as well as the current tree; secrets are often committed and then deleted."
+      ],
+      "related_tools": [
+        "GitLab API",
+        "Gitleaks",
+        "git-dumper"
+      ],
+      "installation": {
+        "status": "Kali package",
+        "baseline": "Git is common on Kali, but the apt path is still useful on minimal images or repairs.",
+        "summary": "Git is available from the Kali repositories as the git package.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install the Git command-line client.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install git",
+              "git -h"
+            ],
+            "source_label": "Kali Tools: git",
+            "source_url": "https://www.kali.org/tools/git/"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Kali Tools: git",
+            "url": "https://www.kali.org/tools/git/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "git-dumper",
+      "summary": "Python tool for recovering web-exposed .git repository data and checking out as much source as the exposed object graph allows.",
+      "syntax": "git-dumper <URL> <DIR>",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "URL to the exposed .git directory."
+        },
+        {
+          "name": "<DIR>",
+          "description": "Local output directory."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "URL DIR",
+          "type": "arguments",
+          "description": "Source .git URL and local output directory.",
+          "use_case": "Recover a confirmed exposed repository."
+        },
+        {
+          "name": "-j, --jobs",
+          "type": "flag",
+          "description": "Set simultaneous requests.",
+          "use_case": "Tune recovery speed."
+        },
+        {
+          "name": "--proxy",
+          "type": "flag",
+          "description": "Route requests through a proxy.",
+          "use_case": "Inspect recovery traffic in Burp or ZAP."
+        },
+        {
+          "name": "-H, --header",
+          "type": "flag",
+          "description": "Add HTTP headers.",
+          "use_case": "Handle authenticated or header-gated exposures."
+        }
+      ],
+      "notes": [
+        "The upstream README warns that repositories controlled by an attacker can cause local code execution; use a disposable workspace.",
+        "A partial dump can still expose config, source, and history worth reviewing carefully."
+      ],
+      "related_tools": [
+        "GitTools",
+        "git",
+        "Gitleaks"
+      ],
+      "installation": {
+        "status": "Non-default Python install",
+        "baseline": "Not part of Kali default; install it in an isolated environment when exposed repositories are in scope.",
+        "summary": "git-dumper is distributed from its upstream Python project.",
+        "methods": [
+          {
+            "label": "pipx",
+            "description": "Install git-dumper into its own Python environment.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install pipx",
+              "pipx ensurepath",
+              "pipx install git-dumper",
+              "git-dumper --help"
+            ],
+            "notes": [
+              "The upstream README warns about attacker-controlled repositories; use a disposable workspace for recovered source."
+            ],
+            "source_label": "git-dumper",
+            "source_url": "https://github.com/arthaud/git-dumper"
+          }
+        ],
+        "sources": [
+          {
+            "label": "git-dumper",
+            "url": "https://github.com/arthaud/git-dumper"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GitLab API",
+      "summary": "Native GitLab REST API workflow for enumerating visible projects, token scope, repository metadata, and other GitLab application context.",
+      "syntax": "curl --header \"PRIVATE-TOKEN: <TOKEN>\" https://<GITLAB_URL>/api/v4/projects",
+      "parameters": [
+        {
+          "name": "<TOKEN>",
+          "description": "GitLab personal, project, group, or job token available during the test."
+        },
+        {
+          "name": "<GITLAB_URL>",
+          "description": "Base GitLab host URL."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "/api/v4/projects",
+          "type": "endpoint",
+          "description": "List projects visible to the authenticated token.",
+          "use_case": "Build a project review target list."
+        },
+        {
+          "name": "membership=true",
+          "type": "parameter",
+          "description": "Limit results to projects where the user is a member.",
+          "use_case": "Reduce unrelated public project noise."
+        },
+        {
+          "name": "PRIVATE-TOKEN",
+          "type": "header",
+          "description": "Header used by GitLab for private-token authentication.",
+          "use_case": "Authenticate API calls with a captured or provided token."
+        },
+        {
+          "name": "read_repository",
+          "type": "scope",
+          "description": "Token scope that permits Git-over-HTTP repository reads.",
+          "use_case": "Decide whether cloning should work."
+        }
+      ],
+      "notes": [
+        "GitLab token scope is part of the finding. Save scope evidence when you can observe it legitimately.",
+        "Avoid putting tokens in shell history; scrub clone remotes after repository review."
+      ],
+      "related_tools": [
+        "git",
+        "Gitleaks",
+        "jq",
+        "curl"
+      ]
+    },
+    {
+      "name": "Gitleaks",
+      "summary": "Secret scanning tool for finding API keys, tokens, passwords, and other credential material in current files and Git history.",
+      "syntax": "gitleaks detect --source <REPO_DIR> [options]",
+      "parameters": [
+        {
+          "name": "<REPO_DIR>",
+          "description": "Repository directory or source tree to scan."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "detect",
+          "type": "command",
+          "description": "Scan source code and repository history for secrets.",
+          "use_case": "Review cloned GitLab or recovered .git repositories."
+        },
+        {
+          "name": "--source",
+          "type": "flag",
+          "description": "Set the path to scan.",
+          "use_case": "Point Gitleaks at a specific repo workspace."
+        },
+        {
+          "name": "--redact",
+          "type": "flag",
+          "description": "Redact detected secret values in output.",
+          "use_case": "Keep shared notes safer while retaining finding metadata."
+        },
+        {
+          "name": "--report-format",
+          "type": "flag",
+          "description": "Choose report format such as json or sarif.",
+          "use_case": "Preserve machine-readable evidence."
+        },
+        {
+          "name": "--report-path",
+          "type": "flag",
+          "description": "Write the scan report to a file.",
+          "use_case": "Attach or review results later without rerunning the scan."
+        }
+      ],
+      "notes": [
+        "A detected string is not automatically a live credential; validate carefully and only within scope.",
+        "Redacted output is better for notes, while sensitive raw values need stricter handling."
+      ],
+      "related_tools": [
+        "git",
+        "GitLab API",
+        "git-dumper"
+      ],
+      "installation": {
+        "status": "Kali package",
+        "baseline": "Not part of the baseline tracked in this playbook, but packaged directly in Kali.",
+        "summary": "Gitleaks is available from the Kali repositories as gitleaks.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install the Gitleaks binary from Kali.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install gitleaks",
+              "gitleaks -h"
+            ],
+            "source_label": "Kali Tools: gitleaks",
+            "source_url": "https://www.kali.org/tools/gitleaks/"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Kali Tools: gitleaks",
+            "url": "https://www.kali.org/tools/gitleaks/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GitTools",
+      "summary": "Classic Finder, Dumper, and Extractor scripts for discovering and recovering web-exposed .git repository data.",
+      "syntax": "./Dumper/gitdumper.sh http://<TARGET>/.git/ <OUTPUT_DIR>",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Host or URL exposing a .git directory."
+        },
+        {
+          "name": "<OUTPUT_DIR>",
+          "description": "Local directory for recovered repository material."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Finder",
+          "type": "tool",
+          "description": "Checks targets for publicly reachable .git/HEAD data.",
+          "use_case": "Find exposed repositories in a target list."
+        },
+        {
+          "name": "Dumper",
+          "type": "tool",
+          "description": "Downloads recoverable files from an exposed .git directory.",
+          "use_case": "Recover source material from a confirmed exposure."
+        },
+        {
+          "name": "Extractor",
+          "type": "tool",
+          "description": "Extracts repository state from recovered object data.",
+          "use_case": "Rebuild useful source snapshots from partial data."
+        },
+        {
+          "name": "--git-dir",
+          "type": "flag",
+          "description": "Change the repository metadata directory name.",
+          "use_case": "Handle non-standard exposed repository paths."
+        }
+      ],
+      "notes": [
+        "GitTools does not guarantee full recovery, especially when objects are packed or partially unavailable.",
+        "Inspect recovered code in a disposable workspace; do not run project hooks or build scripts blindly."
+      ],
+      "related_tools": [
+        "git-dumper",
+        "git",
+        "Gitleaks"
+      ],
+      "installation": {
+        "status": "Upstream Git clone",
+        "baseline": "Not part of Kali default; clone it when .git exposure recovery is part of the workflow.",
+        "summary": "GitTools is distributed as Finder, Dumper, and Extractor scripts from GitHub.",
+        "methods": [
+          {
+            "label": "Git clone",
+            "description": "Clone the upstream repository and run the helper scripts from there.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install git python3",
+              "git clone https://github.com/internetwache/GitTools ~/tools/GitTools",
+              "cd ~/tools/GitTools",
+              "python3 Finder/gitfinder.py -h",
+              "bash Dumper/gitdumper.sh"
+            ],
+            "notes": [
+              "GitTools is best kept in a dedicated tools directory because it is a collection of scripts, not a single packaged binary."
+            ],
+            "source_label": "GitTools",
+            "source_url": "https://github.com/internetwache/GitTools"
+          }
+        ],
+        "sources": [
+          {
+            "label": "GitTools",
+            "url": "https://github.com/internetwache/GitTools"
+          }
+        ]
+      }
+    },
+    {
       "name": "Gobuster",
       "summary": "Lightweight brute-force tool for web content and DNS name discovery when you want simple, fast coverage.",
       "syntax": "gobuster <mode> [mode options]",
@@ -2295,6 +2357,98 @@
         "Burp Suite",
         "httpie",
         "jwt-tool"
+      ]
+    },
+    {
+      "name": "grep",
+      "summary": "Core text-search command for finding strings, patterns, config clues, and evidence inside files or command output.",
+      "syntax": "grep [options] '<PATTERN>' <FILE_OR_PATH>",
+      "parameters": [
+        {
+          "name": "<PATTERN>",
+          "description": "Text or regular expression to search for."
+        },
+        {
+          "name": "<FILE_OR_PATH>",
+          "description": "File, directory, or stdin stream to search."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-R",
+          "type": "flag",
+          "description": "Search directories recursively.",
+          "use_case": "Review a project, config tree, or web root."
+        },
+        {
+          "name": "-n",
+          "type": "flag",
+          "description": "Print matching line numbers.",
+          "use_case": "Make hits easy to reopen and cite."
+        },
+        {
+          "name": "-i",
+          "type": "flag",
+          "description": "Match case-insensitively.",
+          "use_case": "Catch Password, password, PASSWORD, and similar variants."
+        },
+        {
+          "name": "-E",
+          "type": "flag",
+          "description": "Use extended regular expressions.",
+          "use_case": "Write cleaner alternation such as password|secret|token."
+        },
+        {
+          "name": "-F",
+          "type": "flag",
+          "description": "Treat the pattern as fixed text instead of a regex.",
+          "use_case": "Search for strings containing regex characters safely."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Match whole words only.",
+          "use_case": "Reduce noisy partial matches."
+        },
+        {
+          "name": "-v",
+          "type": "flag",
+          "description": "Invert the match.",
+          "use_case": "Filter out known-noisy lines."
+        },
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Print only the matching text.",
+          "use_case": "Extract values for a pipeline."
+        },
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "Print only filenames with matches.",
+          "use_case": "Build a short file list before opening each result."
+        },
+        {
+          "name": "--include='*.conf'",
+          "type": "flag",
+          "description": "Search only matching filenames during recursive searches.",
+          "use_case": "Keep config searches focused."
+        },
+        {
+          "name": "--exclude-dir=.git",
+          "type": "flag",
+          "description": "Skip a directory during recursive searches.",
+          "use_case": "Avoid noisy dependency, cache, and repository metadata folders."
+        }
+      ],
+      "notes": [
+        "Use grep for fast text confirmation, then open the surrounding file context before reporting a finding.",
+        "Prefer -F for literal secrets or tokens and -E only when you actually need a regex."
+      ],
+      "related_tools": [
+        "find",
+        "jq",
+        "file"
       ]
     },
     {
@@ -2660,6 +2814,46 @@
       ]
     },
     {
+      "name": "IIS ShortName Scanner",
+      "summary": "Dedicated scanner for Microsoft IIS 8.3 short filename disclosure behavior using tilde-based probing.",
+      "syntax": "java -jar iis_shortname_scanner.jar <method> <threads> <URL>",
+      "parameters": [
+        {
+          "name": "<URL>",
+          "description": "IIS URL or path to test for short-name disclosure."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "scan method",
+          "type": "argument",
+          "description": "Scanner mode controlling request strategy.",
+          "use_case": "Choose the probing style for the target behavior."
+        },
+        {
+          "name": "threads",
+          "type": "argument",
+          "description": "Concurrency for candidate probing.",
+          "use_case": "Balance depth against noise and reliability."
+        },
+        {
+          "name": "custom HTTP methods",
+          "type": "feature",
+          "description": "The scanner supports method customization in newer builds.",
+          "use_case": "Handle IIS behavior that differs by HTTP verb."
+        }
+      ],
+      "notes": [
+        "Short-name disclosure gives candidates, not full filenames; pair results with content discovery and manual validation.",
+        "Start narrow because this class of test can become noisy."
+      ],
+      "related_tools": [
+        "Nmap NSE",
+        "ffuf",
+        "Burp Suite"
+      ]
+    },
+    {
       "name": "impacket-smbserver",
       "summary": "Impacket helper for standing up a temporary SMB share to receive files, host tooling, or support controlled relay and staging workflows.",
       "syntax": "smbserver.py <SHARE_NAME> <SHARE_PATH> [options]",
@@ -2833,6 +3027,355 @@
         "commix",
         "Dalfox",
         "Burp Suite"
+      ]
+    },
+    {
+      "name": "ip",
+      "summary": "Modern Linux network inspection command for addresses, links, routes, neighbors, and quick local network orientation.",
+      "syntax": "ip [options] <object> <command>",
+      "parameters": [
+        {
+          "name": "<object>",
+          "description": "Network object such as addr, link, route, or neigh."
+        },
+        {
+          "name": "<command>",
+          "description": "Action for that object, such as show, add, or get."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "addr",
+          "type": "object",
+          "description": "Show or manage interface addresses.",
+          "use_case": "Confirm IPs, interface names, and link state."
+        },
+        {
+          "name": "link",
+          "type": "object",
+          "description": "Show or manage network interfaces.",
+          "use_case": "Check MAC addresses, MTU, and up/down state."
+        },
+        {
+          "name": "route",
+          "type": "object",
+          "description": "Show or manage routing table entries.",
+          "use_case": "Identify default gateways and reachable internal subnets."
+        },
+        {
+          "name": "neigh",
+          "type": "object",
+          "description": "Show neighbor/ARP table entries.",
+          "use_case": "Spot nearby hosts the system has already talked to."
+        },
+        {
+          "name": "-br",
+          "type": "flag",
+          "description": "Print brief output.",
+          "use_case": "Make interface and address review easier to scan."
+        },
+        {
+          "name": "-4 / -6",
+          "type": "flag",
+          "description": "Limit output to IPv4 or IPv6.",
+          "use_case": "Separate address families during network notes."
+        },
+        {
+          "name": "route get <TARGET>",
+          "type": "command",
+          "description": "Show how the host would route traffic to a target.",
+          "use_case": "Confirm interface, source IP, and gateway before testing reachability."
+        }
+      ],
+      "notes": [
+        "Read addresses, routes, and listening sockets together; one view alone rarely explains the whole host.",
+        "Brief mode is excellent for notes, but full output is better when you need interface flags and detail."
+      ],
+      "related_tools": [
+        "ss",
+        "Nmap",
+        "Shell"
+      ]
+    },
+    {
+      "name": "jadx",
+      "summary": "Command-line and GUI decompiler for Java-adjacent artifacts including APK, DEX, JAR, CLASS, AAR, and ZIP inputs.",
+      "syntax": "jadx -d <OUTPUT_DIR> <INPUT_FILE>",
+      "parameters": [
+        {
+          "name": "<OUTPUT_DIR>",
+          "description": "Directory for decompiled output."
+        },
+        {
+          "name": "<INPUT_FILE>",
+          "description": "Artifact to decompile, such as a JAR, APK, DEX, or CLASS file."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-d, --output-dir",
+          "type": "flag",
+          "description": "Set output directory.",
+          "use_case": "Create a searchable project folder."
+        },
+        {
+          "name": "-r, --no-res",
+          "type": "flag",
+          "description": "Skip resource decoding.",
+          "use_case": "Speed up Java-focused review."
+        },
+        {
+          "name": "-s, --no-src",
+          "type": "flag",
+          "description": "Skip source decompilation.",
+          "use_case": "Focus on resources when source is not needed."
+        },
+        {
+          "name": "-j, --threads-count",
+          "type": "flag",
+          "description": "Set processing thread count.",
+          "use_case": "Control resource use on large artifacts."
+        },
+        {
+          "name": "jadx-gui",
+          "type": "command",
+          "description": "Launch the graphical browser.",
+          "use_case": "Navigate code and search cross-references visually."
+        }
+      ],
+      "notes": [
+        "jadx warns that decompilation can be incomplete; confirm important behavior through runtime testing.",
+        "For ordinary Java JARs, compare jadx output with JD-GUI when one decompiler produces confusing code."
+      ],
+      "related_tools": [
+        "JD-GUI",
+        "JDK tools",
+        "Wireshark"
+      ],
+      "installation": {
+        "status": "Kali package",
+        "baseline": "Not part of the tracked default baseline here, but packaged directly in Kali.",
+        "summary": "jadx is available from the Kali repositories as jadx.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install jadx command-line and GUI tooling.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install jadx",
+              "jadx -h"
+            ],
+            "source_label": "Kali Tools: jadx",
+            "source_url": "https://www.kali.org/tools/jadx/"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Kali Tools: jadx",
+            "url": "https://www.kali.org/tools/jadx/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "JD-GUI",
+      "summary": "Graphical Java decompiler for quickly browsing reconstructed source code from JAR and CLASS files during thick-client review.",
+      "syntax": "jd-gui <JAR_OR_CLASS_FILE>",
+      "parameters": [
+        {
+          "name": "<JAR_FILE>",
+          "description": "Java archive to inspect."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "File > Open",
+          "type": "control",
+          "description": "Open a JAR or CLASS file for browsing.",
+          "use_case": "Start manual review of a Java client."
+        },
+        {
+          "name": "Save All Sources",
+          "type": "control",
+          "description": "Export decompiled source to a ZIP archive.",
+          "use_case": "Move from GUI review to searchable or editable files."
+        },
+        {
+          "name": "Find",
+          "type": "control",
+          "description": "Search within the decompiled project.",
+          "use_case": "Locate endpoints, credentials, class names, and request methods."
+        }
+      ],
+      "notes": [
+        "Decompiled code can be imperfect; verify important behavior with traffic captures and runtime testing.",
+        "Check META-INF signatures before rebuilding modified JAR files."
+      ],
+      "related_tools": [
+        "jadx",
+        "JDK tools",
+        "Wireshark"
+      ],
+      "installation": {
+        "status": "Kali package",
+        "baseline": "Not part of the default baseline tracked here, but packaged directly by Kali.",
+        "summary": "JD-GUI is available from the Kali repositories as jd-gui.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install the JD-GUI Java decompiler.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install jd-gui",
+              "jd-gui"
+            ],
+            "source_label": "Kali Tools: jd-gui",
+            "source_url": "https://www.kali.org/tools/jd-gui/"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Kali Tools: jd-gui",
+            "url": "https://www.kali.org/tools/jd-gui/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "JDK tools",
+      "summary": "Java runtime and development utilities such as java, jar, and javac for running, inspecting, compiling, and rebuilding Java client artifacts.",
+      "syntax": "java -jar <JAR_FILE> | jar tf <JAR_FILE> | javac -cp <JAR_FILE> <CLASS_FILE>",
+      "parameters": [
+        {
+          "name": "<JAR_FILE>",
+          "description": "Java archive used as an input, classpath, or executable artifact."
+        },
+        {
+          "name": "<CLASS_FILE>",
+          "description": "Java source file or class-related path being compiled or inspected."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "java -jar",
+          "type": "command",
+          "description": "Run a Java archive with its manifest entrypoint.",
+          "use_case": "Launch thick clients or helper tools."
+        },
+        {
+          "name": "jar tf",
+          "type": "command",
+          "description": "List archive contents.",
+          "use_case": "Inspect package layout before extraction or rebuild."
+        },
+        {
+          "name": "jar xf",
+          "type": "command",
+          "description": "Extract selected files from an archive.",
+          "use_case": "Pull manifests, configs, or classes for review."
+        },
+        {
+          "name": "javac -cp",
+          "type": "command",
+          "description": "Compile Java source against a classpath.",
+          "use_case": "Rebuild one modified class against the original client."
+        },
+        {
+          "name": "jar -cmf",
+          "type": "command",
+          "description": "Create a JAR with a chosen manifest.",
+          "use_case": "Repackage a modified client for lab validation."
+        }
+      ],
+      "notes": [
+        "Java version mismatches are a common source of rebuild errors; check class file versions when compilation fails.",
+        "Signed JARs may need stale signature metadata removed in a lab rebuild."
+      ],
+      "related_tools": [
+        "JD-GUI",
+        "jadx",
+        "Wireshark"
+      ],
+      "installation": {
+        "status": "Kali package",
+        "baseline": "A full JDK is not always present on minimal images; install it when Java rebuild or decompiler tooling requires it.",
+        "summary": "JDK tools such as java, javac, and jar are provided by the default-jdk package on Kali.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install the default OpenJDK development toolchain.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install default-jdk",
+              "java -version",
+              "javac -version"
+            ],
+            "source_label": "Debian default-jdk",
+            "source_url": "https://packages.debian.org/default-jdk"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Debian default-jdk",
+            "url": "https://packages.debian.org/default-jdk"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Jenkins CLI",
+      "summary": "Jenkins-distributed command-line client for scripted identity checks, job enumeration, and authenticated controller interactions.",
+      "syntax": "java -jar jenkins-cli.jar -s <JENKINS_URL> [global options] <command>",
+      "parameters": [
+        {
+          "name": "<JENKINS_URL>",
+          "description": "Base Jenkins controller URL."
+        },
+        {
+          "name": "<TOKEN>",
+          "description": "API token or authentication secret used with a Jenkins user."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "/jnlpJars/jenkins-cli.jar",
+          "type": "download",
+          "description": "Controller-hosted CLI client path.",
+          "use_case": "Download the version-matched client."
+        },
+        {
+          "name": "-s",
+          "type": "flag",
+          "description": "Set the Jenkins URL.",
+          "use_case": "Point the CLI at the target controller."
+        },
+        {
+          "name": "-auth",
+          "type": "flag",
+          "description": "Provide username/token credentials.",
+          "use_case": "Authenticate CLI requests for scoped validation."
+        },
+        {
+          "name": "who-am-i",
+          "type": "command",
+          "description": "Report authenticated identity and authorities.",
+          "use_case": "Prove current permissions before deeper testing."
+        },
+        {
+          "name": "list-jobs",
+          "type": "command",
+          "description": "List visible jobs.",
+          "use_case": "Map available build surface."
+        }
+      ],
+      "notes": [
+        "The Jenkins docs note that older CLI client modes have had security concerns; use current server/client behavior when possible.",
+        "Start with identity and visibility checks before testing build or script-console behavior."
+      ],
+      "related_tools": [
+        "curl",
+        "Burp Suite",
+        "JDK tools"
       ]
     },
     {
@@ -3901,6 +4444,50 @@
       ]
     },
     {
+      "name": "osTicket API",
+      "summary": "osTicket HTTP API workflow for validating API key access and ticket creation behavior through JSON or XML requests.",
+      "syntax": "curl -H \"X-API-Key: <TOKEN>\" -d @ticket.json https://<OSTICKET_URL>/api/tickets.json",
+      "parameters": [
+        {
+          "name": "<TOKEN>",
+          "description": "osTicket API key tied to an allowed source IP."
+        },
+        {
+          "name": "<OSTICKET_URL>",
+          "description": "Base osTicket URL."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "X-API-Key",
+          "type": "header",
+          "description": "Header used for osTicket API authentication.",
+          "use_case": "Send API requests with a configured key."
+        },
+        {
+          "name": "/api/tickets.json",
+          "type": "endpoint",
+          "description": "JSON ticket creation endpoint.",
+          "use_case": "Validate key scope and ticket creation behavior."
+        },
+        {
+          "name": "source IP binding",
+          "type": "behavior",
+          "description": "API keys are checked against request source IP.",
+          "use_case": "Explain why a key works from one route but not another."
+        }
+      ],
+      "notes": [
+        "osTicket’s documented API currently centers on ticket creation; avoid noisy test tickets outside explicit windows.",
+        "Source-IP binding can be the important detail when reproducing an API key finding."
+      ],
+      "related_tools": [
+        "curl",
+        "Burp Suite",
+        "jq"
+      ]
+    },
+    {
       "name": "OWASP ZAP",
       "summary": "Open-source web testing proxy and DAST platform for capturing traffic, exploring an app, and scaling repeatable scans once the app state is understood.",
       "syntax": "ZAP desktop or zap.sh -cmd [automation options]",
@@ -4367,6 +4954,108 @@
       ]
     },
     {
+      "name": "PRTG HTTP API",
+      "summary": "PRTG Network Monitor HTTP API workflow for enumerating sensors, object IDs, and monitoring metadata through token-authenticated requests.",
+      "syntax": "curl -H \"Authorization: Bearer <TOKEN>\" https://<PRTG_URL>/api/table.json?content=sensors",
+      "parameters": [
+        {
+          "name": "<TOKEN>",
+          "description": "PRTG API key or bearer token."
+        },
+        {
+          "name": "<PRTG_URL>",
+          "description": "Base PRTG server URL."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "Authorization: Bearer",
+          "type": "header",
+          "description": "Bearer token authentication format.",
+          "use_case": "Authenticate API requests without putting secrets in the URL."
+        },
+        {
+          "name": "table.json",
+          "type": "endpoint",
+          "description": "Table output endpoint for objects such as sensors.",
+          "use_case": "Collect structured monitoring inventory."
+        },
+        {
+          "name": "content=sensors",
+          "type": "parameter",
+          "description": "Request sensor objects.",
+          "use_case": "Enumerate monitored systems and service names."
+        },
+        {
+          "name": "columns=",
+          "type": "parameter",
+          "description": "Choose returned fields.",
+          "use_case": "Keep output focused and reportable."
+        }
+      ],
+      "notes": [
+        "Monitoring data can expose internal hostnames, service owners, and operational dependencies.",
+        "Prefer headers for tokens when possible so secrets do not land in proxy logs or shell history as URL parameters."
+      ],
+      "related_tools": [
+        "curl",
+        "jq",
+        "snmpwalk"
+      ]
+    },
+    {
+      "name": "ps",
+      "summary": "Process listing command for seeing what is running, who owns it, and which command line started it.",
+      "syntax": "ps aux [--sort=<KEY>]",
+      "parameters": [
+        {
+          "name": "--sort=<KEY>",
+          "description": "Sort key such as -%mem, -%cpu, user, pid, or start_time."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "aux",
+          "type": "option set",
+          "description": "Common BSD-style view showing all users, terminal-less processes, and command lines.",
+          "use_case": "Fast broad process orientation."
+        },
+        {
+          "name": "--sort=-%mem",
+          "type": "flag",
+          "description": "Sort by memory usage descending.",
+          "use_case": "Surface heavy applications, databases, and agents."
+        },
+        {
+          "name": "--sort=-%cpu",
+          "type": "flag",
+          "description": "Sort by CPU usage descending.",
+          "use_case": "Find busy or suspicious processes quickly."
+        },
+        {
+          "name": "-ef",
+          "type": "option set",
+          "description": "POSIX-style full process listing.",
+          "use_case": "Alternative format that is common in scripts and docs."
+        },
+        {
+          "name": "-o",
+          "type": "flag",
+          "description": "Choose output columns.",
+          "use_case": "Build readable process views for notes."
+        }
+      ],
+      "notes": [
+        "Process command lines can contain secrets. Handle captured output carefully.",
+        "Pair ps with systemctl when you need to connect a process back to a managed service."
+      ],
+      "related_tools": [
+        "systemctl",
+        "ss",
+        "grep"
+      ]
+    },
+    {
       "name": "psexec.py",
       "summary": "Impacket service-based remote execution helper for situations where that execution footprint is justified and understood.",
       "syntax": "psexec.py <DOMAIN>/<USER>:<PASSWORD>@<TARGET> [command]",
@@ -4633,6 +5322,93 @@
         "PKINITtools",
         "hashcat"
       ]
+    },
+    {
+      "name": "searchsploit",
+      "summary": "Exploit-DB command-line search utility for offline public exploit triage by product, version, CVE, platform, or Nmap XML output.",
+      "syntax": "searchsploit [options] term1 [term2...]",
+      "parameters": [
+        {
+          "name": "<PRODUCT>",
+          "description": "Product or software name to search."
+        },
+        {
+          "name": "<VERSION>",
+          "description": "Version string or CVE identifier to correlate."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-s, --strict",
+          "type": "flag",
+          "description": "Perform stricter matching for exact version-style terms.",
+          "use_case": "Reduce fuzzy false positives."
+        },
+        {
+          "name": "-e, --exact",
+          "type": "flag",
+          "description": "Exact ordered match on exploit title.",
+          "use_case": "Focus a known product/version query."
+        },
+        {
+          "name": "-m",
+          "type": "flag",
+          "description": "Mirror/copy an exploit into the current directory.",
+          "use_case": "Review code in a workspace before any testing."
+        },
+        {
+          "name": "-x",
+          "type": "flag",
+          "description": "Examine an exploit in an editor or pager.",
+          "use_case": "Read exploit assumptions and affected versions."
+        },
+        {
+          "name": "--nmap",
+          "type": "flag",
+          "description": "Search using Nmap XML results.",
+          "use_case": "Triage discovered service versions quickly."
+        },
+        {
+          "name": "--cve",
+          "type": "flag",
+          "description": "Search by CVE identifier.",
+          "use_case": "Correlate a known advisory to local Exploit-DB entries."
+        }
+      ],
+      "notes": [
+        "SearchSploit finds public exploit references; it does not prove the target is vulnerable.",
+        "Always read exploit code and affected-version notes before running anything in a lab."
+      ],
+      "related_tools": [
+        "Nmap",
+        "Nmap NSE",
+        "Nuclei",
+        "msfconsole"
+      ],
+      "installation": {
+        "status": "Kali default package",
+        "baseline": "Kali includes exploitdb in common desktop builds; the apt command is still useful for minimal installs or repairs.",
+        "summary": "searchsploit ships as part of the exploitdb package on Kali.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install the local Exploit-DB archive and SearchSploit client.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install exploitdb",
+              "searchsploit -h"
+            ],
+            "source_label": "Kali Tools: exploitdb",
+            "source_url": "https://www.kali.org/tools/exploitdb/"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Kali Tools: exploitdb",
+            "url": "https://www.kali.org/tools/exploitdb/"
+          }
+        ]
+      }
     },
     {
       "name": "SecLists",
@@ -4961,6 +5737,56 @@
       ]
     },
     {
+      "name": "Splunk REST API",
+      "summary": "Splunk management API workflow for authentication, app visibility, role/capability review, and controlled app-install validation.",
+      "syntax": "curl -k https://<SPLUNK_URL>:8089/services/auth/login --data-urlencode username=<USER> --data-urlencode password=<PASSWORD>",
+      "parameters": [
+        {
+          "name": "<SPLUNK_URL>",
+          "description": "Splunk host or management endpoint."
+        },
+        {
+          "name": "<TOKEN>",
+          "description": "Splunk session key or bearer token."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "/services/auth/login",
+          "type": "endpoint",
+          "description": "Splunk endpoint for obtaining a session key with credentials.",
+          "use_case": "Create an authenticated REST session."
+        },
+        {
+          "name": "Authorization: Splunk",
+          "type": "header",
+          "description": "Header format for session-key authenticated requests.",
+          "use_case": "Reuse the session key for later REST calls."
+        },
+        {
+          "name": "/services/apps/local",
+          "type": "endpoint",
+          "description": "Endpoint for locally installed apps.",
+          "use_case": "Review app visibility and app-install context."
+        },
+        {
+          "name": "output_mode=json",
+          "type": "parameter",
+          "description": "Request JSON output.",
+          "use_case": "Pipe results cleanly into jq and notes."
+        }
+      ],
+      "notes": [
+        "Splunk Web and Splunk management APIs often live on different ports; test both deliberately.",
+        "A session key is credential material. Keep it out of screenshots and shared notes unless redacted."
+      ],
+      "related_tools": [
+        "curl",
+        "jq",
+        "msfvenom"
+      ]
+    },
+    {
       "name": "sqlmap",
       "summary": "SQL injection automation for validated injection points where the request format and parameter behavior are already understood.",
       "syntax": "sqlmap -u <URL> [options] or sqlmap -r <REQUEST_FILE> [options]",
@@ -5034,6 +5860,65 @@
         "Burp Suite",
         "curl",
         "Nuclei"
+      ]
+    },
+    {
+      "name": "ss",
+      "summary": "Modern socket inspection command for seeing listening ports, established connections, protocols, and process ownership.",
+      "syntax": "ss [options]",
+      "parameters": [],
+      "reference_items": [
+        {
+          "name": "-t",
+          "type": "flag",
+          "description": "Show TCP sockets.",
+          "use_case": "Review web, SSH, database, and other TCP services."
+        },
+        {
+          "name": "-u",
+          "type": "flag",
+          "description": "Show UDP sockets.",
+          "use_case": "Catch DNS, VPN, discovery, and telemetry listeners."
+        },
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "Show listening sockets.",
+          "use_case": "Build the local service map."
+        },
+        {
+          "name": "-p",
+          "type": "flag",
+          "description": "Show process information when permitted.",
+          "use_case": "Tie ports back to owning programs."
+        },
+        {
+          "name": "-n",
+          "type": "flag",
+          "description": "Do not resolve service names or hostnames.",
+          "use_case": "Keep output fast and literal."
+        },
+        {
+          "name": "-a",
+          "type": "flag",
+          "description": "Show all sockets.",
+          "use_case": "Broader review when listening-only output is not enough."
+        },
+        {
+          "name": "state established",
+          "type": "filter",
+          "description": "Filter to established connections.",
+          "use_case": "See active peer relationships."
+        }
+      ],
+      "notes": [
+        "Use sudo with ss -p when process names are hidden from an unprivileged user.",
+        "Localhost-only listeners often matter as much as externally reachable services."
+      ],
+      "related_tools": [
+        "ip",
+        "ps",
+        "Nmap"
       ]
     },
     {
@@ -5150,6 +6035,186 @@
         "Amass",
         "dnsx",
         "httpx"
+      ]
+    },
+    {
+      "name": "sudo",
+      "summary": "Privilege delegation command used to list or run commands allowed by sudoers policy for the current user.",
+      "syntax": "sudo [options] <COMMAND>",
+      "parameters": [
+        {
+          "name": "<COMMAND>",
+          "description": "Command to run through sudo policy."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "-l",
+          "type": "flag",
+          "description": "List commands the current user may run.",
+          "use_case": "First sudo check during Linux privilege review."
+        },
+        {
+          "name": "-u <USER>",
+          "type": "flag",
+          "description": "Run as a specific user.",
+          "use_case": "Validate a permitted user context explicitly."
+        },
+        {
+          "name": "-i",
+          "type": "flag",
+          "description": "Run the target user's login shell.",
+          "use_case": "Understand environment changes when sudo allows shell access."
+        },
+        {
+          "name": "-S",
+          "type": "flag",
+          "description": "Read the password from standard input.",
+          "use_case": "Scripted lab workflows where stdin handling is intentional."
+        },
+        {
+          "name": "-k",
+          "type": "flag",
+          "description": "Invalidate cached credentials.",
+          "use_case": "Retest sudo behavior from a clean authentication state."
+        }
+      ],
+      "notes": [
+        "Capture sudo -l output before testing any allowed command. The policy is the evidence trail.",
+        "Wildcards, environment preservation, editors, pagers, and interpreters deserve extra review."
+      ],
+      "related_tools": [
+        "find",
+        "getcap",
+        "linpeas"
+      ]
+    },
+    {
+      "name": "systemctl",
+      "summary": "systemd service manager for listing, inspecting, and understanding services, timers, units, and startup behavior on Linux hosts.",
+      "syntax": "systemctl <command> [unit]",
+      "parameters": [
+        {
+          "name": "<command>",
+          "description": "Action such as status, list-units, list-timers, cat, or show."
+        },
+        {
+          "name": "[unit]",
+          "description": "Optional systemd unit name such as nginx.service or backup.timer."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "status <unit>",
+          "type": "command",
+          "description": "Show state, recent logs, and process information for a unit.",
+          "use_case": "Understand one service quickly."
+        },
+        {
+          "name": "list-units",
+          "type": "command",
+          "description": "List loaded active units.",
+          "use_case": "Baseline running service inventory."
+        },
+        {
+          "name": "--type=service",
+          "type": "flag",
+          "description": "Limit output to service units.",
+          "use_case": "Keep service review readable."
+        },
+        {
+          "name": "--state=running",
+          "type": "flag",
+          "description": "Show units currently in a running state.",
+          "use_case": "Focus on live services first."
+        },
+        {
+          "name": "list-timers",
+          "type": "command",
+          "description": "List timer units and next run times.",
+          "use_case": "Find scheduled jobs managed by systemd."
+        },
+        {
+          "name": "cat <unit>",
+          "type": "command",
+          "description": "Print the unit file and drop-ins.",
+          "use_case": "Review ExecStart, user context, writable paths, and override files."
+        },
+        {
+          "name": "show <unit>",
+          "type": "command",
+          "description": "Print structured unit properties.",
+          "use_case": "Pull exact user, group, path, and dependency values."
+        }
+      ],
+      "notes": [
+        "Use systemctl to connect process names to startup configuration and service identities.",
+        "Unit files, drop-ins, writable service paths, and timer commands are often more useful than the service name alone."
+      ],
+      "related_tools": [
+        "ps",
+        "ss",
+        "find"
+      ]
+    },
+    {
+      "name": "Tomcat Manager API",
+      "summary": "Apache Tomcat Manager text API workflow for authenticated application listing, deployment validation, and cleanup in controlled labs.",
+      "syntax": "curl -u <USER>:<PASSWORD> http://<TARGET>:8080/manager/text/<command>",
+      "parameters": [
+        {
+          "name": "<TARGET>",
+          "description": "Tomcat host and optional port."
+        },
+        {
+          "name": "<USER>",
+          "description": "Tomcat Manager username."
+        },
+        {
+          "name": "<PASSWORD>",
+          "description": "Tomcat Manager password."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "/manager/text/list",
+          "type": "endpoint",
+          "description": "List deployed applications.",
+          "use_case": "Confirm manager access and deployed paths."
+        },
+        {
+          "name": "/manager/text/deploy",
+          "type": "endpoint",
+          "description": "Deploy an application archive or path.",
+          "use_case": "Validate whether deployment is permitted in an authorized lab."
+        },
+        {
+          "name": "/manager/text/undeploy",
+          "type": "endpoint",
+          "description": "Remove a deployed application.",
+          "use_case": "Clean up after validation."
+        },
+        {
+          "name": "path=",
+          "type": "parameter",
+          "description": "Set the context path for deployment or undeployment.",
+          "use_case": "Use a unique path for attributable testing."
+        },
+        {
+          "name": "update=true",
+          "type": "parameter",
+          "description": "Allow replacing an existing deployment.",
+          "use_case": "Repeat lab tests predictably."
+        }
+      ],
+      "notes": [
+        "Deployment testing is high impact; prove read/list access first and keep cleanup planned.",
+        "Use unique context paths so you can distinguish your test artifact from existing applications."
+      ],
+      "related_tools": [
+        "Hydra",
+        "curl",
+        "msfvenom"
       ]
     },
     {
@@ -5309,6 +6374,83 @@
         "PowerUp",
         "accesschk"
       ]
+    },
+    {
+      "name": "Wireshark",
+      "summary": "Network protocol analyzer and capture toolkit for observing thick-client traffic, service behavior, and protocol details before replay or code changes.",
+      "syntax": "wireshark | tshark -i <INTERFACE> -f <CAPTURE_FILTER> -w <FILE>",
+      "parameters": [
+        {
+          "name": "<INTERFACE>",
+          "description": "Network interface to capture from, such as tun0 or eth0."
+        },
+        {
+          "name": "<FILE>",
+          "description": "Capture file to write or inspect."
+        }
+      ],
+      "reference_items": [
+        {
+          "name": "tshark -i",
+          "type": "flag",
+          "description": "Choose the capture interface.",
+          "use_case": "Capture lab traffic from the right adapter."
+        },
+        {
+          "name": "-f",
+          "type": "flag",
+          "description": "Set a capture filter.",
+          "use_case": "Keep captures small and focused."
+        },
+        {
+          "name": "-w",
+          "type": "flag",
+          "description": "Write packets to a capture file.",
+          "use_case": "Preserve traffic for later analysis."
+        },
+        {
+          "name": "Display filters",
+          "type": "feature",
+          "description": "Filter decoded packets in Wireshark.",
+          "use_case": "Pivot from broad capture to specific protocol behavior."
+        }
+      ],
+      "notes": [
+        "Capture filters reduce noise before packets hit disk; display filters help analysis after capture.",
+        "When reviewing thick clients, capture a clean login and one action at a time."
+      ],
+      "related_tools": [
+        "Burp Suite",
+        "JD-GUI",
+        "jadx"
+      ],
+      "installation": {
+        "status": "Kali package",
+        "baseline": "Wireshark is commonly present on desktop-oriented Kali installs, but installing it explicitly is useful on minimal setups.",
+        "summary": "Wireshark and tshark are available as Kali packages.",
+        "methods": [
+          {
+            "label": "Kali apt",
+            "description": "Install Wireshark GUI and tshark CLI capture tooling.",
+            "commands": [
+              "sudo apt update",
+              "sudo apt install wireshark tshark",
+              "tshark -h"
+            ],
+            "notes": [
+              "Packet capture permissions may require adding your user to the wireshark group or running with elevated privileges according to local policy."
+            ],
+            "source_label": "Kali Tools: wireshark",
+            "source_url": "https://www.kali.org/tools/wireshark/"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Kali Tools: wireshark",
+            "url": "https://www.kali.org/tools/wireshark/"
+          }
+        ]
+      }
     },
     {
       "name": "wmiexec.py",

