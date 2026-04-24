@@ -668,10 +668,6 @@ summary:focus-visible {
     align-items: start;
 }
 
-.workspace-shell.has-detail {
-    grid-template-columns: minmax(0, 1.18fr) minmax(360px, 0.92fr);
-}
-
 .workspace-main {
     min-width: 0;
     display: grid;
@@ -764,67 +760,6 @@ summary:focus-visible {
 #home-dashboard {
     display: grid;
     gap: 18px;
-}
-
-.tool-detail-panel {
-    position: sticky;
-    top: 0;
-    align-self: start;
-    min-width: 0;
-}
-
-.tool-detail-frame {
-    display: grid;
-    gap: 16px;
-    max-height: calc(100vh - 56px);
-    padding: 16px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    background:
-        linear-gradient(180deg, rgba(var(--accent-rgb), 0.08), transparent 22%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008)),
-        var(--surface);
-    box-shadow:
-        0 22px 42px -34px var(--shadow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.035);
-    backdrop-filter: blur(18px) saturate(130%);
-}
-
-.tool-detail-toolbar {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--line);
-}
-
-.tool-detail-copy {
-    display: grid;
-    gap: 6px;
-}
-
-.tool-detail-caption {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.84rem;
-    line-height: 1.58;
-}
-
-#detail-container {
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 6px;
-    display: grid;
-    gap: 16px;
-}
-
-.tool-detail-panel .manual-hero {
-    padding: 22px;
-}
-
-.tool-detail-panel .manual-title {
-    font-size: clamp(1.7rem, 2.8vw, 2.3rem);
 }
 
 .hero-panel,
@@ -1145,6 +1080,7 @@ summary:focus-visible {
 #payload-container {
     display: grid;
     gap: 22px;
+    min-width: 0;
 }
 
 .result-section {
@@ -1374,6 +1310,7 @@ summary:focus-visible {
 
 .tool-syntax {
     display: block;
+    min-width: 0;
     max-width: 100%;
     overflow: hidden;
     color: var(--text-muted);
@@ -1403,6 +1340,7 @@ summary:focus-visible {
 .manual-note-list {
     display: grid;
     gap: 14px;
+    min-width: 0;
 }
 
 .tool-search-grid {
@@ -1414,6 +1352,7 @@ summary:focus-visible {
 .manual-stat-card,
 .manual-section,
 .manual-card {
+    min-width: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background:
@@ -1484,10 +1423,12 @@ summary:focus-visible {
     margin: 0;
     color: var(--text-soft);
     line-height: 1.65;
+    overflow-wrap: anywhere;
 }
 
 .tool-search-actions,
 .manual-hero-actions {
+    min-width: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -1666,6 +1607,8 @@ summary:focus-visible {
 }
 
 .manual-code-block {
+    min-width: 0;
+    max-width: 100%;
     display: grid;
     gap: 8px;
     padding: 14px 16px;
@@ -1686,6 +1629,7 @@ summary:focus-visible {
 }
 
 .manual-section {
+    min-width: 0;
     display: grid;
     gap: 12px;
     padding: 18px;
@@ -1708,6 +1652,7 @@ summary:focus-visible {
 }
 
 .manual-card {
+    min-width: 0;
     display: grid;
     gap: 10px;
     padding: 16px;
@@ -2215,29 +2160,11 @@ pre {
         --sidebar-width: 292px;
     }
 
-    .workspace-shell.has-detail {
-        grid-template-columns: 1fr;
-    }
-
-    .tool-detail-panel {
-        position: static;
-    }
-
-    .tool-detail-frame {
-        max-height: none;
-    }
-
-    #detail-container {
-        overflow: visible;
-        padding-right: 0;
-    }
-
     .home-columns {
         grid-template-columns: 1fr;
     }
 
     .tool-search-head,
-    .tool-detail-toolbar,
     .manual-hero,
     .shell-helper-head,
     .shell-helper-support,
@@ -2280,7 +2207,6 @@ pre {
     #results-bar,
     .result-section-header,
     .tool-search-head,
-    .tool-detail-toolbar,
     .manual-hero,
     .shell-helper-head,
     .home-panel-header,
