@@ -52,40 +52,57 @@
                 <button id="clear-search-btn" type="button" onclick="clearSearch()" disabled>Clear</button>
             </div>
 
-            <section id="home-dashboard">
-                <div class="hero-panel">
-                    <p class="eyebrow">Practical workflow. Cleaner structure. Authorized use only.</p>
-                    <h1 id="hero-title">IO Playbook</h1>
-                    <p id="hero-subtitle" class="hero-copy"></p>
-                    <p id="hero-disclaimer" class="hero-disclaimer"></p>
-                </div>
-
-                <section class="home-panel popular-tools-panel">
-                    <div class="home-panel-header">
-                        <div class="home-panel-copy">
-                            <span class="dashboard-kicker">Coverage First</span>
-                            <h3 class="dashboard-heading">Popular Tools</h3>
-                            <p class="dashboard-subcopy">The tools with the widest coverage across this playbook, so the home screen starts where you are most likely to work.</p>
+            <div id="workspace-shell" class="workspace-shell">
+                <div id="workspace-main" class="workspace-main">
+                    <section id="home-dashboard">
+                        <div class="hero-panel">
+                            <p class="eyebrow">Practical workflow. Cleaner structure. Authorized use only.</p>
+                            <h1 id="hero-title">IO Playbook</h1>
+                            <p id="hero-subtitle" class="hero-copy"></p>
+                            <p id="hero-disclaimer" class="hero-disclaimer"></p>
                         </div>
-                        <span id="popular-tools-meta" class="section-chip">Top tools</span>
-                    </div>
-                    <div id="popular-tools-grid" class="popular-tools-grid"></div>
-                </section>
 
-                <div class="home-columns">
-                    <div class="home-panel">
-                        <h3 class="dashboard-title">Quick Routes</h3>
-                        <div id="shortcut-grid" class="shortcut-grid"></div>
-                    </div>
+                        <section class="home-panel popular-tools-panel">
+                            <div class="home-panel-header">
+                                <div class="home-panel-copy">
+                                    <span class="dashboard-kicker">Coverage First</span>
+                                    <h3 class="dashboard-heading">Popular Tools</h3>
+                                    <p class="dashboard-subcopy">The tools with the widest coverage across this playbook, so the home screen starts where you are most likely to work.</p>
+                                </div>
+                                <span id="popular-tools-meta" class="section-chip">Top tools</span>
+                            </div>
+                            <div id="popular-tools-grid" class="popular-tools-grid"></div>
+                        </section>
 
-                    <div class="home-panel">
-                        <h3 class="dashboard-title">Operator Rules</h3>
-                        <ul id="principles-list" class="principles-list"></ul>
-                    </div>
+                        <div class="home-columns">
+                            <div class="home-panel">
+                                <h3 class="dashboard-title">Quick Routes</h3>
+                                <div id="shortcut-grid" class="shortcut-grid"></div>
+                            </div>
+
+                            <div class="home-panel">
+                                <h3 class="dashboard-title">Operator Rules</h3>
+                                <ul id="principles-list" class="principles-list"></ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div id="payload-container"></div>
                 </div>
-            </section>
 
-            <div id="payload-container"></div>
+                <aside id="tool-detail-panel" class="tool-detail-panel" hidden aria-label="Tool manual panel">
+                    <div class="tool-detail-frame">
+                        <div class="tool-detail-toolbar">
+                            <div class="tool-detail-copy">
+                                <span class="section-kicker">Tool Panel</span>
+                                <p id="tool-detail-caption" class="tool-detail-caption">Open a tool and keep search results in view while the manual stays pinned here.</p>
+                            </div>
+                            <button id="tool-detail-close-btn" class="secondary-btn" type="button" onclick="closeToolPanel({ historyMode: 'push' })">Close</button>
+                        </div>
+                        <div id="detail-container"></div>
+                    </div>
+                </aside>
+            </div>
         </main>
 
         <div id="help-modal" class="modal">

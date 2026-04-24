@@ -768,7 +768,11 @@ const appContainer = document.getElementById("app-container");
 const sidebar = document.getElementById("sidebar");
 const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
 const categoryListDiv = document.getElementById("category-list");
+const workspaceShell = document.getElementById("workspace-shell");
 const payloadContainer = document.getElementById("payload-container");
+const detailPanel = document.getElementById("tool-detail-panel");
+const detailContainer = document.getElementById("detail-container");
+const detailCaption = document.getElementById("tool-detail-caption");
 const searchBox = document.getElementById("search-box");
 const homeDashboard = document.getElementById("home-dashboard");
 const resultsMeta = document.getElementById("results-meta");
@@ -807,10 +811,16 @@ let activeView = {
     broadSearch: false,
     fuzzySearch: false
 };
+let activeToolContext = {
+    tool: null,
+    path: null,
+    module: null
+};
 let expandedSidebarPaths = new Set();
 let expandedSidebarModules = new Set();
 let isSidebarCollapsed = localStorage.getItem("io_sidebar_collapsed") === "1";
 let hasInitializedSidebarState = false;
+const defaultDetailCaption = "Open a tool and keep search results in view while the manual stays pinned here.";
 
 function injectManualButtonStyles() {
     if (document.getElementById("manual-button-style")) {
@@ -956,11 +966,32 @@ function getModuleKey(pathName, moduleName) {
     return `${pathName}::${moduleName}`;
 }
 
+function hasActiveToolPanel() {
+    return Boolean(activeToolContext.tool);
+}
+
+function getNavigationFocus() {
+    if (hasActiveToolPanel()) {
+        return activeToolContext;
+    }
+
+    return activeView;
+}
+
+function updateWorkspaceLayout() {
+    const isDetailOpen = hasActiveToolPanel();
+    workspaceShell.classList.toggle("has-detail", isDetailOpen);
+    detailPanel.hidden = !isDetailOpen;
+    detailCaption.textContent = isDetailOpen
+        ? `${activeToolContext.tool} manual pinned here while you keep browsing on the left.`
+        : defaultDetailCaption;
+}
+
 function isActiveToolLocation(pathName, moduleName, toolName) {
-    return activeView.type === "tool"
-        && activeView.path === pathName
-        && activeView.module === moduleName
-        && activeView.tool === toolName;
+    return hasActiveToolPanel()
+        && activeToolContext.path === pathName
+        && activeToolContext.module === moduleName
+        && activeToolContext.tool === toolName;
 }
 
 function ensureSidebarHasOpenPath() {
@@ -1620,10 +1651,12 @@ function buildNavTree() {
 function renderSidebar() {
     categoryListDiv.innerHTML = "";
     ensureSidebarHasOpenPath();
+    const navigationFocus = getNavigationFocus();
 
     getOrderedPaths().forEach(pathName => {
         const pathGroup = navTree[pathName] || { count: 0, modules: {} };
         const modules = Object.keys(pathGroup.modules || {});
+        const isPathSelected = navigationFocus.path === pathName;
         const isPathActive = activeView.type === "path" && activeView.path === pathName;
         const isPathOpen = expandedSidebarPaths.has(pathName);
 
@@ -1633,7 +1666,7 @@ function renderSidebar() {
         const pathHeader = document.createElement("button");
         pathHeader.type = "button";
         pathHeader.className = "path-header";
-        if (isPathActive) {
+        if (isPathSelected) {
             pathHeader.classList.add("active");
         }
         if (isPathOpen) {
@@ -1653,7 +1686,7 @@ function renderSidebar() {
             }
 
             expandedSidebarPaths.add(pathName);
-            loadView(pathName, null, null, "");
+            loadView(pathName, null, null, "", { historyMode: "push" });
         };
 
         const moduleList = document.createElement("div");
@@ -1666,6 +1699,7 @@ function renderSidebar() {
             const moduleData = pathGroup.modules[moduleName];
             const meta = getModuleMeta(moduleName);
             const tools = Object.keys(moduleData.tools || {}).sort((a, b) => a.localeCompare(b));
+            const isModuleSelected = navigationFocus.path === pathName && navigationFocus.module === moduleName;
             const isModuleActive = activeView.type === "module" && activeView.path === pathName && activeView.module === moduleName;
             const moduleKey = getModuleKey(pathName, moduleName);
             const isModuleOpen = expandedSidebarModules.has(moduleKey);
@@ -1676,7 +1710,7 @@ function renderSidebar() {
             const moduleButton = document.createElement("button");
             moduleButton.type = "button";
             moduleButton.className = "module-item";
-            if (isModuleActive) {
+            if (isModuleSelected) {
                 moduleButton.classList.add("active");
             }
             if (isModuleOpen) {
@@ -1699,7 +1733,7 @@ function renderSidebar() {
                 }
 
                 expandSidebarTo(pathName, moduleName);
-                loadView(pathName, moduleName, null, "");
+                loadView(pathName, moduleName, null, "", { historyMode: "push" });
             };
 
             const toolList = document.createElement("div");
@@ -1814,7 +1848,7 @@ function renderHomeDashboard() {
         button.onclick = () => {
             if (shortcut.module) {
                 const moduleMeta = getModuleMeta(shortcut.module);
-                loadView(moduleMeta.path || null, shortcut.module, null, "");
+                loadView(moduleMeta.path || null, shortcut.module, null, "", { historyMode: "push" });
                 return;
             }
             executeSearch(shortcut.query || "");
@@ -1831,7 +1865,7 @@ function setResultsMeta(text) {
     resultsMeta.textContent = text;
 }
 
-function setClearSearchState(active) {
+function setClearSearchState(active = activeView.type !== "home" || hasActiveToolPanel()) {
     clearSearchBtn.disabled = !active;
 }
 
@@ -2503,7 +2537,7 @@ function buildShellHelperMarkup() {
                         <button
                             class="secondary-btn inline-btn"
                             type="button"
-                            onclick="loadView(decodeURIComponent('${fileTransferPath}'), decodeURIComponent('${fileTransferModule}'))"
+                            onclick="loadView(decodeURIComponent('${fileTransferPath}'), decodeURIComponent('${fileTransferModule}'), null, '', { historyMode: 'push' })"
                         >
                             Open file transfer workflow
                         </button>
@@ -2688,7 +2722,7 @@ function buildToolClusterMarkup(toolGroup, moduleGroup, pathGroup, toolIndex) {
         : "";
     const installMarkup = buildInstallButtonMarkup(toolGroup.name, manual.installation);
     const hasAssistantCard = Boolean(manual.summary || manual.syntax || referenceMarkup || manualMarkup || installMarkup);
-    const isToolOpen = activeView.tool
+    const isToolOpen = hasActiveToolPanel()
         ? isActiveToolLocation(pathGroup.name, moduleGroup.name, toolGroup.name)
         : activeView.query
             ? toolGroup.items.some(item => item.entryId === activeView.focusedId)
@@ -3051,7 +3085,7 @@ function renderToolManualPage(toolName) {
         `
         : "";
 
-    payloadContainer.innerHTML = `
+    detailContainer.innerHTML = `
         <section class="manual-shell">
             <div class="manual-hero">
                 <div class="manual-hero-copy">
@@ -3085,16 +3119,20 @@ function renderToolManualPage(toolName) {
         </section>
         ${examplesSection}
     `;
+    updateWorkspaceLayout();
     updateShellHelper();
 }
 
-function syncUrlState() {
+function syncUrlState(options = {}) {
+    const { historyMode = "replace" } = options;
+    if (historyMode === "none") {
+        return;
+    }
+
     const params = new URLSearchParams();
 
     if (activeView.type === "search" && activeView.query) {
         params.set("q", activeView.query);
-    } else if (activeView.type === "tool" && activeView.tool) {
-        params.set("tool", activeView.tool);
     } else if (activeView.path) {
         params.set("path", activeView.path);
         if (activeView.module) {
@@ -3102,11 +3140,21 @@ function syncUrlState() {
         }
     }
 
+    if (hasActiveToolPanel()) {
+        params.set("tool", activeToolContext.tool);
+    }
+
     const nextUrl = params.toString()
         ? `${window.location.pathname}?${params.toString()}`
         : window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
 
-    window.history.replaceState(null, "", nextUrl);
+    if (nextUrl === currentUrl) {
+        return;
+    }
+
+    const historyMethod = historyMode === "push" ? "pushState" : "replaceState";
+    window.history[historyMethod](null, "", nextUrl);
 }
 
 function buildLoadErrorMarkup(message) {
@@ -3141,29 +3189,46 @@ function fetchJsonFile(url) {
     });
 }
 
+function showHomeBaseView(options = {}) {
+    const { historyMode = "replace" } = options;
+
+    activeView = {
+        type: "home",
+        path: null,
+        module: null,
+        tool: null,
+        query: "",
+        focusedId: null,
+        broadSearch: false,
+        fuzzySearch: false
+    };
+    currentViewDB = [];
+    currentToolMatches = [];
+    homeDashboard.style.display = "grid";
+    payloadContainer.innerHTML = "";
+    searchBox.value = "";
+    setResultsMeta("Home dashboard");
+    updateWorkspaceLayout();
+    setClearSearchState();
+    syncUrlState({ historyMode });
+    renderSidebar();
+}
+
 function rerenderActiveView() {
-    if (activeView.type === "tool" && activeView.tool) {
-        loadToolView(activeView.tool, activeView.path, activeView.module);
-        return;
-    }
-
     if (activeView.type === "search" && activeView.query) {
-        loadView(null, null, null, activeView.query);
-        return;
+        loadView(null, null, null, activeView.query, { historyMode: "none" });
+    } else if (activeView.type === "module" && activeView.path && activeView.module) {
+        loadView(activeView.path, activeView.module, null, "", { historyMode: "none" });
+    } else if (activeView.type === "path" && activeView.path) {
+        loadView(activeView.path, null, null, "", { historyMode: "none" });
+    } else {
+        renderHomeDashboard();
+        showHomeBaseView({ historyMode: "none" });
     }
 
-    if (activeView.type === "module" && activeView.path && activeView.module) {
-        loadView(activeView.path, activeView.module, null, "");
-        return;
+    if (hasActiveToolPanel()) {
+        loadToolView(activeToolContext.tool, activeToolContext.path, activeToolContext.module, { historyMode: "none" });
     }
-
-    if (activeView.type === "path" && activeView.path) {
-        loadView(activeView.path, null, null, "");
-        return;
-    }
-
-    renderHomeDashboard();
-    goHome();
 }
 
 function loadToolManualOverridesInBackground() {
@@ -3193,33 +3258,67 @@ function loadToolManualOverridesInBackground() {
     return toolManualLoadPromise;
 }
 
-function applyInitialRoute() {
+function getRouteStateFromUrl() {
     const params = new URLSearchParams(window.location.search);
-    const query = params.get("q")?.trim();
-    const pathName = params.get("path")?.trim();
-    const moduleName = params.get("module")?.trim();
-    const toolName = params.get("tool")?.trim();
+    return {
+        query: params.get("q")?.trim() || "",
+        pathName: params.get("path")?.trim() || "",
+        moduleName: params.get("module")?.trim() || "",
+        toolName: params.get("tool")?.trim() || ""
+    };
+}
+
+function applyRouteState(route = getRouteStateFromUrl()) {
+    const { query, pathName, moduleName, toolName } = route;
 
     if (query) {
         searchBox.value = query;
-        loadView(null, null, null, query);
-        return true;
+        loadView(null, null, null, query, { historyMode: "none" });
+    } else if (pathName) {
+        loadView(pathName, moduleName || null, null, "", { historyMode: "none" });
+    } else {
+        showHomeBaseView({ historyMode: "none" });
     }
 
     if (toolName) {
-        loadToolView(toolName, pathName || null, moduleName || null);
-        return true;
+        loadToolView(toolName, pathName || null, moduleName || null, { historyMode: "none" });
+    } else {
+        closeToolPanel({ historyMode: "none" });
     }
-
-    if (pathName) {
-        loadView(pathName, moduleName || null, null, "");
-        return true;
-    }
-
-    return false;
 }
 
-function loadToolView(toolName, contextPath = null, contextModule = null) {
+function applyInitialRoute() {
+    const route = getRouteStateFromUrl();
+    const hasRoute = Boolean(route.query || route.pathName || route.toolName);
+
+    if (hasRoute) {
+        applyRouteState(route);
+    }
+
+    return hasRoute;
+}
+
+function closeToolPanel(options = {}) {
+    const { historyMode = "replace", renderSidebar: shouldRenderSidebar = true } = options;
+
+    activeToolContext = {
+        tool: null,
+        path: null,
+        module: null
+    };
+    detailContainer.innerHTML = "";
+    updateWorkspaceLayout();
+    setClearSearchState();
+    syncUrlState({ historyMode });
+
+    if (shouldRenderSidebar) {
+        renderSidebar();
+    }
+}
+
+function loadToolView(toolName, contextPath = null, contextModule = null, options = {}) {
+    const { historyMode = "push" } = options;
+
     if (!hasLoadedToolManualOverrides) {
         loadToolManualOverridesInBackground();
     }
@@ -3227,43 +3326,26 @@ function loadToolView(toolName, contextPath = null, contextModule = null) {
     const toolManual = getToolManual(toolName);
     const firstItem = toolManual.items[0] || null;
 
-    activeView = {
-        type: "tool",
-        path: contextPath || firstItem?.path || null,
-        module: contextModule || firstItem?.module || null,
+    activeToolContext = {
         tool: toolName,
-        query: "",
-        focusedId: firstItem?.entryId || null,
-        broadSearch: false,
-        fuzzySearch: false
+        path: contextPath || firstItem?.path || null,
+        module: contextModule || firstItem?.module || null
     };
 
-    currentViewDB = toolManual.items || [];
-    currentToolMatches = [];
-    payloadContainer.innerHTML = "";
-    homeDashboard.style.display = "none";
-    searchBox.value = "";
-
-    if (activeView.path) {
-        expandSidebarTo(activeView.path, activeView.module);
+    if (activeToolContext.path) {
+        expandSidebarTo(activeToolContext.path, activeToolContext.module);
     }
 
-    setResultsMeta(`${toolName} manual • ${pluralize(toolManual.workflows.length, "workflow")} • ${pluralize(toolManual.items.length, "example")}`);
-    setClearSearchState(true);
-    syncUrlState();
+    updateWorkspaceLayout();
+    setClearSearchState();
+    syncUrlState({ historyMode });
     renderSidebar();
-
-    if (toolManual.items.length === 0) {
-        renderEmptyState("There are no saved examples for that tool yet.");
-        return;
-    }
-
     renderToolManualPage(toolName);
 }
 
 function loadView(filterPath = null, filterModule = null, filterTool = null, searchQuery = "", options = {}) {
     const query = searchQuery.trim();
-    const { syncUrl = true } = options;
+    const { historyMode = "replace" } = options;
 
     activeView = {
         type: query
@@ -3332,13 +3414,12 @@ function loadView(filterPath = null, filterModule = null, filterTool = null, sea
         setResultsMeta(`${filterPath} • ${pluralize(currentViewDB.length, "entry")}`);
         setClearSearchState(true);
     } else {
-        goHome();
+        showHomeBaseView({ historyMode });
         return;
     }
 
-    if (syncUrl) {
-        syncUrlState();
-    }
+    updateWorkspaceLayout();
+    syncUrlState({ historyMode });
     renderSidebar();
 
     if (activeView.type === "search") {
@@ -3362,26 +3443,10 @@ function loadView(filterPath = null, filterModule = null, filterTool = null, sea
     renderEntryResults(currentViewDB);
 }
 
-function goHome() {
-    activeView = {
-        type: "home",
-        path: null,
-        module: null,
-        tool: null,
-        query: "",
-        focusedId: null,
-        broadSearch: false,
-        fuzzySearch: false
-    };
-    currentViewDB = [];
-    currentToolMatches = [];
-    homeDashboard.style.display = "grid";
-    payloadContainer.innerHTML = "";
-    searchBox.value = "";
-    setResultsMeta("Home dashboard");
-    setClearSearchState(false);
-    syncUrlState();
-    renderSidebar();
+function goHome(options = {}) {
+    const { historyMode = "push" } = options;
+    closeToolPanel({ historyMode: "none", renderSidebar: false });
+    showHomeBaseView({ historyMode });
 }
 
 function executeSearch(query) {
@@ -3389,14 +3454,21 @@ function executeSearch(query) {
     searchBox.value = normalizedQuery;
 
     if (normalizedQuery.length > 0) {
-        loadView(null, null, null, normalizedQuery, { syncUrl: true });
+        loadView(null, null, null, normalizedQuery, { historyMode: "push" });
     } else {
-        goHome();
+        goHome({ historyMode: "push" });
     }
 }
 
 function clearSearch() {
-    goHome();
+    if (activeView.type !== "home") {
+        showHomeBaseView({ historyMode: "push" });
+        return;
+    }
+
+    if (hasActiveToolPanel()) {
+        closeToolPanel({ historyMode: "push" });
+    }
 }
 
 function copyCommandById(entryId, button) {
@@ -3610,13 +3682,17 @@ window.addEventListener("click", event => {
     }
 });
 
+window.addEventListener("popstate", () => {
+    applyRouteState(getRouteStateFromUrl());
+});
+
 searchBox.addEventListener("input", event => {
     const query = event.target.value.trim();
     if (query.length > 0) {
         // Keep the live filter responsive without rewriting the URL on every keystroke.
-        loadView(null, null, null, query, { syncUrl: false });
+        loadView(null, null, null, query, { historyMode: "none" });
     } else {
-        goHome();
+        showHomeBaseView({ historyMode: "replace" });
     }
 });
 
@@ -3645,6 +3721,8 @@ document.addEventListener("keydown", event => {
             closeModal();
         } else if (searchBox.value.trim().length > 0) {
             clearSearch();
+        } else if (hasActiveToolPanel()) {
+            closeToolPanel({ historyMode: "push" });
         }
     }
 });
@@ -3673,7 +3751,7 @@ fetchJsonFile("data.json")
         renderSidebar();
         renderHomeDashboard();
         if (!applyInitialRoute()) {
-            goHome();
+            showHomeBaseView({ historyMode: "replace" });
         }
         loadToolManualOverridesInBackground();
     })
