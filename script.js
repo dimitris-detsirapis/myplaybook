@@ -1309,7 +1309,11 @@ function getActiveDocumentTitle() {
     const appTitle = getAppTitle();
 
     if (activeView.type === "tool" && activeView.tool) {
-        return `${activeView.tool} manual | ${appTitle}`;
+        // Tool manuals are transient in-app panels that collapse back to the
+        // canonical app URL. Keeping the browser title stable prevents history
+        // and bookmark search from collecting stale "tool manual" entries for
+        // unrelated path URLs.
+        return appTitle;
     }
 
     if (activeView.type === "search" && activeView.query) {
@@ -3167,9 +3171,9 @@ function renderToolManualPage(toolName) {
 
 function syncUrlState(options = {}) {
     const { historyMode = "replace" } = options;
-    syncDocumentTitle();
 
     if (historyMode === "none") {
+        syncDocumentTitle();
         return;
     }
 
@@ -3193,13 +3197,13 @@ function syncUrlState(options = {}) {
         : window.location.pathname;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
 
-    if (nextUrl === currentUrl) {
-        return;
+    if (nextUrl !== currentUrl) {
+        // Keep this as one browser-history entry. The app is static, but all route
+        // changes are SPA state changes, so adding a browser page per tool is noisy.
+        window.history.replaceState(null, getActiveDocumentTitle(), nextUrl);
     }
 
-    // Keep this as one browser-history entry. The app is static, but all route
-    // changes are SPA state changes, so adding a browser page per tool is noisy.
-    window.history.replaceState(null, document.title, nextUrl);
+    syncDocumentTitle();
 }
 
 function buildLoadErrorMarkup(message) {
