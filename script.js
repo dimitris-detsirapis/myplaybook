@@ -788,6 +788,7 @@ const modal = document.getElementById("help-modal");
 const modalTitle = document.getElementById("modal-title");
 const modalBody = document.getElementById("modal-body");
 
+const defaultDocumentTitle = document.title || "my pl4yb00k";
 let appMeta = {};
 let db = [];
 let navTree = {};
@@ -1298,6 +1299,36 @@ function hydrateMeta(meta = {}) {
     pathMetaByName = new Map((meta.paths || []).map(path => [path.name, path]));
     moduleMetaByName = new Map((meta.modules || []).map(module => [module.name, module]));
     toolProfileByName = new Map((meta.tool_profiles || []).map(profile => [profile.name, profile]));
+}
+
+function getAppTitle() {
+    return appMeta.title || defaultDocumentTitle;
+}
+
+function getActiveDocumentTitle() {
+    const appTitle = getAppTitle();
+
+    if (activeView.type === "tool" && activeView.tool) {
+        return `${activeView.tool} manual | ${appTitle}`;
+    }
+
+    if (activeView.type === "search" && activeView.query) {
+        return `Search: ${activeView.query} | ${appTitle}`;
+    }
+
+    if (activeView.type === "module" && activeView.module) {
+        return `${activeView.module} | ${appTitle}`;
+    }
+
+    if (activeView.type === "path" && activeView.path) {
+        return `${activeView.path} | ${appTitle}`;
+    }
+
+    return appTitle;
+}
+
+function syncDocumentTitle() {
+    document.title = getActiveDocumentTitle();
 }
 
 function hydrateToolManualOverrides(manualData = {}) {
@@ -3136,23 +3167,25 @@ function renderToolManualPage(toolName) {
 
 function syncUrlState(options = {}) {
     const { historyMode = "replace" } = options;
+    syncDocumentTitle();
+
     if (historyMode === "none") {
         return;
     }
 
     const params = new URLSearchParams();
 
-    if (activeView.type === "search" && activeView.query) {
-        params.set("q", activeView.query);
-    } else if (activeView.path) {
-        params.set("path", activeView.path);
-        if (activeView.module) {
-            params.set("module", activeView.module);
+    // Tool manuals are intentionally transient during in-app navigation. Direct
+    // tool URLs still load, but clicking between tools keeps history clean.
+    if (activeView.type !== "tool") {
+        if (activeView.type === "search" && activeView.query) {
+            params.set("q", activeView.query);
+        } else if (activeView.path) {
+            params.set("path", activeView.path);
+            if (activeView.module) {
+                params.set("module", activeView.module);
+            }
         }
-    }
-
-    if (activeView.type === "tool" && activeView.tool) {
-        params.set("tool", activeView.tool);
     }
 
     const nextUrl = params.toString()
@@ -3166,7 +3199,7 @@ function syncUrlState(options = {}) {
 
     // Keep this as one browser-history entry. The app is static, but all route
     // changes are SPA state changes, so adding a browser page per tool is noisy.
-    window.history.replaceState(null, "", nextUrl);
+    window.history.replaceState(null, document.title, nextUrl);
 }
 
 function buildLoadErrorMarkup(message) {
